@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PyUnit",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/test_all.py"
+        },
+        {
+            "name": "PyUnit AIAgentConfig",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/agents/test_agent_config.py"
+        },
+        {
+            "name": "PyUnit AIAgent",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/agents/test_agent.py"
+        },
+        {
+            "name": "PyUnit AIAgentOpenAI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/agents/test_agent_openai.py"
+        },
+        {
+            "name": "PyUnit AIAgentFactory",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/agents/test_agent_factory.py"
+        },
+        {
+            "name": "PyUnit PromptFactory",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/agents/test_prompt_factory.py"
+        }
+    ]
+}

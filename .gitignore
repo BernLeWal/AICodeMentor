@@ -1,0 +1,9 @@
+# add .gitignore entries for a python project
+
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+
+### Project ###
+.env
