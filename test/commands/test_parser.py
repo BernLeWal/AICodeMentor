@@ -36,7 +36,7 @@ class TestParser(unittest.TestCase):
 
     def test_parse_incomplete_command(self):
         """Test parsing an incomplete command"""
-        agent_msg = "```bash\nls -la"
+        agent_msg = "```python\nprint('Hello, world!')"
         commands = self.parser.parse(agent_msg)
         self.assertEqual(len(commands), 0)
 

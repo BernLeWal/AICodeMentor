@@ -3,7 +3,7 @@
 Class to parse commands from agent outputs
 """
 import logging
-from app.commands.command import Command
+from app.commands.command import Command, CommandFactory
 
 
 # Setup logging framework
@@ -16,30 +16,48 @@ class Parser:
     """
     Class to parse commands from agent outputs
     """
-    def parse(self, agent_msg: str) -> list['Command']:
+    def parse(self, agent_msg: str) -> list[Command]:
         """
         Parse the output string and return a list of Command objects
 
         :param output: The output string from the agent
         :return: A list of Command objects
         """
-        commands = []
-        current_code_block = None
-        current_code_lines = []
+        commands : list[Command] = []
+        current_code_block : str = None
+        current_code_lines : list[str] = []
         for line in agent_msg.splitlines():
             if current_code_block is None:
                 line.strip()
             if line.startswith("```"):
                 if current_code_block is None:
                     # Start of code block
-                    current_code_block = line.replace("```", "")
+                    current_code_block = Command.parse_command_type(line.replace("```", ""))
                 else:
                     # End of code block
-                    commands.append(Command(current_code_block, current_code_lines))
-                    current_code_block = None
+                    new_command = CommandFactory.try_create_command(
+                        current_code_block, current_code_lines)
+                    if new_command is not None:
+                        commands.append(new_command)
                     current_code_lines = []
+                    current_code_block = None
             else:
-                if current_code_block is not None:
+                if current_code_block==Command.SHELL:
+                    # Inside code SHELL block
+                    line.strip()
+                    # create one Command instance per line
+                    if len(line) > 0:
+                        if line.endswith("\\"):
+                            current_code_lines.append(line[:-1])
+                            current_code_lines.append(" ")
+                        else:
+                            current_code_lines.append(line)
+                            new_command = CommandFactory.try_create_command(
+                                current_code_block, current_code_lines)
+                            if new_command is not None:
+                                commands.append(new_command)
+                            current_code_lines = []
+                elif current_code_block is not None:
                     # Inside code block
                     if len(line) > 0:
                         current_code_lines.append(line)
@@ -50,7 +68,7 @@ if __name__ == "__main__":
     main_parser = Parser()
     # define a multi-line agent message
     MAIN_AGENT_MESSAGE = "```bash\n" + \
-        "git --version && " + \
+        "git --version && \\\n" + \
         "git ls-remote https://github.com\n" + \
         "# Check if git commands are installed\n" + \
         "git --version && echo \"Git is installed\" || echo \"Git is not installed\"\n" + \

@@ -36,6 +36,18 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test/agents/test_prompt_factory.py"
+        },
+        {
+            "name": "PyUnit Parser",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/commands/test_parser.py"
+        },
+        {
+            "name": "PyUnit ShellCommandExecutor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/commands/test_shellcommandexecutor.py"
         }
     ]
 }
