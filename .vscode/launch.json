@@ -48,6 +48,18 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/test/commands/test_shellcommandexecutor.py"
+        },
+        {
+            "name": "PyUnit Workflow",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/workflow/test_workflow.py"
+        },
+        {
+            "name": "PyUnit WorkflowInterpreter",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test/workflow/test_interpreter.py"
         }
     ]
 }

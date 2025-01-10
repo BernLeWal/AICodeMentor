@@ -3,7 +3,7 @@
 The factory class for creating AI-Agent instances
 """
 import logging
-from prompt_factory import PromptFactory
+from app.agents.prompt_factory import PromptFactory
 from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
 from app.agents.agent_openai import AIAgentOpenAI
@@ -20,6 +20,18 @@ class AIAgentFactory:
     """
     The factory class for creating AI-Agent instances
     """
+
+    @staticmethod
+    def create_agent() -> AIAgent:
+        """
+        Creates an AI-Agent instance of type AIAgentOpenAI
+        """
+        logger.debug("Creating agent")
+        config = AIAgentConfig()
+        config.load_from_environment()
+        agent = AIAgentOpenAI(config)
+        return agent
+
 
     @staticmethod
     def create_preparation_agent() -> AIAgent:

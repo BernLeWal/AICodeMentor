@@ -139,8 +139,15 @@ class ShellCommandExecutor(CommandExecutor):
         """
         Enqueue output from a given stream (stdout or stderr).
         """
-        for line in iter(stream.readline, ''):
-            queue.put(line)
+        while True:
+            try:
+                line = stream.readline()
+                if line:
+                    queue.put(line)
+                else:
+                    break
+            except (IOError, OSError, UnicodeDecodeError) as e:
+                logger.error("Error reading output from stream: %s", e)
 
 
     def close(self):
