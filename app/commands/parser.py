@@ -3,12 +3,15 @@
 Class to parse commands from agent outputs
 """
 import logging
+import os
+from dotenv import load_dotenv
 from app.commands.command import Command, CommandFactory
 
 
 # Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+load_dotenv()
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 

@@ -2,18 +2,22 @@
 """
 Class to execute commands
 """
+import os
 import logging
 import subprocess
 import threading
 from queue import Queue, Empty
+from dotenv import load_dotenv
 from app.commands.command import Command
 from app.commands.executor import CommandExecutor
+from app.commands.parser import Parser
+
 
 # Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+load_dotenv()
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
-
 
 
 class ShellCommandExecutor(CommandExecutor):
@@ -21,8 +25,8 @@ class ShellCommandExecutor(CommandExecutor):
     Class to execute shell commands in a persistent shell session.
     """
 
-    SHELL_BASH = '/bin/bash'
-    SHELL_SH = '/bin/sh'
+    SHELL_BASH = 'bash'
+    SHELL_SH = 'sh'
     SHELL_POWERSHELL = 'powershell'
     SHELL_CMD = 'cmd.exe'
 
@@ -64,6 +68,7 @@ class ShellCommandExecutor(CommandExecutor):
         """
         try:
             #self.current_output = ""
+            logger.info("Executing command: %s", command.cmds)
             self._send_command_to_shell(command.cmds)
             command.output = self.current_output
             command.exit_code = 0  # Shell commands don't always return standard exit codes
@@ -160,24 +165,27 @@ class ShellCommandExecutor(CommandExecutor):
             self.shell_process.wait()
 
 if __name__ == "__main__":
-    # Attention: These commands will only work on the cmd.exe shell on windows
-    main_commands = [
-        'echo Hello, World!',
-        'set VAR=PersistentShell',
-        'echo %VAR%',
-        'cd ..',
-        'cd',
-        'pwd',  # This will fail in cmd.exe, testing stderr capture
-    ]
-
-    main_executor = ShellCommandExecutor(ShellCommandExecutor.SHELL_CMD)
+    # Attention: These commands will only work on the bash on linux
+    main_executor = ShellCommandExecutor(ShellCommandExecutor.SHELL_BASH)
+    main_parser = Parser()
+    # define a multi-line agent message
+    MAIN_AGENT_MESSAGE = "```bash\n" + \
+        "git --version\n" + \
+        "git --version && \\\n" + \
+        "git ls-remote https://github.com\n" + \
+        "# Check if git commands are installed\n" + \
+        "git --version && echo \"Git is installed\" || echo \"Git is not installed\"\n" + \
+        "\n" + \
+        "# Check if GitHub is reachable\n" + \
+        "ping -c 4 github.com\n" + \
+        "```\n"
+    # Print the parsed commands
     try:
-        for main_command in main_commands:
-            main_cmd = Command(Command.SHELL, [main_command])
-            print(f"Execute {main_cmd.cmds}")
-            main_executor.execute(main_cmd)
-            print(f"Output: \n{main_cmd.output}")
+        for main_command in main_parser.parse(MAIN_AGENT_MESSAGE):
+            print(f"Execute: {main_command}")
+            main_executor.execute(main_command)
+            print("---------------------------")
+            print(f"Output: \n{main_command.output}")
+            print("===========================")
     finally:
         main_executor.close()
-
-    print("Done.")

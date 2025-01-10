@@ -3,6 +3,8 @@
 The factory class for creating AI-Agent instances
 """
 import logging
+import os
+from dotenv import load_dotenv
 from app.agents.prompt_factory import PromptFactory
 from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
@@ -10,8 +12,9 @@ from app.agents.agent_openai import AIAgentOpenAI
 
 
 # Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+load_dotenv()
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 

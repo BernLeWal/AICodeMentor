@@ -8,14 +8,11 @@ import json
 from dotenv import load_dotenv
 
 
-# Load environment variables
-load_dotenv()
-
 # Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+load_dotenv()
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
-
 
 
 # app/agents/AIAgentConfig.py
@@ -28,11 +25,11 @@ class AIAgentConfig:
 
     def load_from_environment(self):
         """loads the configuration from the environment variables"""
-        logger.debug("Loading configuration from environment")
+        logger.debug("Loading configuration from environment...")
         self.ai_api_key = os.getenv('AI_API_KEY', '')
         self.ai_organization_id = os.getenv('AI_ORGANIZATION_ID', '')
         self.ai_model_name = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
-        logger.info(self)
+        logger.debug(self)
 
     def load_from_jsonfile(self, filename):
         """loads the configuration from a JSON file"""
@@ -43,7 +40,7 @@ class AIAgentConfig:
             self.ai_api_key = config['AI_API_KEY']
             self.ai_organization_id = config['AI_ORGANIZATION_ID']
             self.ai_model_name = config['AI_MODEL_NAME']
-        logger.info(self)
+        logger.debug(self)
 
     def load_from_json(self, json_data : str):
         """loads the configuration from a JSON string"""
@@ -53,13 +50,17 @@ class AIAgentConfig:
         self.ai_api_key = config['AI_API_KEY']
         self.ai_organization_id = config['AI_ORGANIZATION_ID']
         self.ai_model_name = config['AI_MODEL_NAME']
-        logger.info(self)
+        logger.debug(self)
 
     # convert to str
     def __str__(self):
-        return f"AIAgentConfig: AI_API_KEY={self.ai_api_key}, AI_ORGANIZATION_ID={self.ai_organization_id}, AI_MODEL_NAME={self.ai_model_name}"
+        return "AIAgentConfig: " + \
+            f"AI_API_KEY={self.ai_api_key[:4]}...{self.ai_api_key[-4:]}, " + \
+            f"AI_ORGANIZATION_ID={self.ai_organization_id[:4]}...{self.ai_organization_id[-4:]}, "+\
+            f"AI_MODEL_NAME={self.ai_model_name}"
 
 
 if __name__ == "__main__":
     main_config = AIAgentConfig()
     main_config.load_from_environment()
+    print(main_config)

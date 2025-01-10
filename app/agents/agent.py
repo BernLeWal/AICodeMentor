@@ -3,13 +3,16 @@
 The base class for all AI Agent implementations
 """
 import logging
+import os
+from dotenv import load_dotenv
 from app.agents.agent_config import AIAgentConfig
 from app.agents.prompt import Prompt
 
 
 # Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+load_dotenv()
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 
@@ -52,14 +55,17 @@ if __name__ == "__main__":
 
     main_agent = AIAgent(main_config)
 
+    print("System Prompt:")
     main_agent.system("You are a helpful assistant")
     for message in main_agent.messages:
-        print(f"{message.role}: {message.content}")
+        print(f"  - {message.role}: {message.content}")
 
+    print("User Prompt:")
     main_agent.ask("What is the answer to life, the universe and everything?")
     for message in main_agent.messages:
-        print(f"{message.role}: {message.content}")
+        print(f"  - {message.role}: {message.content}")
 
+    print("Assistant Prompt:")
     main_agent.advice(None, "42")
     for message in main_agent.messages:
-        print(f"{message.role}: {message.content}")
+        print(f"  - {message.role}: {message.content}")

@@ -113,7 +113,7 @@ class WorkflowInterpreter:
 if __name__ == "__main__":
     main_workflow = Workflow(name="Test build toolchain")
     main_interpreter = WorkflowInterpreter(main_workflow)
-    main_interpreter.command_executor = ShellCommandExecutor(ShellCommandExecutor.SHELL_CMD)
+    main_interpreter.command_executor = ShellCommandExecutor(ShellCommandExecutor.SHELL_BASH)
 
     ## hardcoded workflow implementation
     # START

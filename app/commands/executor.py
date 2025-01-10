@@ -2,13 +2,7 @@
 """
 Base class for command executors
 """
-import logging
 from app.commands.command import Command
-
-# Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 
 class CommandExecutor:
