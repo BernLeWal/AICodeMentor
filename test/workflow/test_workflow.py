@@ -14,7 +14,7 @@ class TestWorkflow(unittest.TestCase):
         """Test Workflow initialization"""
         workflow = Workflow(name="Test Workflow")
         self.assertEqual(workflow.name, "Test Workflow")
-        self.assertEqual(workflow.status, Workflow.DOING)
+        self.assertEqual(workflow.status, Workflow.Status.CREATED)
         self.assertEqual(workflow.result, None)
 
 

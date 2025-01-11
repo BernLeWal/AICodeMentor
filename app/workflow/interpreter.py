@@ -5,6 +5,7 @@ WorkflowInterpreter module  - Interpreter for Workflow instances
 
 import logging
 import os
+from enum import Enum
 from dotenv import load_dotenv
 from app.agents.agent import AIAgent
 from app.agents.agent_factory import AIAgentFactory
@@ -27,9 +28,11 @@ logger = logging.getLogger(__name__)
 class WorkflowInterpreter:
     """The base class for all WorkflowInterpreter implementations"""
 
-    CHECK_RESULT_EQUALS = 0
-    CHECK_RESULT_CONTAINS = 1
-    #CHECK_RESULT_MATCH_REGEX = 2
+    class CheckOperation(Enum):
+        """Check operations enumeration"""
+        EQUALS = 0
+        CONTAINS = 1
+        # TODO: MATCH_REGEX = 2
 
 
     def __init__(self, workflow: Workflow):
@@ -42,18 +45,16 @@ class WorkflowInterpreter:
 
     def start(self):
         """Start the workflow"""
-        logger.info("Starting workflow: %s", self.workflow.name)
-        self.workflow.status = Workflow.DOING
+        logger.info("START: %s", self.workflow.name)
+        self.workflow.status = Workflow.Status.DOING
 
 
     def prompt(self,
             role : str = Prompt.USER,
-            prompt_id: str = None,
+            #prompt_id: str = None,
             prompt_file: str = None,
             append_results: bool = False)->None:
         """Send a prompt to the AI-agent"""
-        logger.info("Prompting with role=%s, prompt_id=%s, prompt_file=%s",
-                role, prompt_id, prompt_file)
         if self.agent is None:
             self.agent = AIAgentFactory.create_agent()
         if prompt_file is not None:
@@ -62,6 +63,11 @@ class WorkflowInterpreter:
             raise ValueError("prompt_file is required")
         if append_results:
             prompt_content += self.workflow.result
+        if len(prompt_content) > 100:
+            logger.info("PROMPT: role=%s, content=%s...",
+                role, prompt_content[:100].replace("\n", "\\n"))
+        else:
+            logger.info("PROMPT: role=%s, content=%s",role, prompt_content)
 
         if Prompt.SYSTEM == role.lower():
             self.agent.system(prompt_content)
@@ -72,7 +78,12 @@ class WorkflowInterpreter:
 
     def execute(self, command: str = None):
         """Execute the commands in the current result"""
-        logger.info("Executing commands of: %s", self.workflow.result)
+        # if workflow.result > 100 lines the cut it
+        if len(self.workflow.result) > 100:
+            logger.info("EXECUTE: %s...", self.workflow.result[:100].replace("\n", "\\n"))
+        else:
+            logger.info("EXECUTE: %s", self.workflow.resultreplace("\n", "\\n"))
+
         if self.command_executor is None:
             raise ValueError("CommandExecutor is not set")
         if command is not None:
@@ -84,30 +95,31 @@ class WorkflowInterpreter:
             self.command_executor.execute(cmd)
             self.workflow.result += cmd.output
 
-    def check_status(self, expected_status: int) -> bool:
+    def check_status(self, expected_status: Workflow.Status) -> bool:
         """Check if the workflow status is as expected"""
-        logger.debug("Checking status. Expected: %d, Current: %d",
+        logger.info("CHECK_STATUS: expected: %s, current: %s",
             expected_status, self.workflow.status)
         return self.workflow.status == expected_status
 
-    def check_result(self, expected_text: str, operation: int = CHECK_RESULT_EQUALS) -> bool:
+    def check_result(self, expected_text: str,
+        operation: CheckOperation = CheckOperation.EQUALS) -> bool:
         """Check if the result is as expected"""
-        logger.debug("Checking result with expected text: %s and operation: %d",
+        logger.info("CHECK_RESULT: expected_text: '%s', operation: %s",
             expected_text, operation)
-        if operation == WorkflowInterpreter.CHECK_RESULT_CONTAINS:
+        if operation == WorkflowInterpreter.CheckOperation.CONTAINS:
             return expected_text in self.workflow.result
         else: #if operation == WorkflowInterpreter.CHECK_RESULT_EQUALS:
             return self.workflow.result.strip() == expected_text.strip()
 
     def success(self):
         """Finish workflow with status SUCCESS"""
-        logger.info("Finished workflow with status SUCCESS")
-        self.workflow.status = Workflow.SUCCESS
+        logger.info("SUCCESS result: %s", self.workflow.result)
+        self.workflow.status = Workflow.Status.SUCCESS
 
     def failed(self):
         """Finish workflow with status FAILED"""
-        logger.info("Finished workflow with status FAILED")
-        self.workflow.status = Workflow.FAILED
+        logger.info("FAILED result: %s", self.workflow.result)
+        self.workflow.status = Workflow.Status.FAILED
 
 
 if __name__ == "__main__":
