@@ -113,7 +113,7 @@ class WorkflowInterpreter:
 if __name__ == "__main__":
     main_workflow = Workflow(name="Test build toolchain")
     main_interpreter = WorkflowInterpreter(main_workflow)
-    main_interpreter.command_executor = ShellCommandExecutor(ShellCommandExecutor.SHELL_BASH)
+    main_interpreter.command_executor = ShellCommandExecutor()
 
     ## hardcoded workflow implementation
     # START
@@ -129,8 +129,8 @@ if __name__ == "__main__":
         Prompt.USER,
         prompt_file="prep-agent.test-git.prompt.md")
 
-    iteration = 1
-    while iteration < 3:
+    ITERATION = 1
+    while ITERATION < 3:
 
         # EXECUTE: ShellCommands
         main_interpreter.execute()
@@ -170,7 +170,7 @@ if __name__ == "__main__":
         main_interpreter.prompt(
             Prompt.USER,
             prompt_file="prep-agent.test-git-improve.prompt.md")
-        iteration += 1
+        ITERATION += 1
 
     # FAILED: no solution found
     print("No solution found")

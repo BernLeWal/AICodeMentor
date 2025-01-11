@@ -11,6 +11,12 @@ AI-agents will autonomously evaluate source-code projects base on program requir
 ## Setup
 
 - Create and activate a virtual environment, e.g. venv
+    ```shell
+    #sudo apt install python3-venv -y
+    pip install virtualenv
+    python -m virtualenv .venv
+    source .venv/bin/activate
+    ```
 - Install required libraries:
     ```shell
     pip install -r requirements.txt
