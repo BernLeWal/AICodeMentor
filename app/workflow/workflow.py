@@ -25,6 +25,7 @@ class Workflow:
         self.name = name
         self.parent : Workflow = parent  # parent workflow
         self.interpreter = interpreter  # WorkflowInterpreter instance
+        self.description : str = ''
 
         self.status : Workflow.Status = Workflow.Status.CREATED
         self.result : str = None

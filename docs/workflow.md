@@ -40,7 +40,7 @@ classDiagram
     WorkflowInterpreter *-- Workflow
 
     class Activity {
-        - int kind # START, PROMPT, EXECUTE, CHECK_STATUS, CHECK_RESULT, SUCCESS, FAILED
+        - int kind # START, PROMPT, ...
         - str name
         - str expression
         - Activity next
@@ -64,12 +64,12 @@ flowchart TD
     PROMPT_TESTGIT[Prompt: User TestGit] --> EXECUTE_OUTPUT
     EXECUTE_OUTPUT[Execute: ShellCommands] --> PROMPT_CMDRESULTS
 
-    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{Check: Result==SUCCESS?}
-    CHECK_RESULT_SUCCESS --> |TRUE| PROMPT_SUCCESS_SUMMARY
-    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{Check: Result==FAILED?} 
+    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECKRESULT_SUCCESS{Check: Result==SUCCESS?}
+    CHECKRESULT_SUCCESS --> |TRUE| PROMPT_SUCCESS_SUMMARY
+    CHECKRESULT_SUCCESS --> |FALSE| CHECKRESULT_FAILED{Check: Result==FAILED?} 
 
-    CHECK_RESULT_FAILED --> |TRUE| PROMPT_FAIL_SUMMARY
-    CHECK_RESULT_FAILED --> |FALSE| PROMPT_IMPROVE
+    CHECKRESULT_FAILED --> |TRUE| PROMPT_FAIL_SUMMARY
+    CHECKRESULT_FAILED --> |FALSE| PROMPT_IMPROVE
 
     PROMPT_SUCCESS_SUMMARY[Prompt: User SuccessSummary] --> SUCCESS
     PROMPT_FAIL_SUMMARY[Prompt: User FailedSummary] --> FAILED

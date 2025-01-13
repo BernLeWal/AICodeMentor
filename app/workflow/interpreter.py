@@ -51,6 +51,8 @@ class WorkflowInterpreter:
         logger.info("RUN: %s", workflow.name)
         self.workflow = workflow
         current_activity = workflow.start
+        if current_activity is None:
+            current_activity = workflow.activities[Activity.Kind.START.name]
 
         while current_activity is not None:
             # pre-conditions
@@ -65,14 +67,16 @@ class WorkflowInterpreter:
             next_activity = current_activity.next
             if current_activity.kind == Activity.Kind.START:
                 self.start()
+            elif current_activity.kind == Activity.Kind.ASSIGN:
+                self.assign(current_activity.expression)
             elif current_activity.kind == Activity.Kind.PROMPT:
                 self.prompt(prompt_id = current_activity.expression)
             elif current_activity.kind == Activity.Kind.EXECUTE:
                 self.execute(current_activity.expression)
-            elif current_activity.kind == Activity.Kind.CHECK_STATUS:
+            elif current_activity.kind == Activity.Kind.CHECKSTATUS:
                 if not self.check_status(current_activity.expression):
                     next_activity = current_activity.other
-            elif current_activity.kind == Activity.Kind.CHECK_RESULT:
+            elif current_activity.kind == Activity.Kind.CHECKRESULT:
                 if not self.check_result(current_activity.expression):
                     next_activity = current_activity.other
             elif current_activity.kind == Activity.Kind.SUCCESS:
@@ -93,6 +97,25 @@ class WorkflowInterpreter:
         logger.info("START: %s", self.workflow.name)
         self.workflow.status = Workflow.Status.DOING
 
+    def assign(self, value: str = None)->None:
+        """Assign a prompt to the result (like a "copy" operation)"""
+        content = None
+        if value is not None:
+            # Try to use value as a prompt_id to get the content from prompts
+            if value in self.workflow.prompts:
+                content = self.workflow.prompts[value].content
+            else:
+                content = value
+        if content is None:
+            raise ValueError("ASSIGN Value is not set! ")
+        if content.find("{{CURRENT_RESULT}}") > 0:
+            content = content.replace("{{CURRENT_RESULT}}", self.workflow.result)
+        if len(content) > 100:
+            logger.info("ASSIGN: %s...", content[:100].replace("\n", "\\n"))
+        else:
+            logger.info("ASSIGN: %s", content)
+        self.workflow.result = content
+
 
     def prompt(self,
             role : str = Prompt.USER,
@@ -111,7 +134,7 @@ class WorkflowInterpreter:
             else:
                 logger.warning("Prompt_id {%s} not found in prompts!", prompt_id)
         if prompt_content is None:
-            raise ValueError("Prompt content is not set! " + \
+            raise ValueError("PROMPT content is not set! " + \
                 f"prompt_id={prompt_id}, prompt_file={prompt_file}")
 
         if prompt_content.find("{{CURRENT_RESULT}}") > 0:
@@ -150,7 +173,7 @@ class WorkflowInterpreter:
 
         if self.command_executor is None:
             raise ValueError("CommandExecutor is not set")
-        if command is not None:
+        if command is not None and len(command) > 0:
             commands = [Command(Command.SHELL, [command])]
         else:
             commands = Parser().parse(self.workflow.result)
@@ -161,7 +184,7 @@ class WorkflowInterpreter:
 
     def check_status(self, expected_status: Workflow.Status) -> bool:
         """Check if the workflow status is as expected"""
-        logger.info("CHECK_STATUS: expected: %s, current: %s",
+        logger.info("CHECKSTATUS: expected: %s, current: %s",
             expected_status, self.workflow.status)
         return self.workflow.status == expected_status
 
@@ -169,14 +192,14 @@ class WorkflowInterpreter:
         operation: CheckOperation = CheckOperation.EQUALS) -> bool:
         """Check if the result is as expected"""
         if len(self.workflow.result) > 100:
-            logger.info("CHECK_RESULT: expected_text: '%s' %s in '%s'...",
+            logger.info("CHECKRESULT: expected_text: '%s' %s in '%s'...",
                 expected_text, operation, self.workflow.result[:100].replace("\n", "\\n"))
         else:
-            logger.info("CHECK_RESULT: expected_text: '%s' %s in '%s'",
+            logger.info("CHECKRESULT: expected_text: '%s' %s in '%s'",
                 expected_text, operation, self.workflow.result.replace("\n", "\\n"))
         if operation == WorkflowInterpreter.CheckOperation.CONTAINS:
             return expected_text in self.workflow.result
-        else: #if operation == WorkflowInterpreter.CHECK_RESULT_EQUALS:
+        else: #if operation == WorkflowInterpreter.CHECKRESULT_EQUALS:
             return self.workflow.result.strip() == expected_text.strip()
 
     def success(self):
@@ -192,77 +215,9 @@ class WorkflowInterpreter:
 
 if __name__ == "__main__":
     main_workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
-    main_workflow.name = "Test build toolchain"
     main_interpreter = WorkflowInterpreter()
     main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()
-
-    ## hardcoded workflow implementation
-
-    # START
-    start = Activity(Activity.Kind.START, "START")
-    main_workflow.start = start
-    main_workflow.activities[start.name] = start
-
-    # PROMPT: System
-    prompt_system = Activity(Activity.Kind.PROMPT, "PROMPT_SYSTEM", "System")
-    main_workflow.activities[prompt_system.name] = prompt_system
-    start.next = prompt_system
-
-    # PROMPT: User TestGit
-    prompt_testgit = Activity(Activity.Kind.PROMPT, "PROMPT_TESTGIT", "User TestGit")
-    main_workflow.activities[prompt_testgit.name] = prompt_testgit
-    prompt_system.next = prompt_testgit
-
-    # EXECUTE: ShellCommands
-    execute_output = Activity(Activity.Kind.EXECUTE, "EXECUTE_OUTPUT")
-    main_workflow.activities[execute_output.name] = execute_output
-    prompt_testgit.next = execute_output
-
-    # PROMPT: User CommandResults
-    prompt_cmdresults = Activity(Activity.Kind.PROMPT, "PROMPT_CMDRESULTS", "User CommandResults")
-    main_workflow.activities[prompt_cmdresults.name] = prompt_cmdresults
-    execute_output.next = prompt_cmdresults
-
-    # CHECK_STATUS: SUCCESS
-    checkresult_success = Activity(Activity.Kind.CHECK_RESULT, "CHECK_RESULT_SUCCESS", "SUCCESS")
-    main_workflow.activities[checkresult_success.name] = checkresult_success
-    prompt_cmdresults.next = checkresult_success
-
-    # PROMT: User SuccessSummary
-    prompt_successsummary = Activity(
-        Activity.Kind.PROMPT, "PROMPT_SUCCESS_SUMMARY", "User SuccessSummary")
-    main_workflow.activities[prompt_successsummary.name] = prompt_successsummary
-    checkresult_success.next = prompt_successsummary
-
-    # SUCCESS
-    success = Activity(Activity.Kind.SUCCESS, "SUCCESS")
-    main_workflow.activities[success.name] = success
-    prompt_successsummary.next = success
-
-    # CHECK_STATUS: FAILED
-    checkresult_failed = Activity(Activity.Kind.CHECK_RESULT, "CHECK_RESULT_FAILED", "FAILED")
-    main_workflow.activities[checkresult_failed.name] = checkresult_failed
-    checkresult_success.other = checkresult_failed
-
-    # PROMT: User FailedSummary
-    prompt_failedsummary = Activity(
-        Activity.Kind.PROMPT, "PROMPT_FAILED_SUMMARY", "User FailedSummary")
-    main_workflow.activities[prompt_failedsummary.name] = prompt_failedsummary
-    checkresult_failed.next = prompt_failedsummary
-
-    # FAILED
-    failed = Activity(Activity.Kind.FAILED, "FAILED")
-    main_workflow.activities[failed.name] = failed
-    prompt_failedsummary.next = failed
-
-    # PROMPT: Improve
-    prompt_improve = Activity(Activity.Kind.PROMPT, "PROMPT_IMPROVE", "User Improve")
-    main_workflow.activities[prompt_improve.name] = prompt_improve
-    failed.other = prompt_improve
-    prompt_improve.next = execute_output
-    checkresult_failed.other = prompt_improve
-
 
     ## run the workflow
     main_status = main_interpreter.run(main_workflow)
