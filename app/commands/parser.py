@@ -31,7 +31,7 @@ class Parser:
         current_code_lines : list[str] = []
         for line in agent_msg.splitlines():
             if current_code_block is None:
-                line.strip()
+                line = line.strip()
             if line.startswith("```"):
                 if current_code_block is None:
                     # Start of code block
@@ -46,8 +46,7 @@ class Parser:
                     current_code_block = None
             else:
                 if current_code_block==Command.SHELL:
-                    # Inside code SHELL block
-                    line.strip()
+                    # Inside code SHELL block:
                     # create one Command instance per line
                     if len(line) > 0:
                         if line.endswith("\\"):

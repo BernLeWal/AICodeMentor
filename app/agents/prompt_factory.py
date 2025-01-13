@@ -54,18 +54,18 @@ class PromptFactory:
         current_content = ''
         current_role = Prompt.USER
         for line in content:
-            line.strip()
-            if line.startswith('## User'):
+            line_strip = line.strip()
+            if line_strip.startswith('## User'):
                 if len(current_content) > 0:
                     result.append(Prompt(current_role, current_content))
                     current_content = ''
                 current_role = Prompt.USER
-            elif line.startswith('## Assistant'):
+            elif line_strip.startswith('## Assistant'):
                 if len(current_content) > 0:
                     result.append(Prompt(current_role, current_content))
                     current_content = ''
                 current_role = Prompt.ASSISTANT
-            elif line.startswith('## System'):
+            elif line_strip.startswith('## System'):
                 if len(current_content) > 0:
                     result.append(Prompt(current_role, current_content))
                     current_content = ''
@@ -91,7 +91,7 @@ class PromptFactory:
         current_content = ''
         current_role = Prompt.USER
         for line in content:
-            line.strip()
+            line = line.strip()
             if line.startswith('User:'):
                 if len(current_content) > 0:
                     result.append(Prompt(current_role, current_content))

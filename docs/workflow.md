@@ -17,6 +17,7 @@ classDiagram
         - str id
         - str name
         - list~Activity~ activities
+        - Activity start
 
         - int status # DOING, SUCCESS, FAILED
         - str result
@@ -40,6 +41,11 @@ classDiagram
 
     class Activity {
         - int kind # START, PROMPT, EXECUTE, CHECK_STATUS, CHECK_RESULT, SUCCESS, FAILED
+        - str name
+        - str expression
+        - Activity next
+        - Activity other
+        - int hits
     }
     Workflow "1" *-- "n" Activity
 ```

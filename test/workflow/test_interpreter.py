@@ -5,9 +5,11 @@ UnitTests for WorkflowInterpreter
 
 # --- test/workflow/test_interpreter.py ---
 import unittest
-from app.agents.prompt import Prompt
+from app.agents.agent_factory import AIAgentFactory
 from app.commands.shell_executor import ShellCommandExecutor
+from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
+from app.workflow.workflow_factory import WorkflowFactory
 from app.workflow.interpreter import WorkflowInterpreter
 
 
@@ -32,70 +34,116 @@ class TestWorkflowInterpreter(unittest.TestCase):
         interpreter.failed()
         self.assertTrue(interpreter.check_status(Workflow.Status.FAILED))
 
-    def test_workflow(self):
-        """Test the workflow implementation"""
-        main_workflow = Workflow(name="Test build toolchain")
+    def test_loop_break(self):
+        """Test loop_break method"""
+        main_workflow = Workflow(name="Test Workflow loop")
         main_interpreter = WorkflowInterpreter(main_workflow)
-        main_interpreter.command_executor = ShellCommandExecutor()
 
         ## hardcoded workflow implementation
         # START
-        main_interpreter.start()  # no input required
+        start = Activity(Activity.Kind.START, "START")
+        main_workflow.start = start
+        main_workflow.activities[start.name] = start
+
+        # CHECK_STATUS: SUCCESS
+        checkstatus_success = Activity(
+            Activity.Kind.CHECK_STATUS, "CHECK_STATUS_SUCCESS", "SUCCESS")
+        main_workflow.activities[checkstatus_success.name] = checkstatus_success
+        start.next = checkstatus_success
+        checkstatus_success.next = start
+
+        # FAILED
+        failed = Activity(Activity.Kind.FAILED, "FAILED")
+        main_workflow.activities[failed.name] = failed
+        checkstatus_success.other = failed
+
+        ## run the workflow
+        main_status = main_interpreter.run(main_workflow)
+        print(f"Workflow completed with {main_status}, Result:\n{main_workflow.result}")
+        self.assertEqual(main_status, Workflow.Status.FAILED)
+
+
+    def test_workflow(self):
+        """Test the workflow implementation"""
+        main_workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
+        main_workflow.name = "Test build toolchain"
+        main_interpreter = WorkflowInterpreter()
+        main_interpreter.agent = AIAgentFactory.create_agent()
+        main_interpreter.command_executor = ShellCommandExecutor()
+
+        ## hardcoded workflow implementation
+
+        # START
+        start = Activity(Activity.Kind.START, "START")
+        main_workflow.start = start
+        main_workflow.activities[start.name] = start
 
         # PROMPT: System
-        main_interpreter.prompt(
-            Prompt.SYSTEM,
-            prompt_file="prep-agent.system.prompt.md")
+        prompt_system = Activity(Activity.Kind.PROMPT, "PROMPT_SYSTEM", "System")
+        main_workflow.activities[prompt_system.name] = prompt_system
+        start.next = prompt_system
 
         # PROMPT: User TestGit
-        main_interpreter.prompt(
-            Prompt.USER,
-            prompt_file="prep-agent.test-git.prompt.md")
+        prompt_testgit = Activity(Activity.Kind.PROMPT, "PROMPT_TESTGIT", "User TestGit")
+        main_workflow.activities[prompt_testgit.name] = prompt_testgit
+        prompt_system.next = prompt_testgit
 
-        iteration = 1
-        while iteration < 3:
+        # EXECUTE: ShellCommands
+        execute_output = Activity(Activity.Kind.EXECUTE, "EXECUTE_OUTPUT")
+        main_workflow.activities[execute_output.name] = execute_output
+        prompt_testgit.next = execute_output
 
-            # EXECUTE: ShellCommands
-            main_interpreter.execute()
+        # PROMPT: User CommandResults
+        prompt_cmdresults = Activity(
+            Activity.Kind.PROMPT, "PROMPT_CMDRESULTS", "User CommandResults")
+        main_workflow.activities[prompt_cmdresults.name] = prompt_cmdresults
+        execute_output.next = prompt_cmdresults
 
-            # PROMPT: User CommandResults
-            main_interpreter.prompt(
-                Prompt.USER,
-                prompt_file="prep-agent.test-git-results.prompt.md",
-                append_results=True)
+        # CHECK_STATUS: SUCCESS
+        checkresult_success = Activity(
+            Activity.Kind.CHECK_RESULT, "CHECK_RESULT_SUCCESS", "SUCCESS")
+        main_workflow.activities[checkresult_success.name] = checkresult_success
+        prompt_cmdresults.next = checkresult_success
 
-            # CHECK_STATUS: SUCCESS
-            if main_interpreter.check_result("SUCCESS"):
+        # PROMT: User SuccessSummary
+        prompt_successsummary = Activity(
+            Activity.Kind.PROMPT, "PROMPT_SUCCESS_SUMMARY", "User SuccessSummary")
+        main_workflow.activities[prompt_successsummary.name] = prompt_successsummary
+        checkresult_success.next = prompt_successsummary
 
-                # PROMT: User SuccessSummary
-                main_interpreter.prompt(
-                    Prompt.USER,
-                    prompt_file="prep-agent.test-git-success.prompt.md")
+        # SUCCESS
+        success = Activity(Activity.Kind.SUCCESS, "SUCCESS")
+        main_workflow.activities[success.name] = success
+        prompt_successsummary.next = success
 
-                # SUCCESS
-                main_interpreter.success()
-                print(main_interpreter.workflow.result)
-                break
+        # CHECK_STATUS: FAILED
+        checkresult_failed = Activity(Activity.Kind.CHECK_RESULT, "CHECK_RESULT_FAILED", "FAILED")
+        main_workflow.activities[checkresult_failed.name] = checkresult_failed
+        checkresult_success.other = checkresult_failed
 
-            if main_interpreter.check_result("FAILED"):
+        # PROMT: User FailedSummary
+        prompt_failedsummary = Activity(
+            Activity.Kind.PROMPT, "PROMPT_FAILED_SUMMARY", "User FailedSummary")
+        main_workflow.activities[prompt_failedsummary.name] = prompt_failedsummary
+        checkresult_failed.next = prompt_failedsummary
 
-                # PROMT: User FailedSummary
-                main_interpreter.prompt(
-                    Prompt.USER,
-                    prompt_file="prep-agent.test-git-failed.prompt.md")
+        # FAILED
+        failed = Activity(Activity.Kind.FAILED, "FAILED")
+        main_workflow.activities[failed.name] = failed
+        prompt_failedsummary.next = failed
 
-                # FAILED
-                main_interpreter.failed()
-                print(main_interpreter.workflow.result)
-                break
+        # PROMPT: Improve
+        prompt_improve = Activity(Activity.Kind.PROMPT, "PROMPT_IMPROVE", "User Improve")
+        main_workflow.activities[prompt_improve.name] = prompt_improve
+        failed.other = prompt_improve
+        prompt_improve.next = execute_output
+        checkresult_failed.other = prompt_improve
 
-            # PROMPT: Improve
-            main_interpreter.prompt(
-                Prompt.USER,
-                prompt_file="prep-agent.test-git-improve.prompt.md")
-            iteration += 1
 
-        self.assertEqual(main_interpreter.workflow.status, Workflow.Status.SUCCESS)
+        ## run the workflow
+        main_status = main_interpreter.run(main_workflow)
+        print(f"Workflow completed with {main_status}, Result:\n{main_workflow.result}")
+        self.assertEqual(main_status, Workflow.Status.SUCCESS)
 
 
 if __name__ == "__main__":

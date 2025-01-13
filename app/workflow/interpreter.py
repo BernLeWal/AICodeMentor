@@ -11,7 +11,9 @@ from app.agents.agent import AIAgent
 from app.agents.agent_factory import AIAgentFactory
 from app.agents.prompt import Prompt
 from app.agents.prompt_factory import PromptFactory
+from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
+from app.workflow.workflow_factory import WorkflowFactory
 from app.commands.command import Command
 from app.commands.parser import Parser
 from app.commands.executor import CommandExecutor
@@ -34,14 +36,57 @@ class WorkflowInterpreter:
         CONTAINS = 1
         # TODO: MATCH_REGEX = 2
 
+        def __str__(self):
+            return self.name
 
-    def __init__(self, workflow: Workflow):
+
+    def __init__(self, workflow : Workflow = None):
         self.workflow : Workflow = workflow
-        self.agent : AIAgent = None   # will be created on demand
+        self.agent : AIAgent = None   # will be set from outside
         self.command_executor : CommandExecutor = None  # will be set from outside
-        logger.debug("WorkflowInterpreter initialized with workflow: %s",
-            self.workflow.name)
 
+
+    def run(self, workflow : Workflow)->Workflow.Status:
+        """Run the workflow"""
+        logger.info("RUN: %s", workflow.name)
+        self.workflow = workflow
+        current_activity = workflow.start
+
+        while current_activity is not None:
+            # pre-conditions
+            if current_activity.hits > 3:
+                logger.warning("Activity %s has been executed too many times",
+                    current_activity.name)
+                workflow.status = Workflow.Status.FAILED
+                break
+            current_activity.hits += 1
+
+            # run the activity
+            next_activity = current_activity.next
+            if current_activity.kind == Activity.Kind.START:
+                self.start()
+            elif current_activity.kind == Activity.Kind.PROMPT:
+                self.prompt(prompt_id = current_activity.expression)
+            elif current_activity.kind == Activity.Kind.EXECUTE:
+                self.execute(current_activity.expression)
+            elif current_activity.kind == Activity.Kind.CHECK_STATUS:
+                if not self.check_status(current_activity.expression):
+                    next_activity = current_activity.other
+            elif current_activity.kind == Activity.Kind.CHECK_RESULT:
+                if not self.check_result(current_activity.expression):
+                    next_activity = current_activity.other
+            elif current_activity.kind == Activity.Kind.SUCCESS:
+                self.success()
+                break
+            elif current_activity.kind == Activity.Kind.FAILED:
+                self.failed()
+                break
+
+            # post-conditions
+            current_activity = next_activity
+
+        logger.info("DONE:%s with result %s", workflow.name, workflow.status)
+        return workflow.status
 
     def start(self):
         """Start the workflow"""
@@ -51,29 +96,48 @@ class WorkflowInterpreter:
 
     def prompt(self,
             role : str = Prompt.USER,
-            #prompt_id: str = None,
-            prompt_file: str = None,
-            append_results: bool = False)->None:
+            prompt_id: str = None,
+            prompt_file: str = None)->None:
         """Send a prompt to the AI-agent"""
-        if self.agent is None:
-            self.agent = AIAgentFactory.create_agent()
+        # get the prompt content
+        prompt_content = None
         if prompt_file is not None:
             prompt_content = PromptFactory.load(prompt_file)[0].content
-        else:
-            raise ValueError("prompt_file is required")
-        if append_results:
-            prompt_content += self.workflow.result
+        if prompt_id is not None:
+            # handle prompt_id not found in prompts
+            if prompt_id in self.workflow.prompts:
+                role = self.workflow.prompts[prompt_id].role
+                prompt_content = self.workflow.prompts[prompt_id].content
+            else:
+                logger.warning("Prompt_id {%s} not found in prompts!", prompt_id)
+        if prompt_content is None:
+            raise ValueError("Prompt content is not set! " + \
+                f"prompt_id={prompt_id}, prompt_file={prompt_file}")
+
+        if prompt_content.find("{{CURRENT_RESULT}}") > 0:
+            prompt_content = prompt_content.replace("{{CURRENT_RESULT}}", self.workflow.result)
+
         if len(prompt_content) > 100:
             logger.info("PROMPT: role=%s, content=%s...",
                 role, prompt_content[:100].replace("\n", "\\n"))
         else:
             logger.info("PROMPT: role=%s, content=%s",role, prompt_content)
 
+        if self.agent is None:
+            raise ValueError("AIAgent is not set")
+
         if Prompt.SYSTEM == role.lower():
             self.agent.system(prompt_content)
             self.workflow.result = ""
+        elif Prompt.ASSISTANT == role.lower():
+            self.agent.advice(None, prompt_content)
+            self.workflow.result = prompt_content
         else:   #if Prompt.USER == role.lower():
             self.workflow.result = self.agent.ask(prompt_content)
+        if len(self.workflow.result) > 100:
+            logger.info("PROMPT: result: %s...", self.workflow.result[:100].replace("\n", "\\n"))
+        else:
+            logger.info("PROMPT: result: %s", self.workflow.result.replace("\n", "\\n"))
 
 
     def execute(self, command: str = None):
@@ -82,7 +146,7 @@ class WorkflowInterpreter:
         if len(self.workflow.result) > 100:
             logger.info("EXECUTE: %s...", self.workflow.result[:100].replace("\n", "\\n"))
         else:
-            logger.info("EXECUTE: %s", self.workflow.resultreplace("\n", "\\n"))
+            logger.info("EXECUTE: %s", self.workflow.result.replace("\n", "\\n"))
 
         if self.command_executor is None:
             raise ValueError("CommandExecutor is not set")
@@ -104,8 +168,12 @@ class WorkflowInterpreter:
     def check_result(self, expected_text: str,
         operation: CheckOperation = CheckOperation.EQUALS) -> bool:
         """Check if the result is as expected"""
-        logger.info("CHECK_RESULT: expected_text: '%s', operation: %s",
-            expected_text, operation)
+        if len(self.workflow.result) > 100:
+            logger.info("CHECK_RESULT: expected_text: '%s' %s in '%s'...",
+                expected_text, operation, self.workflow.result[:100].replace("\n", "\\n"))
+        else:
+            logger.info("CHECK_RESULT: expected_text: '%s' %s in '%s'",
+                expected_text, operation, self.workflow.result.replace("\n", "\\n"))
         if operation == WorkflowInterpreter.CheckOperation.CONTAINS:
             return expected_text in self.workflow.result
         else: #if operation == WorkflowInterpreter.CHECK_RESULT_EQUALS:
@@ -123,67 +191,84 @@ class WorkflowInterpreter:
 
 
 if __name__ == "__main__":
-    main_workflow = Workflow(name="Test build toolchain")
-    main_interpreter = WorkflowInterpreter(main_workflow)
+    main_workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
+    main_workflow.name = "Test build toolchain"
+    main_interpreter = WorkflowInterpreter()
+    main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()
 
     ## hardcoded workflow implementation
+
     # START
-    main_interpreter.start()  # no input required
+    start = Activity(Activity.Kind.START, "START")
+    main_workflow.start = start
+    main_workflow.activities[start.name] = start
 
     # PROMPT: System
-    main_interpreter.prompt(
-        Prompt.SYSTEM,
-        prompt_file="prep-agent.system.prompt.md")
+    prompt_system = Activity(Activity.Kind.PROMPT, "PROMPT_SYSTEM", "System")
+    main_workflow.activities[prompt_system.name] = prompt_system
+    start.next = prompt_system
 
     # PROMPT: User TestGit
-    main_interpreter.prompt(
-        Prompt.USER,
-        prompt_file="prep-agent.test-git.prompt.md")
+    prompt_testgit = Activity(Activity.Kind.PROMPT, "PROMPT_TESTGIT", "User TestGit")
+    main_workflow.activities[prompt_testgit.name] = prompt_testgit
+    prompt_system.next = prompt_testgit
 
-    ITERATION = 1
-    while ITERATION < 3:
+    # EXECUTE: ShellCommands
+    execute_output = Activity(Activity.Kind.EXECUTE, "EXECUTE_OUTPUT")
+    main_workflow.activities[execute_output.name] = execute_output
+    prompt_testgit.next = execute_output
 
-        # EXECUTE: ShellCommands
-        main_interpreter.execute()
+    # PROMPT: User CommandResults
+    prompt_cmdresults = Activity(Activity.Kind.PROMPT, "PROMPT_CMDRESULTS", "User CommandResults")
+    main_workflow.activities[prompt_cmdresults.name] = prompt_cmdresults
+    execute_output.next = prompt_cmdresults
 
-        # PROMPT: User CommandResults
-        main_interpreter.prompt(
-            Prompt.USER,
-            prompt_file="prep-agent.test-git-results.prompt.md",
-            append_results=True)
+    # CHECK_STATUS: SUCCESS
+    checkresult_success = Activity(Activity.Kind.CHECK_RESULT, "CHECK_RESULT_SUCCESS", "SUCCESS")
+    main_workflow.activities[checkresult_success.name] = checkresult_success
+    prompt_cmdresults.next = checkresult_success
 
-        # CHECK_STATUS: SUCCESS
-        if main_interpreter.check_result("SUCCESS"):
+    # PROMT: User SuccessSummary
+    prompt_successsummary = Activity(
+        Activity.Kind.PROMPT, "PROMPT_SUCCESS_SUMMARY", "User SuccessSummary")
+    main_workflow.activities[prompt_successsummary.name] = prompt_successsummary
+    checkresult_success.next = prompt_successsummary
 
-            # PROMT: User SuccessSummary
-            main_interpreter.prompt(
-                Prompt.USER,
-                prompt_file="prep-agent.test-git-success.prompt.md")
+    # SUCCESS
+    success = Activity(Activity.Kind.SUCCESS, "SUCCESS")
+    main_workflow.activities[success.name] = success
+    prompt_successsummary.next = success
 
-            # SUCCESS
-            main_interpreter.success()
-            print(main_interpreter.workflow.result)
-            exit(0)
+    # CHECK_STATUS: FAILED
+    checkresult_failed = Activity(Activity.Kind.CHECK_RESULT, "CHECK_RESULT_FAILED", "FAILED")
+    main_workflow.activities[checkresult_failed.name] = checkresult_failed
+    checkresult_success.other = checkresult_failed
 
-        if main_interpreter.check_result("FAILED"):
+    # PROMT: User FailedSummary
+    prompt_failedsummary = Activity(
+        Activity.Kind.PROMPT, "PROMPT_FAILED_SUMMARY", "User FailedSummary")
+    main_workflow.activities[prompt_failedsummary.name] = prompt_failedsummary
+    checkresult_failed.next = prompt_failedsummary
 
-            # PROMT: User FailedSummary
-            main_interpreter.prompt(
-                Prompt.USER,
-                prompt_file="prep-agent.test-git-failed.prompt.md")
+    # FAILED
+    failed = Activity(Activity.Kind.FAILED, "FAILED")
+    main_workflow.activities[failed.name] = failed
+    prompt_failedsummary.next = failed
 
-            # FAILED
-            main_interpreter.failed()
-            print(main_interpreter.workflow.result)
-            exit(1)
+    # PROMPT: Improve
+    prompt_improve = Activity(Activity.Kind.PROMPT, "PROMPT_IMPROVE", "User Improve")
+    main_workflow.activities[prompt_improve.name] = prompt_improve
+    failed.other = prompt_improve
+    prompt_improve.next = execute_output
+    checkresult_failed.other = prompt_improve
 
-        # PROMPT: Improve
-        main_interpreter.prompt(
-            Prompt.USER,
-            prompt_file="prep-agent.test-git-improve.prompt.md")
-        ITERATION += 1
 
-    # FAILED: no solution found
-    print("No solution found")
-    exit(2)
+    ## run the workflow
+    main_status = main_interpreter.run(main_workflow)
+    if main_status == Workflow.Status.SUCCESS:
+        print(f"Workflow completed with SUCCESS, Result:\n{main_workflow.result}")
+        exit(0)
+    else:
+        print(f"Workflow completed with FAILED, Result:\n{main_workflow.result}")
+        exit(1)

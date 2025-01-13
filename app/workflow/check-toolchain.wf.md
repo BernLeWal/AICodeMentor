@@ -12,9 +12,9 @@ flowchart TD
     PROMPT_TESTGIT[Prompt: User TestGit] --> EXECUTE_OUTPUT
     EXECUTE_OUTPUT[Execute: ShellCommands] --> PROMPT_CMDRESULTS
 
-    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{Check: Result==SUCCESS?}
+    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{Check_Result: SUCCESS}
     CHECK_RESULT_SUCCESS --> |TRUE| PROMPT_SUCCESS_SUMMARY
-    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{Check: Result==FAILED?} 
+    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{Check_Result: FAILED} 
 
     CHECK_RESULT_FAILED --> |TRUE| PROMPT_FAIL_SUMMARY
     CHECK_RESULT_FAILED --> |FALSE| PROMPT_IMPROVE
@@ -22,7 +22,7 @@ flowchart TD
     PROMPT_SUCCESS_SUMMARY[Prompt: User SuccessSummary] --> SUCCESS
     PROMPT_FAIL_SUMMARY[Prompt: User FailedSummary] --> FAILED
 
-    PROMPT_IMPROVE[Prompt: Improve] --> EXECUTE_OUTPUT
+    PROMPT_IMPROVE[Prompt: User Improve] --> EXECUTE_OUTPUT
     
     SUCCESS@{ shape: stadium  }
     FAILED@{ shape: stadium }
@@ -51,7 +51,10 @@ It the output shows, that git commands are installed correctly and github is rea
 If the output shows, that the git commands are not installed correctly or github is not reachable, then just answer with the word: "FAILED".
 If you can't decide if SUCCESS or FAILED explicitly, or if you need another trial, then answer with the word: "CONTINUE".
 
-The console output of your generated commands are:
+The console output of your generated commands are:  
+```shell
+{{CURRENT_RESULT}}
+```
 
 ## User SuccessSummary
 
