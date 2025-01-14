@@ -5,6 +5,7 @@ WorkflowInterpreter module  - Interpreter for Workflow instances
 
 import logging
 import os
+import re
 from enum import Enum
 from dotenv import load_dotenv
 from app.agents.agent import AIAgent
@@ -34,7 +35,7 @@ class WorkflowInterpreter:
         """Check operations enumeration"""
         EQUALS = 0
         CONTAINS = 1
-        # TODO: MATCH_REGEX = 2
+        MATCHES = 2   # regex match
 
         def __str__(self):
             return self.name
@@ -44,6 +45,7 @@ class WorkflowInterpreter:
         self.workflow : Workflow = workflow
         self.agent : AIAgent = None   # will be set from outside
         self.command_executor : CommandExecutor = None  # will be set from outside
+        self.max_hits = 3
 
 
     def run(self, workflow : Workflow)->Workflow.Status:
@@ -56,46 +58,53 @@ class WorkflowInterpreter:
 
         while current_activity is not None:
             # pre-conditions
-            if current_activity.hits > 3:
-                logger.warning("Activity %s has been executed too many times",
-                    current_activity.name)
-                workflow.status = Workflow.Status.FAILED
+            if current_activity.hits > self.max_hits:
+                self.failed( f"Activity {current_activity.name} has been executed too many times")
                 break
             current_activity.hits += 1
 
             # run the activity
-            next_activity = current_activity.next
-            if current_activity.kind == Activity.Kind.START:
-                self.start()
-            elif current_activity.kind == Activity.Kind.ASSIGN:
-                self.assign(current_activity.expression)
-            elif current_activity.kind == Activity.Kind.PROMPT:
-                self.prompt(prompt_id = current_activity.expression)
-            elif current_activity.kind == Activity.Kind.EXECUTE:
-                self.execute(current_activity.expression)
-            elif current_activity.kind == Activity.Kind.CHECKSTATUS:
-                if not self.check_status(current_activity.expression):
-                    next_activity = current_activity.other
-            elif current_activity.kind == Activity.Kind.CHECKRESULT:
-                if not self.check_result(current_activity.expression):
-                    next_activity = current_activity.other
-            elif current_activity.kind == Activity.Kind.SUCCESS:
-                self.success()
-                break
-            elif current_activity.kind == Activity.Kind.FAILED:
-                self.failed()
+            try:
+                next_activity = current_activity.next
+                if current_activity.kind == Activity.Kind.START:
+                    self.start()
+                elif current_activity.kind == Activity.Kind.ASSIGN:
+                    self.assign(current_activity.expression)
+                elif current_activity.kind == Activity.Kind.PROMPT:
+                    self.prompt(prompt_id = current_activity.expression)
+                elif current_activity.kind == Activity.Kind.EXECUTE:
+                    self.execute(current_activity.expression)
+                elif current_activity.kind == Activity.Kind.CHECK:
+                    if not self.check(current_activity.expression):
+                        next_activity = current_activity.other
+                        if next_activity is None:
+                            self.failed()
+                            break
+                elif current_activity.kind == Activity.Kind.SUCCESS:
+                    self.success()
+                    break
+                elif current_activity.kind == Activity.Kind.FAILED:
+                    self.failed()
+                    break
+            except Exception as e:
+                self.failed(str(e))
                 break
 
             # post-conditions
             current_activity = next_activity
+            if current_activity is None:
+                self.success()
+                break
 
         logger.info("DONE:%s with result %s", workflow.name, workflow.status)
         return workflow.status
+
 
     def start(self):
         """Start the workflow"""
         logger.info("START: %s", self.workflow.name)
         self.workflow.status = Workflow.Status.DOING
+
 
     def assign(self, value: str = None)->None:
         """Assign a prompt to the result (like a "copy" operation)"""
@@ -182,34 +191,83 @@ class WorkflowInterpreter:
             self.command_executor.execute(cmd)
             self.workflow.result += cmd.output
 
-    def check_status(self, expected_status: Workflow.Status) -> bool:
-        """Check if the workflow status is as expected"""
-        logger.info("CHECKSTATUS: expected: %s, current: %s",
-            expected_status, self.workflow.status)
-        return self.workflow.status == expected_status
 
-    def check_result(self, expected_text: str,
-        operation: CheckOperation = CheckOperation.EQUALS) -> bool:
-        """Check if the result is as expected"""
-        if len(self.workflow.result) > 100:
-            logger.info("CHECKRESULT: expected_text: '%s' %s in '%s'...",
-                expected_text, operation, self.workflow.result[:100].replace("\n", "\\n"))
+    def check(self, expression: str) -> bool:
+        """Check if the status or result is as expected"""
+        # parse the expression
+        parts = str.split(expression, " ")
+        if len(parts) < 3:
+            raise ValueError(f"CHECK expression '{expression}' is not valid! " +\
+                "Syntax: [STATUS|RESULT] <operation> <expected>")
+
+        if parts[0].upper() == "STATUS":
+            left = self.workflow.status.name
+        elif parts[0].upper() == "RESULT":
+            if self.workflow.result is None:
+                left = ""
+            else:
+                left = self.workflow.result
         else:
-            logger.info("CHECKRESULT: expected_text: '%s' %s in '%s'",
-                expected_text, operation, self.workflow.result.replace("\n", "\\n"))
-        if operation == WorkflowInterpreter.CheckOperation.CONTAINS:
-            return expected_text in self.workflow.result
-        else: #if operation == WorkflowInterpreter.CHECKRESULT_EQUALS:
-            return self.workflow.result.strip() == expected_text.strip()
+            raise ValueError(f"CHECK expression '{expression}' is not valid! " +\
+                "Syntax: [STATUS|RESULT] <operation> <expected>")
+
+        if parts[1].upper() == "==":
+            operation = WorkflowInterpreter.CheckOperation.EQUALS
+        elif parts[1].upper() == WorkflowInterpreter.CheckOperation.EQUALS.name:
+            operation = WorkflowInterpreter.CheckOperation.EQUALS
+        elif parts[1].upper() == WorkflowInterpreter.CheckOperation.CONTAINS.name:
+            operation = WorkflowInterpreter.CheckOperation.CONTAINS
+        elif parts[1].upper() == WorkflowInterpreter.CheckOperation.MATCHES.name:
+            operation = WorkflowInterpreter.CheckOperation.MATCHES
+        else:
+            raise ValueError(f"CHECK expression '{expression}' is not valid! " +\
+                "Syntax: [STATUS|RESULT] <operation> <expected>")
+
+        expected_text = " ".join(parts[2:])
+
+        if len(left) > 100:
+            logger.info("CHECK: '%s' %s '%s...'",
+                expected_text, operation.name, left[:100].replace("\n", "\\n"))
+        else:
+            logger.info("CHECK: '%s' %s '%s'",
+                expected_text, operation, left.replace("\n", "\\n"))
+
+        if operation == WorkflowInterpreter.CheckOperation.EQUALS:
+            firstline = left.split("\n")[0].strip()
+            return expected_text.strip() == firstline
+        elif operation == WorkflowInterpreter.CheckOperation.CONTAINS:
+            return expected_text.strip() in left
+        elif operation == WorkflowInterpreter.CheckOperation.MATCHES:
+            return re.search(expected_text, left) is not None
+
 
     def success(self):
         """Finish workflow with status SUCCESS"""
-        logger.info("SUCCESS result: %s", self.workflow.result)
+        if self.workflow.result is None:
+            logger.info("SUCCESS without result")
+        elif len(self.workflow.result) > 100:
+            logger.info("SUCCESS result: %s...", self.workflow.result[:100].replace("\n", "\\n"))
+        else:
+            logger.info("SUCCESS result: %s", self.workflow.result.replace("\n", "\\n"))
         self.workflow.status = Workflow.Status.SUCCESS
 
-    def failed(self):
+
+    def failed(self, result : str = ''):
         """Finish workflow with status FAILED"""
-        logger.info("FAILED result: %s", self.workflow.result)
+        if self.workflow.result is None or len(self.workflow.result) == 0:
+            if len(result) > 0:
+                self.workflow.result = result
+                logger.warning("FAILED result: %s", result.replace("\n", "\\n"))
+            else:
+                logger.warning("FAILED without result")
+        else:
+            if len(result) > 0:
+                self.workflow.result = result + "\n" + self.workflow.result
+            if len(self.workflow.result) > 100:
+                logger.warning("FAILED result: %s...",
+                    self.workflow.result[:100].replace("\n", "\\n"))
+            else:
+                logger.warning("FAILED result: %s", self.workflow.result.replace("\n", "\\n"))
         self.workflow.status = Workflow.Status.FAILED
 
 

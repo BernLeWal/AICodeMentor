@@ -26,13 +26,13 @@ class TestWorkflowInterpreter(unittest.TestCase):
         """Test check_status method"""
         workflow = Workflow(name="Test Workflow")
         interpreter = WorkflowInterpreter(workflow)
-        self.assertTrue(interpreter.check_status(Workflow.Status.CREATED))
+        self.assertTrue(interpreter.check("STATUS == CREATED"))
         interpreter.start()
-        self.assertTrue(interpreter.check_status(Workflow.Status.DOING))
+        self.assertTrue(interpreter.check("STATUS equals DOING"))
         interpreter.success()
-        self.assertTrue(interpreter.check_status(Workflow.Status.SUCCESS))
+        self.assertTrue(interpreter.check("STATUS contains SUCCESS"))
         interpreter.failed()
-        self.assertTrue(interpreter.check_status(Workflow.Status.FAILED))
+        self.assertTrue(interpreter.check("STATUS matches FAILED"))
 
     def test_loop_break(self):
         """Test loop_break method"""
@@ -45,9 +45,9 @@ class TestWorkflowInterpreter(unittest.TestCase):
         main_workflow.start = start
         main_workflow.activities[start.name] = start
 
-        # CHECKSTATUS: SUCCESS
+        # CHECKS: SUCCESS
         checkstatus_success = Activity(
-            Activity.Kind.CHECKSTATUS, "CHECKSTATUS_SUCCESS", "SUCCESS")
+            Activity.Kind.CHECK, "CHECK_SUCCESS", "STATUS == SUCCESS")
         main_workflow.activities[checkstatus_success.name] = checkstatus_success
         start.next = checkstatus_success
         checkstatus_success.next = checkstatus_success

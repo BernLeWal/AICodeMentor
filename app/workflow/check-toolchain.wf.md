@@ -12,15 +12,12 @@ flowchart TD
     PROMPT_TESTGIT[Prompt: User TestGit] --> EXECUTE_OUTPUT
     EXECUTE_OUTPUT[Execute: ] --> PROMPT_CMDRESULTS
 
-    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECKRESULT_SUCCESS{Check_Result: SUCCESS}
-    CHECKRESULT_SUCCESS --> |TRUE| PROMPT_SUCCESS_SUMMARY
-    CHECKRESULT_SUCCESS --> |FALSE| CHECKRESULT_FAILED{Check_Result: FAILED} 
+    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{RESULT == SUCCESS}
+    CHECK_RESULT_SUCCESS --> |TRUE| SUCCESS
+    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{RESULT == FAILED} 
 
-    CHECKRESULT_FAILED --> |TRUE| PROMPT_FAIL_SUMMARY
-    CHECKRESULT_FAILED --> |FALSE| PROMPT_IMPROVE
-
-    PROMPT_SUCCESS_SUMMARY[Prompt: User SuccessSummary] --> SUCCESS
-    PROMPT_FAIL_SUMMARY[Prompt: User FailedSummary] --> FAILED
+    CHECK_RESULT_FAILED --> |TRUE| FAILED
+    CHECK_RESULT_FAILED --> |FALSE| PROMPT_IMPROVE
 
     PROMPT_IMPROVE[Prompt: User Improve] --> EXECUTE_OUTPUT
     
@@ -47,23 +44,15 @@ Check if in the shell the git commands are installed correctly and if the github
 ## User CommandResults
 
 Your generated commands have been executed and the output is now shown to you.
-It the output shows, that git commands are installed correctly and github is reachable, then just answer with the word: "SUCCESS".
-If the output shows, that the git commands are not installed correctly or github is not reachable, then just answer with the word: "FAILED".
-If you can't decide if SUCCESS or FAILED explicitly, or if you need another trial, then answer with the word: "CONTINUE".
+It the output shows, that git commands are installed correctly and github is reachable, then just answer with the word "SUCCESS" in the first line.
+If the output shows, that the git commands are not installed correctly or github is not reachable, then just answer with the word "FAILED" in the first line.
+If you can't decide if SUCCESS or FAILED explicitly, or if you need another trial, then answer with the word "CONTINUE" in the first line.
+In the following lines of your answer summarize with only a few sentences the outcome of your activities.
 
 The console output of your generated commands are:  
 ```shell
 {{CURRENT_RESULT}}
 ```
-
-## User SuccessSummary
-
-Summarize with only a few sentences the outcome of your activities and state that the workflow was completed with SUCCESS.
-
-## User FailedSummary
-
-Summarize with only a few sentences the outcome of your activities and state that the workflow FAILED.
-Give brief suggestions what to do to fix the problem.
 
 ## User Improve
 

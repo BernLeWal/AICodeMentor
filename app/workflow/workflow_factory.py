@@ -148,14 +148,15 @@ class WorkflowFactory:
             right_activity = workflow.activities[right]
             if attr is None or len(attr) == 0:
                 left_activity.next = right_activity
-            elif attr.upper()=="NO" or attr.upper() == 'FALSE' or attr.upper() == 'OTHER':
+            elif attr.upper()=="NO" or attr.upper() == 'FALSE' or attr.upper() == 'OTHER' \
+                or attr.upper() == 'ELSE' or attr.upper() == 'FAIL' or attr.upper() == 'FAILED':
                 left_activity.other = right_activity
             elif attr.upper() == 'YES' or attr.upper() == 'TRUE':
                 left_activity.next = right_activity
             else:
                 raise ValueError(f"Invalid flow attribute '{attr}' in flowchart line '{line}'! " + \
                     "For positive check results use: YES, TRUE, '', or no attribute. " +\
-                    "For negative check results use: NO, FALSE, or OTHER.")
+                    "For negative check results use: NO, FALSE, OTHER, ELSE, or FAILED.")
 
             #print(f"Flow-Parsed: {left} --> {right} with attr={attr}")
         else:

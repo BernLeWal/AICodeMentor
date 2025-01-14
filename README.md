@@ -4,12 +4,29 @@ A product to automatically analyse, feedback and grade source-code project submi
 
 AI-agents will autonomously evaluate source-code projects base on program requirements and specifications. Therefore it will generate the commands (shell, etc.) which will be executed and the output analyzed autonomously.
 
+## TODOs
+Before "official" version 0.1:
+* Variables Support
+* CALL activity to run sub-workflows
+* Record workflow processing logs
+* Write processing logs to md file
+* Execute the workflow in a docker container
+* Implement BIC-SAM Practice1 as workflow
+* Implement main.py console app
+
+Later:
+* ShellExecutor command whitelist, blacklist, reputation mechanism
+
 ## Research Questions
 
 1. How can I reach the next AI-autonomy level in this product.
 
 ## Setup
 
+- Install Python3 (>3.12), and pip3
+    ```shell
+    sudo apt install python3 python3-pip -y
+    ```
 - Create and activate a virtual environment, e.g. venv
     ```shell
     #sudo apt install python3-venv -y

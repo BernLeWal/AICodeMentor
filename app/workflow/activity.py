@@ -15,8 +15,7 @@ class Activity:
         ASSIGN = 11
         PROMPT = 12
         EXECUTE = 13
-        CHECKSTATUS = 21
-        CHECKRESULT = 22
+        CHECK = 14
         SUCCESS = 1
         FAILED = 2
 

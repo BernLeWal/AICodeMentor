@@ -50,7 +50,15 @@ classDiagram
     Workflow "1" *-- "n" Activity
 ```
 
-## Workflow Charts
+## Workflow Interpretion
+
+- A workflow consists of a list of **Activities**
+- Every Activity is of a special **ActivityKind** which describes the actions to take place
+- Every workflow has a **START** Activity, which must be included in the flow-chart
+- Every workflow has a **SUCCESS** Activity, which does not need to be shown in the flow-chart. When the current activity has no next-activity defined, then automatically the **SUCCESS** Activity is reaced next.
+- Every workflow has a **FAILED** Activity, which does not need to be shown in the flow-chart. When there is an error during activity running or the failed-activity in the **CHECK** activity is to be taken but not connected, then the **FAILED** Activiy is automatically reached next.
+- Running the **SUCCESS** or **FAILED** activities will end the Workflow interpretation which the corresponding SUCCESS- oder FAILURE- Status Code.
+
 
 ### Workflow 1: "Check toolchain"
 This (sub-) workflow is used for (unit)-testing.
