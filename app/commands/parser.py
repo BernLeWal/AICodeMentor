@@ -29,6 +29,7 @@ class Parser:
         commands : list[Command] = []
         current_code_block : str = None
         current_code_lines : list[str] = []
+        collapse_next_line : bool = False
         for line in agent_msg.splitlines():
             if current_code_block is None:
                 line = line.strip()
@@ -50,15 +51,25 @@ class Parser:
                     # create one Command instance per line
                     if len(line) > 0:
                         if line.endswith("\\"):
+                            # collapse multi-line commands to one line
                             current_code_lines.append(line[:-1])
                             current_code_lines.append(" ")
-                        else:
-                            current_code_lines.append(line)
+                            collapse_next_line = True
+                        elif line.startswith(" ") or line.startswith("\t"):
+                            # continuation of previous line
+                            current_code_lines.append("\n" + line)
+                        elif len(current_code_lines) > 0 and not collapse_next_line:
+                            # previous line was the last line of a multi-line command
+                            # --> create Command
                             new_command = CommandFactory.try_create_command(
                                 current_code_block, current_code_lines)
                             if new_command is not None:
                                 commands.append(new_command)
-                            current_code_lines = []
+                                current_code_lines = []
+                            current_code_lines.append(line)
+                        else:
+                            current_code_lines.append(line)
+                            collapse_next_line = False
                 elif current_code_block is not None:
                     # Inside code block
                     if len(line) > 0:
@@ -77,6 +88,13 @@ if __name__ == "__main__":
         "\n" + \
         "# Check if GitHub is reachable\n" + \
         "ping -c 4 github.com\n" + \
+        "for file in \".\"/*; do \n" + \
+        "  if [ -d \"$file\" ]; then \n" +\
+        "    echo \"$file is a directory.\" \n" +\
+        "  else \n" +\
+        "    echo \"$file is a file.\" \n" +\
+        "  fi \n" +\
+        "done" +\
         "```\n"
     # Print the parsed commands
     for command in main_parser.parse(MAIN_AGENT_MESSAGE):

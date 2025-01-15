@@ -5,10 +5,19 @@ WorkflowFactory module  - Factory for Workflow instances
 
 import os
 import re
+import logging
 from enum import Enum
+from dotenv import load_dotenv
 from app.agents.prompt import Prompt
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
+
+
+# Setup logging framework
+load_dotenv()
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'))
+logger = logging.getLogger(__name__)
 
 
 class WorkflowMdSection(Enum):
@@ -23,6 +32,8 @@ class WorkflowMdSection(Enum):
 
 class WorkflowFactory:
     """The base class for all WorkflowFactory implementations"""
+
+    WORKFLOWS_DIR = os.getenv('WORKFLOWS_DIR', './workflows')
 
     @staticmethod
     def load_from_mdfile(filename: str, directory = None) -> Workflow:
@@ -46,7 +57,7 @@ class WorkflowFactory:
         workflow = Workflow(filename)
 
         if directory is None:
-            directory = os.path.dirname(__file__)
+            directory = os.path.abspath(WorkflowFactory.WORKFLOWS_DIR)
         else:
             directory = os.path.abspath(directory)
         abs_file_path = os.path.join(directory, filename)
@@ -158,7 +169,7 @@ class WorkflowFactory:
                     "For positive check results use: YES, TRUE, '', or no attribute. " +\
                     "For negative check results use: NO, FALSE, OTHER, ELSE, or FAILED.")
 
-            #print(f"Flow-Parsed: {left} --> {right} with attr={attr}")
+            logger.debug("Flow-Parsed: %s --> %s with attr=%s", left, right, attr)
         else:
             # Parse the activity
             activity_name = ''
@@ -176,7 +187,8 @@ class WorkflowFactory:
             if activity_expr.find(':') > 0:
                 # ignore mermaid visualisation prefix
                 activity_expr = activity_expr[activity_expr.find(':')+1:].strip()
-            #print(f"Activity-Parsed: {line} => name={activity_name}, expr={activity_expr}")
+            logger.debug("Activity-Parsed: '%s' => name=%s, expr=%s",
+                line, activity_name, activity_expr)
 
             # Create or update activity
             if activity_name not in workflow.activities:

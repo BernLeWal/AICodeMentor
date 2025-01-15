@@ -36,22 +36,12 @@ class AIAgentFactory:
         return agent
 
 
-    @staticmethod
-    def create_preparation_agent() -> AIAgent:
-        """
-        Creates an AI-Agent instance of type AIAgentOpenAI 
-        for the preparation of student sourcecode submissions.
-        """
-        logger.debug("Creating preparation-agent")
-        config = AIAgentConfig()
-        config.load_from_environment()
-        agent = AIAgentOpenAI(config)
-        agent.messages = PromptFactory.load("prep-agent.system.prompt.md")
-        return agent
-
 
 if __name__ == "__main__":
-    main_agent = AIAgentFactory.create_preparation_agent()
-    question = PromptFactory.load("prep-agent.test-git.prompt.md")[0].content
-    result = main_agent.ask(question)
+    main_agent = AIAgentFactory.create_agent()
+    system = PromptFactory.load("prep-agent.system.prompt.md")[0].content
+    main_agent.system(system)
+    QUESTION = "Check if in the shell the git commands are installed correctly " +\
+        "and if the github-server (https://www.github.com) is reachable via network."
+    result = main_agent.ask(QUESTION)
     print(f"{result}")

@@ -11,9 +11,12 @@ class TestAIAgentFactory(unittest.TestCase):
 
     def test_chat(self):
         """Test setting a system prompt and asking a question"""
-        agent = AIAgentFactory.create_preparation_agent()
+        agent = AIAgentFactory.create_agent()
         self.assertIsNotNone(agent)
-        question = PromptFactory.load("prep-agent.test-git.prompt.md")[0].content
+        system = PromptFactory.load("prep-agent.system.prompt.md")[0].content
+        agent.system(system)
+        question = "Check if in the shell the git commands are installed correctly " +\
+            "and if the github-server (https://www.github.com) is reachable via network."
         result = agent.ask(question)
         print(f"{result}")
         self.assertIsNotNone(result)

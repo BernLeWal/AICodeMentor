@@ -11,6 +11,7 @@ import logging
 import subprocess
 import threading
 from queue import Queue, Empty
+import time
 from dotenv import load_dotenv
 from app.commands.command import Command
 from app.commands.executor import CommandExecutor
@@ -28,10 +29,17 @@ class ShellCommandExecutor(CommandExecutor):
     Class to execute shell commands in a persistent shell session.
     """
 
+    SHELL = os.getenv('SHELL', '/bin/bash')
+    if os.getenv('SHELL_TIMEOUT', None) is None:
+        SHELL_TIMEOUT = 120
+    else:
+        SHELL_TIMEOUT = int(os.getenv('SHELL_TIMEOUT', "120"))
+
+
     def __init__(self):
         super().__init__()
         self.shell_process = subprocess.Popen(
-            [os.getenv('SHELL', '/bin/bash')],
+            [ShellCommandExecutor.SHELL],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -110,11 +118,19 @@ class ShellCommandExecutor(CommandExecutor):
                 self._read_shell_output(command_marker_end)
 
 
-    def _read_shell_output(self, command_marker: str):
+    def _read_shell_output(self, command_marker: str, timeout : int = None):
         """
         Read combined stdout and stderr output.
         """
+        if timeout is None:
+            timeout = self.SHELL_TIMEOUT
+
+        start_time = time.time()
         while True:
+            if time.time() - start_time > timeout:
+                logger.error("Timeout of %d seconds reached while waiting for command to finish",
+                    timeout)
+                break
             try:
                 stdout_line = self._stdout_queue.get_nowait()
                 logger.debug("  STDOUT: %s", stdout_line[:-1])
@@ -184,7 +200,16 @@ if __name__ == "__main__":
         "",
         "# Check if GitHub is reachable",
         "ping -c 4 github.com",
-        "ls -al"]
+        "ls -al",
+
+        "for file in \".\"/*; do \n" + \
+        "  if [ -d \"$file\" ]; then \n" +\
+        "    echo \"$file is a directory.\" \n" +\
+        "  else \n" +\
+        "    echo \"$file is a file.\" \n" +\
+        "  fi \n" +\
+        "done",
+        ]
     # Print the parsed commands
     try:
         for main_command in MAIN_COMMANDS:

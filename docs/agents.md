@@ -35,7 +35,7 @@ classDiagram
     AIAgent <|-- AIAgentOpenAI
 
     class AIAgentFactory {
-        + create_preparation_agent()$ AIAgent
+        + create_agent()$ AIAgent
     }
     AIAgentFactory ..> AIAgent
 ```

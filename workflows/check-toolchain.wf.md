@@ -39,7 +39,9 @@ Generate the commands in shell-codeblocks and always only generate one alternati
 
 ## User TestGit
 
-Check if in the shell the git commands are installed correctly and if the github-server (https://www.github.com) is reachable via network.
+Check if in the shell the git commands are installed correctly and if the github-server (https://www.github.com) is reachable via network. 
+Also check that the Java version 21 or newer is installed.
+Finally check that the Maven build system is available.
 
 ## User CommandResults
 
@@ -47,7 +49,7 @@ Your generated commands have been executed and the output is now shown to you.
 It the output shows, that git commands are installed correctly and github is reachable, then just answer with the word "SUCCESS" in the first line.
 If the output shows, that the git commands are not installed correctly or github is not reachable, then just answer with the word "FAILED" in the first line.
 If you can't decide if SUCCESS or FAILED explicitly, or if you need another trial, then answer with the word "CONTINUE" in the first line.
-In the following lines of your answer summarize with only a few sentences the outcome of your activities.
+In the following lines of your answer summarize with only a few sentences the outcome of your activities with the tool versions when available.
 
 The console output of your generated commands are:  
 ```shell
