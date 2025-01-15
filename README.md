@@ -12,7 +12,6 @@ Before "official" version 0.1:
 * Write processing logs to md file
 * Execute the workflow in a docker container
 * Implement BIC-SAM Practice1 as workflow
-* Implement main.py console app
 
 Later:
 * ShellExecutor command whitelist, blacklist, reputation mechanism
@@ -49,4 +48,20 @@ Later:
     - Windows (PowerShell):
     ```powershell
     $env:PYTHONPATH = (Get-Location).Path
+    ```
+
+- Run the console app providing a workflow Markdown file
+    ```sh
+    python app/main.py workflows/check-toolchain.wf.md
+    ```
+
+    The usage of the tool is as follows:
+    ```sh
+    $ python app/main.py -h
+    AI CodeMentor - automatically analyse, feedback and grade source-code project submissions using AI agents
+
+    Usage: python main.py [options] <workflow-file.md>
+
+    Options:
+        -h, --help         Show this help message and exit
     ```
