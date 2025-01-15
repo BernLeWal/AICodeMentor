@@ -9,7 +9,7 @@
 - The **WorkflowInterpreter** controls the execution of the collaboration, executes the parties (AI-Agents, Commands), checks the overall status of tasks and the workflow, and interrupts/fails the workflow on problems
 - The **WorkflowInterpreter** will limit the collaboration due to, cost limits of AI-APIs, char/token limits, time limits, and iteration limits
 
-## Class Diagrams
+## Class Diagram
 
 ```mermaid
 classDiagram
@@ -19,7 +19,7 @@ classDiagram
         - list~Activity~ activities
         - Activity start
 
-        - int status # DOING, SUCCESS, FAILED
+        - WorkflowStatus status # CREATED, DOING, SUCCESS, FAILED
         - str result
         - Workflow parent
         - WorkflowInterpeter interpreter
@@ -40,7 +40,7 @@ classDiagram
     WorkflowInterpreter *-- Workflow
 
     class Activity {
-        - int kind # START, PROMPT, ...
+        - ActivityKind kind # START, PROMPT, ...
         - str name
         - str expression
         - Activity next
@@ -58,34 +58,51 @@ classDiagram
 - Every workflow has a **SUCCESS** Activity, which does not need to be shown in the flow-chart. When the current activity has no next-activity defined, then automatically the **SUCCESS** Activity is reaced next.
 - Every workflow has a **FAILED** Activity, which does not need to be shown in the flow-chart. When there is an error during activity running or the failed-activity in the **CHECK** activity is to be taken but not connected, then the **FAILED** Activiy is automatically reached next.
 - Running the **SUCCESS** or **FAILED** activities will end the Workflow interpretation which the corresponding SUCCESS- oder FAILURE- Status Code.
+- A workflow is using **Variables** which provides a "data context" to the activities. The activities may read and write the values to that variables. (see Variables section below)
 
 
-### Workflow 1: "Check toolchain"
+### Sample Workflow: "Check toolchain"
 This (sub-) workflow is used for (unit)-testing.
 
 ```mermaid
 flowchart TD
     START@{ shape: f-circ, label:"start"} --> PROMPT_SYSTEM
-    START_COMMENT@{ shape: comment, label: "no input parameters"}
+    PARAMS@{ shape: comment, label: "REPO_URL, \nUSER_NAME"}
 
     PROMPT_SYSTEM[Prompt: System] --> PROMPT_TESTGIT
     PROMPT_TESTGIT[Prompt: User TestGit] --> EXECUTE_OUTPUT
-    EXECUTE_OUTPUT[Execute: ShellCommands] --> PROMPT_CMDRESULTS
+    EXECUTE_OUTPUT[Execute: ] --> PROMPT_CMDRESULTS
 
-    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECKRESULT_SUCCESS{Check: Result==SUCCESS?}
-    CHECKRESULT_SUCCESS --> |TRUE| PROMPT_SUCCESS_SUMMARY
-    CHECKRESULT_SUCCESS --> |FALSE| CHECKRESULT_FAILED{Check: Result==FAILED?} 
+    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{RESULT == SUCCESS}
+    CHECK_RESULT_SUCCESS --> |TRUE| SUCCESS
+    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{RESULT == FAILED} 
 
-    CHECKRESULT_FAILED --> |TRUE| PROMPT_FAIL_SUMMARY
-    CHECKRESULT_FAILED --> |FALSE| PROMPT_IMPROVE
+    CHECK_RESULT_FAILED --> |TRUE| FAILED
+    CHECK_RESULT_FAILED --> |FALSE| PROMPT_IMPROVE
 
-    PROMPT_SUCCESS_SUMMARY[Prompt: User SuccessSummary] --> SUCCESS
-    PROMPT_FAIL_SUMMARY[Prompt: User FailedSummary] --> FAILED
-
-    PROMPT_IMPROVE[Prompt: Improve] --> EXECUTE_OUTPUT
+    PROMPT_IMPROVE[Prompt: User Improve] --> EXECUTE_OUTPUT
     
     SUCCESS@{ shape: stadium  }
     FAILED@{ shape: stadium }
 
     style PROMPT_SYSTEM stroke:#000,stroke-width:4px,fill:#80a0ff
 ```
+
+## Variables
+
+### Internal (hard-coded) variables
+
+- When a variable is used, on first hand it is searched for in this section.
+- **STATUS**: represents the current state of the workflow as enum with the following possible values: CREATED, DOING, SUCCES, FAILED
+- **RESULT** (or **CONTENT**): represents a "big" string value, which is usually Markdown formated. The string can be processed also line based. Most activities will update this value.
+
+### Workflow Parameters
+
+- If the variable name was not found in the Internal Variables, the current section is searched.
+- On the creation/loading of a workflow a dictionary of key/value pairs are passed. The keys represent the variable names (use upper-case only) and the values the corresponding (string) value.
+
+### Environmental variables
+
+- When the variable name is also not found in the Internal Variables, then the environment variables are searched.
+- The system will try to fetch the variable from the Operating-System environmental variables.
+- This way it is easily possible to inject data from outside and use it in the workflow.

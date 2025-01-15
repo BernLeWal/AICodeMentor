@@ -23,12 +23,13 @@ class Workflow:
 
     def __init__(self, name: str, interpreter=None, parent=None):
         self.name = name
-        self.parent : Workflow = parent  # parent workflow
         self.interpreter = interpreter  # WorkflowInterpreter instance
+        self.parent : Workflow = parent  # parent workflow
         self.description : str = ''
 
         self.status : Workflow.Status = Workflow.Status.CREATED
         self.result : str = None
+        self.variables : dict = {}
 
         self.prompts : dict = {}  # prompt_id -> Prompt instance
         self.activities : dict = {}  # activity_name -> Activity instance

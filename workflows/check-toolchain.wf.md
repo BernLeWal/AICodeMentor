@@ -12,9 +12,9 @@ flowchart TD
     PROMPT_TESTGIT[Prompt: User TestGit] --> EXECUTE_OUTPUT
     EXECUTE_OUTPUT[Execute: ] --> PROMPT_CMDRESULTS
 
-    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{RESULT == SUCCESS}
+    PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{RESULT == 'SUCCESS'}
     CHECK_RESULT_SUCCESS --> |TRUE| SUCCESS
-    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{RESULT == FAILED} 
+    CHECK_RESULT_SUCCESS --> |FALSE| CHECK_RESULT_FAILED{RESULT == 'FAILED'} 
 
     CHECK_RESULT_FAILED --> |TRUE| FAILED
     CHECK_RESULT_FAILED --> |FALSE| PROMPT_IMPROVE
@@ -53,7 +53,7 @@ In the following lines of your answer summarize with only a few sentences the ou
 
 The console output of your generated commands are:  
 ```shell
-{{CURRENT_RESULT}}
+{{RESULT}}
 ```
 
 ## User Improve

@@ -6,8 +6,7 @@ AI-agents will autonomously evaluate source-code projects base on program requir
 
 ## TODOs
 Before "official" version 0.1:
-* Variables Support
-* CALL activity to run sub-workflows
+* CALL activity to run sub-workflows (with parameters)
 * Record workflow processing logs
 * Write processing logs to md file
 * Execute the workflow in a docker container
@@ -15,10 +14,18 @@ Before "official" version 0.1:
 
 Later:
 * ShellExecutor command whitelist, blacklist, reputation mechanism
+* feedback for the AIAgent on the prompt results for improvement (learning)
 
 ## Research Questions
 
-1. How can I reach the next AI-autonomy level in this product.
+1. Q: How can I reach the next AI-autonomy level in this product.  
+   A: Fulfil all aspects of the AI-Agent definition published by Google in their paper about [*Agents*](https://media.licdn.com/dms/document/media/v2/D561FAQH8tt1cvunj0w/feedshare-document-pdf-analyzed/B56ZQq.TtsG8AY-/0/1735887787265?e=1736985600&v=beta&t=pLuArcKyUcxE9B1Her1QWfMHF_UxZL9Q-Y0JTDuSn38)
+
+    - Connected to external systems
+    - Managed session with multi-turn inference between the "system" and the "agent"
+    - Tools are natively implemented in the agent Architecture
+    - Agent learns by the feedback it gets itself by the "system"
+
 
 ## Setup
 
@@ -65,3 +72,7 @@ Later:
     Options:
         -h, --help         Show this help message and exit
     ```
+
+## Documentation
+
+Software Architecture and Implementation Documentation see [docs/README.md](./docs/README.md)

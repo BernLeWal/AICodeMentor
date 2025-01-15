@@ -5,6 +5,9 @@ UnitTests for WorkflowInterpreter
 
 # --- test/workflow/test_interpreter.py ---
 import unittest
+from app.agents.agent import AIAgent
+from app.agents.agent_config import AIAgentConfig
+from app.agents.prompt import Prompt
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
 from app.workflow.interpreter import WorkflowInterpreter
@@ -19,17 +22,50 @@ class TestWorkflowInterpreter(unittest.TestCase):
         interpreter = WorkflowInterpreter(workflow)
         self.assertEqual(interpreter.workflow.name, "Test Workflow")
 
+    def test_assign(self):
+        """Test assign method"""
+        workflow = Workflow(name="Test Workflow")
+        interpreter = WorkflowInterpreter(workflow)
+        interpreter.assign("'hello'")
+        # Internal variable
+        self.assertEqual(interpreter.get_value(WorkflowInterpreter.InternalVariable.RESULT.name),
+            "hello")
+        # Environment variable
+        self.assertTrue(interpreter.get_value("SHELL").find("bash") >= 0)
+
+    def test_set(self):
+        """Test set method"""
+        workflow = Workflow(name="Test Workflow")
+        interpreter = WorkflowInterpreter(workflow)
+        interpreter.set("foo='bar'")
+        self.assertEqual(interpreter.get_value("foo"), "bar")
+
     def test_check_status(self):
         """Test check_status method"""
         workflow = Workflow(name="Test Workflow")
         interpreter = WorkflowInterpreter(workflow)
-        self.assertTrue(interpreter.check("STATUS == CREATED"))
+        self.assertTrue(interpreter.check("STATUS == 'CREATED'"))
         interpreter.start()
-        self.assertTrue(interpreter.check("STATUS equals DOING"))
+        self.assertTrue(interpreter.check("STATUS equals 'DOING'"))
         interpreter.success()
         self.assertTrue(interpreter.check("STATUS contains SUCCESS"))
         interpreter.failed()
         self.assertTrue(interpreter.check("STATUS matches FAILED"))
+
+    def test_prompt(self):
+        """Test prompt method"""
+        config = AIAgentConfig()
+        config.load_from_environment()
+        workflow = Workflow(name="Test Workflow prompt")
+        workflow.prompts["System"] = Prompt(Prompt.SYSTEM, "A system prompt")
+        workflow.prompts["User Name"] = Prompt(Prompt.USER, "A user prompt")
+        interpreter = WorkflowInterpreter(workflow)
+        interpreter.agent = AIAgent(config)
+
+        interpreter.prompt(prompt_id="System")
+        self.assertEqual(workflow.result, "")   # system prompt returns empty string
+        interpreter.prompt(prompt_id="User Name")
+        self.assertEqual(workflow.result, "A user prompt")
 
     def test_loop_break(self):
         """Test loop_break method"""

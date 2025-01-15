@@ -16,6 +16,7 @@ class Activity:
         PROMPT = 12
         EXECUTE = 13
         CHECK = 14
+        SET = 15
         SUCCESS = 1
         FAILED = 2
 
