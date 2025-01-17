@@ -21,9 +21,9 @@ class Workflow:
             return self.name
 
 
-    def __init__(self, name: str, interpreter=None, parent=None):
-        self.name = name
-        self.interpreter = interpreter  # WorkflowInterpreter instance
+    def __init__(self, filepath: str, parent=None):
+        self.filepath = filepath
+        self.name = filepath.replace('.md', '')
         self.parent : Workflow = parent  # parent workflow
         self.description : str = ''
 

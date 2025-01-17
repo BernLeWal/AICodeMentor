@@ -15,6 +15,7 @@ from app.agents.prompt_factory import PromptFactory
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
 from app.workflow.workflow_factory import WorkflowFactory
+from app.workflow.operation import OperationInterpreter
 from app.commands.command import Command
 from app.commands.parser import Parser
 from app.commands.executor import CommandExecutor
@@ -36,15 +37,6 @@ class WorkflowInterpreter:
         """Internal variables enumeration"""
         STATUS = 0
         RESULT = 1
-
-        def __str__(self):
-            return self.name
-
-    class CheckOperation(Enum):
-        """Check operations enumeration"""
-        EQUALS = 0
-        CONTAINS = 1
-        MATCHES = 2   # regex match
 
         def __str__(self):
             return self.name
@@ -77,16 +69,22 @@ class WorkflowInterpreter:
                 next_activity = current_activity.next
                 if current_activity.kind == Activity.Kind.START:
                     self.start()
-                elif current_activity.kind == Activity.Kind.ASSIGN:
-                    self.assign(current_activity.expression)
                 elif current_activity.kind == Activity.Kind.SET:
                     self.set(current_activity.expression)
+                elif current_activity.kind == Activity.Kind.ASSIGN:
+                    self.assign(current_activity.expression)
+                elif current_activity.kind == Activity.Kind.CHECK:
+                    if not self.check(current_activity.expression):
+                        next_activity = current_activity.other
+                        if next_activity is None:
+                            self.failed()
+                            break
                 elif current_activity.kind == Activity.Kind.PROMPT:
                     self.prompt(prompt_id = current_activity.expression)
                 elif current_activity.kind == Activity.Kind.EXECUTE:
                     self.execute(current_activity.expression)
-                elif current_activity.kind == Activity.Kind.CHECK:
-                    if not self.check(current_activity.expression):
+                elif current_activity.kind == Activity.Kind.CALL:
+                    if not self.call(current_activity.expression):
                         next_activity = current_activity.other
                         if next_activity is None:
                             self.failed()
@@ -169,9 +167,11 @@ class WorkflowInterpreter:
             role, WorkflowInterpreter.limit_str(prompt_content))
 
         if self.agent is None:
-            raise ValueError("AIAgent is not set")
+            self.agent = AIAgentFactory.create_agent()
 
         if Prompt.SYSTEM == role.lower():
+            # The system prompt starts a new agent
+            self.agent = AIAgentFactory.create_agent()
             self.agent.system(prompt_content)
             self.workflow.result = ""
         elif Prompt.ASSISTANT == role.lower():
@@ -198,6 +198,32 @@ class WorkflowInterpreter:
             self.workflow.result += cmd.output
 
 
+    def call(self, workflow_name: str = None) -> bool:
+        """Call another workflow as sub-workflow"""
+        logger.info("CALL: %s", workflow_name)
+        directory = os.path.dirname(self.workflow.filepath)
+        if len(directory) == 0:
+            directory = None
+        sub_workflow = WorkflowFactory.load_from_mdfile(workflow_name, directory)
+        sub_workflow.parent = self.workflow
+        sub_workflow.result = self.workflow.result
+        for key,value in self.workflow.variables.items():
+            sub_workflow.variables[key] = value
+        sub_interpreter = WorkflowInterpreter()
+        sub_interpreter.agent = self.agent
+        sub_interpreter.command_executor = self.command_executor
+
+        ## run the workflow
+        sub_status = sub_interpreter.run(sub_workflow)
+        logger.info("CALL: Sub-Workflow %s completed with %s, Result:%s",
+            workflow_name, sub_status, WorkflowInterpreter.limit_str(sub_workflow.result))
+        self.workflow.status = sub_status
+        self.workflow.result = sub_workflow.result
+        for key,value in sub_workflow.variables.items():
+            self.workflow.variables[key] = value
+        return sub_status == Workflow.Status.SUCCESS
+
+
     def check(self, expression: str) -> bool:
         """Check if the status or result is as expected"""
         # parse the expression
@@ -207,34 +233,16 @@ class WorkflowInterpreter:
                 "Syntax: <variable> <operation> <expected>")
 
         left = self.get_value(parts[0])
-
-        if parts[1].upper() == "==":
-            operation = WorkflowInterpreter.CheckOperation.EQUALS
-        elif parts[1].upper() == WorkflowInterpreter.CheckOperation.EQUALS.name:
-            operation = WorkflowInterpreter.CheckOperation.EQUALS
-        elif parts[1].upper() == WorkflowInterpreter.CheckOperation.CONTAINS.name:
-            operation = WorkflowInterpreter.CheckOperation.CONTAINS
-        elif parts[1].upper() == WorkflowInterpreter.CheckOperation.MATCHES.name:
-            operation = WorkflowInterpreter.CheckOperation.MATCHES
-        else:
-            operation = None
-
+        operation = OperationInterpreter.parse_operation(parts[1])
         right = " ".join(parts[2:])
         right = self.get_value(right, right)
-
         if left is None or operation is None or right is None:
             raise ValueError(f"CHECK expression '{expression}' is not valid! " +\
                 "Syntax: <variable> <operation> <expected>")
 
         logger.info("CHECK: '%s' %s '%s'",
             right, operation, WorkflowInterpreter.limit_str(left))
-        if operation == WorkflowInterpreter.CheckOperation.EQUALS:
-            firstline = left.split("\n")[0].strip()
-            return right.strip() == firstline
-        elif operation == WorkflowInterpreter.CheckOperation.CONTAINS:
-            return right.strip() in left
-        elif operation == WorkflowInterpreter.CheckOperation.MATCHES:
-            return re.search(right, left) is not None
+        return OperationInterpreter.interpret_operation(operation, left, right)
 
 
     def success(self):
@@ -347,7 +355,7 @@ class WorkflowInterpreter:
 
 
 if __name__ == "__main__":
-    main_workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
+    main_workflow = WorkflowFactory.load_from_mdfile("sample-project-eval.wf.md")
     main_interpreter = WorkflowInterpreter()
     main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()

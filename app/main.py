@@ -1,6 +1,7 @@
 #!/bin/python
 """
-AI CodeMentor - automatically analyse, feedback and grade source-code project submissions using AI agents
+AI CodeMentor
+automatically analyse, feedback and grade source-code project submissions using AI agents
 """
 import logging
 import sys
@@ -22,22 +23,34 @@ def show_help():
     print("AI CodeMentor - automatically analyse, feedback and grade " +\
         "source-code project submissions using AI agents")
     print()
-    print("Usage: python main.py [options] <workflow-file.md>")
+    print("Usage: python main.py [options] <workflow-file.md> [key=value ...]")
     print()
     print("Options:")
     print("  -h, --help         Show this help message and exit")
+    print()
+    print("Example:")
+    print("  python main.py workflow.md FOO1=BAR1 FOO2=BAR2")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         show_help()
         exit(1)
+        #sys.argv.append("workflows/bif5-swkom/paperless-sprint1.wf.md")
+        #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
         show_help()
         exit(0)
 
     main_workflow = WorkflowFactory.load_from_mdfile(sys.argv[1], ".")
+    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})")
+    if len(sys.argv) > 2:
+        print("with parameters: ")
+        for arg in sys.argv[2:]:
+            key, value = arg.split("=")
+            print(f"  {key} = {value}")
+            main_workflow.variables[key] = value
     main_interpreter = WorkflowInterpreter()
     main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()

@@ -5,16 +5,17 @@ A product to automatically analyse, feedback and grade source-code project submi
 AI-agents will autonomously evaluate source-code projects base on program requirements and specifications. Therefore it will generate the commands (shell, etc.) which will be executed and the output analyzed autonomously.
 
 ## TODOs
-Before "official" version 0.1:
-* CALL activity to run sub-workflows (with parameters)
+Before "official" version 0.1 (the MVP):
+* Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
 * Record workflow processing logs
 * Write processing logs to md file
 * Execute the workflow in a docker container
-* Implement BIC-SAM Practice1 as workflow
 
 Later:
 * ShellExecutor command whitelist, blacklist, reputation mechanism
 * feedback for the AIAgent on the prompt results for improvement (learning)
+* AIAgent collaboration sequence diagram written
+* Add Activity to ask user for input
 
 ## Research Questions
 
@@ -67,10 +68,18 @@ Later:
     $ python app/main.py -h
     AI CodeMentor - automatically analyse, feedback and grade source-code project submissions using AI agents
 
-    Usage: python main.py [options] <workflow-file.md>
+    Usage: python main.py [options] <workflow-file.md> [key=value ...]
 
     Options:
         -h, --help         Show this help message and exit
+
+    Example:
+        python main.py workflow.md FOO1=BAR1 FOO2=BAR2
+    ```
+
+- Run the console app to evaluate a sample project
+    ```sh
+    python app/main.py workflows/bif5-swkom/paperless-sprint1.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
     ```
 
 ## Documentation

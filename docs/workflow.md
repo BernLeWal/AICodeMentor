@@ -69,8 +69,9 @@ flowchart TD
     START@{ shape: f-circ, label:"start"} --> PROMPT_SYSTEM
     PARAMS@{ shape: comment, label: "REPO_URL, \nUSER_NAME"}
 
-    PROMPT_SYSTEM[Prompt: System] --> PROMPT_TESTGIT
-    PROMPT_TESTGIT[Prompt: User TestGit] --> EXECUTE_OUTPUT
+    PROMPT_SYSTEM[Prompt: System] --> CALL_CHECK_TOOLS
+    CALL_CHECK_TOOLS[[check-tools.md]] --> PROMPT_TESTGIT
+    PROMPT_TESTGIT[Prompt: User GetSubmission] --> EXECUTE_OUTPUT
     EXECUTE_OUTPUT[Execute: ] --> PROMPT_CMDRESULTS
 
     PROMPT_CMDRESULTS[Prompt: User CommandResults] --> CHECK_RESULT_SUCCESS{RESULT == SUCCESS}

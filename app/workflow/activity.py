@@ -12,17 +12,42 @@ class Activity:
     class Kind(Enum):
         """Activity kind enumeration"""
         START = 0
+        SET = 10
         ASSIGN = 11
-        PROMPT = 12
-        EXECUTE = 13
-        CHECK = 14
-        SET = 15
+        CHECK = 12
+        PROMPT = 21
+        EXECUTE = 22
+        CALL = 23
         SUCCESS = 1
         FAILED = 2
 
         def __str__(self):
             return self.name
 
+
+    class Succeeded(Enum):
+        """Activity succeeded enumeration"""
+        YES = 'YES',
+        TRUE = 'TRUE',
+        OK = 'OK',
+        SUCCESS = 'SUCCESS',
+
+        def __str__(self):
+            return self.name
+
+
+    class Failed(Enum):
+        """Activity failed enumeration"""
+        NO = 'NO',
+        FALSE = 'FALSE',
+        ERROR = 'ERROR',
+        FAILED = 'FAILED',
+        ELSE = 'ELSE',
+        FAIL = 'FAIL',
+        OTHER = 'OTHER'
+
+        def __str__(self):
+            return self.name
 
 
     def __init__(self, kind: Kind, name: str, expression: str = None):

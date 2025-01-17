@@ -142,11 +142,11 @@ class WorkflowFactory:
             WorkflowFactory.__parse_flowchart_line(workflow, right)
             attr = ''
 
-            match = re.search('([A-Z_]*)[@\\{\\[]', left)
+            match = re.search(r"([A-Z_]*)[@\{\[]", left)
             if match is not None:
                 left = match.group(1)
 
-            match = re.search('(\\|.*\\|)?\\s*\\s*([A-Z_]*)[@\\{\\[]?', right)
+            match = re.search(r"(\|.*\|)?\s*\s*([A-Z_]*)[@\{\[]?", right)
             if match is not None:
                 attr = match.group(1)
                 if attr is None:
@@ -159,10 +159,9 @@ class WorkflowFactory:
             right_activity = workflow.activities[right]
             if attr is None or len(attr) == 0:
                 left_activity.next = right_activity
-            elif attr.upper()=="NO" or attr.upper() == 'FALSE' or attr.upper() == 'OTHER' \
-                or attr.upper() == 'ELSE' or attr.upper() == 'FAIL' or attr.upper() == 'FAILED':
+            elif attr.upper() in Activity.Failed.__members__:
                 left_activity.other = right_activity
-            elif attr.upper() == 'YES' or attr.upper() == 'TRUE':
+            elif attr.upper() in Activity.Succeeded.__members__:
                 left_activity.next = right_activity
             else:
                 raise ValueError(f"Invalid flow attribute '{attr}' in flowchart line '{line}'! " + \
@@ -174,15 +173,18 @@ class WorkflowFactory:
             # Parse the activity
             activity_name = ''
             activity_expr = ''
-            match = re.search('(\\|.*\\|)?\\s*([A-Z_]*)[@\\{\\[]?(.*)?[\\}\\]]?', line)
+            match = re.search(r"(\|.*\|)?\s*([A-Z_]*)[@\{\[]?(.*)?[\}\]]?", line)
             if match is not None:
                 activity_name = match.group(2)
                 activity_expr = match.group(3)
                 if activity_expr.endswith(']') or activity_expr.endswith('}'):
                     activity_expr = activity_expr[:-1]
+                # when activity_expr is in additional brackets, remove them
+                if activity_expr.startswith('[') and activity_expr.endswith(']'):
+                    activity_expr = activity_expr[1:-1]
             else:
                 activity_name = line
-            if activity_expr.startswith('{'):
+            if activity_expr.startswith('{') and not activity_name.startswith('PARAMS'):
                 activity_expr = ''  # ignore mermaid visualisation defs
             if activity_expr.find(':') > 0:
                 # ignore mermaid visualisation prefix
@@ -198,13 +200,28 @@ class WorkflowFactory:
                 else:
                     activity_kindname = activity_name
 
-                # Check if activity kind is valid
-                activity_kind = Activity.parse_kind(activity_kindname)
-                if activity_kind is None:
-                    raise ValueError(f"Invalid Activity prefix! '{activity_kindname}' " + \
-                        "not found in Activity.Kind enumeration.")
-                activity = Activity(activity_kind, activity_name, activity_expr)
-                workflow.activities[activity_name] = activity
+                if activity_kindname == "PARAMS":
+                    # Process workflow parameters
+                    match = re.search(r'"(.*)"', activity_expr)
+                    if not match is None:
+                        activity_expr = match.group(1)
+                    params = activity_expr.split(',')
+                    for param in params:
+                        param = param.strip()
+                        if len(param) > 0:
+                            if param.find('=') > 0:
+                                param_key, param_value = param.split('=')
+                                workflow.variables[param_key] = param_value
+                            else:
+                                workflow.variables[param] = ''
+                else:
+                    # Process activity kind
+                    activity_kind = Activity.parse_kind(activity_kindname)
+                    if activity_kind is None:
+                        raise ValueError(f"Invalid Activity prefix! '{activity_kindname}' " + \
+                            "not found in Activity.Kind enumeration.")
+                    activity = Activity(activity_kind, activity_name, activity_expr)
+                    workflow.activities[activity_name] = activity
             else:
                 activity = workflow.activities[activity_name]
                 if activity_expr is not None and len(activity_expr) > 0:
@@ -212,11 +229,16 @@ class WorkflowFactory:
 
 
 if __name__ == '__main__':
-    main_workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
+    MAIN_FILENAME = "sample-project-eval.wf.md"
+    main_workflow = WorkflowFactory.load_from_mdfile(MAIN_FILENAME)
     print(f"Loaded workflow: {main_workflow.name}")
     print(f"Description: {main_workflow.description}\n")
 
-    print("Loaded activities:")
+    print("Loaded variables:")
+    for key, value in main_workflow.variables.items():
+        print(f"  {key}: {value}")
+
+    print("\nLoaded activities:")
     for key, main_activity in main_workflow.activities.items():
         print(f"  {key}: {main_activity}")
 
