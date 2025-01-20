@@ -7,7 +7,7 @@ import logging
 import sys
 
 from app.agents.agent_factory import AIAgentFactory
-from app.workflow.workflow_factory import WorkflowFactory
+from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.interpreter import WorkflowInterpreter
 from app.workflow.workflow import Workflow
 from app.commands.shell_executor import ShellCommandExecutor
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         show_help()
         exit(0)
 
-    main_workflow = WorkflowFactory.load_from_mdfile(sys.argv[1], ".")
+    main_workflow = WorkflowReader.load_from_mdfile(sys.argv[1], ".")
     print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})")
     if len(sys.argv) > 2:
         print("with parameters: ")

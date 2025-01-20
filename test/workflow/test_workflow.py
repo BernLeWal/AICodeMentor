@@ -6,14 +6,14 @@ UnitTests for Workflow
 # --- test/workflow/test_workflow.py ---
 import unittest
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_factory import WorkflowFactory
+from app.workflow.workflow_reader import WorkflowReader
 
 class TestWorkflow(unittest.TestCase):
     """UnitTests for Workflow"""
 
     def test_workflow_initialization(self):
         """Test Workflow initialization"""
-        workflow = Workflow(name="Test Workflow")
+        workflow = Workflow("Test Workflow")
         self.assertEqual(workflow.name, "Test Workflow")
         self.assertEqual(workflow.status, Workflow.Status.CREATED)
         self.assertEqual(workflow.result, None)
@@ -21,7 +21,7 @@ class TestWorkflow(unittest.TestCase):
 
     def test_workflow_load_from_mdfile(self):
         """Test Workflow load_from_mdfile method"""
-        workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
+        workflow = WorkflowReader.load_from_mdfile("check-toolchain.wf.md")
         self.assertEqual(workflow.name, "Check Toolchain")
         self.assertEqual(workflow.status, Workflow.Status.CREATED)
         self.assertEqual(workflow.result, None)

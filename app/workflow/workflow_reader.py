@@ -1,6 +1,6 @@
 #!/bin/python
 """
-WorkflowFactory module  - Factory for Workflow instances
+WorkflowReader module  - Reading/Loading Workflow from file and generate Workflow instance
 """
 
 import os
@@ -30,8 +30,8 @@ class WorkflowMdSection(Enum):
         return self.name
 
 
-class WorkflowFactory:
-    """The base class for all WorkflowFactory implementations"""
+class WorkflowReader:
+    """The base class for all WorkflowReader implementations"""
 
     WORKFLOWS_DIR = os.getenv('WORKFLOWS_DIR', './workflows')
 
@@ -57,7 +57,7 @@ class WorkflowFactory:
         workflow = Workflow(filename)
 
         if directory is None:
-            directory = os.path.abspath(WorkflowFactory.WORKFLOWS_DIR)
+            directory = os.path.abspath(WorkflowReader.WORKFLOWS_DIR)
         else:
             directory = os.path.abspath(directory)
         abs_file_path = os.path.join(directory, filename)
@@ -73,7 +73,7 @@ class WorkflowFactory:
         for line in content:
             line_strip = line.strip()
             if line_strip.startswith('# '):
-                section = WorkflowFactory.__check_section(line_strip)
+                section = WorkflowReader.__check_section(line_strip)
                 if section == WorkflowMdSection.NONE:
                     workflow.name = line.replace('# ', '').strip()
                 continue
@@ -91,7 +91,7 @@ class WorkflowFactory:
                     in_mermaid = False
                     in_flowchart = False
                 elif len(line_strip) > 0 and in_mermaid and in_flowchart:
-                    WorkflowFactory.__parse_flowchart_line(workflow, line_strip)
+                    WorkflowReader.__parse_flowchart_line(workflow, line_strip)
 
             if section == WorkflowMdSection.PROMPTS:
                 if line_strip.startswith('## User'):
@@ -119,6 +119,9 @@ class WorkflowFactory:
             if current_key is not None:
                 workflow.prompts[current_key] = Prompt(current_role, current_content)
 
+        if workflow.start is None:
+            workflow.start = workflow.activities[Activity.Kind.START.name]
+
         return workflow
 
 
@@ -137,9 +140,9 @@ class WorkflowFactory:
         pos = line.find('-->')
         if pos > 0:
             left = line[:pos].strip()
-            WorkflowFactory.__parse_flowchart_line(workflow, left)
+            WorkflowReader.__parse_flowchart_line(workflow, left)
             right = line[pos+3:].strip()
-            WorkflowFactory.__parse_flowchart_line(workflow, right)
+            WorkflowReader.__parse_flowchart_line(workflow, right)
             attr = ''
 
             match = re.search(r"([A-Z_]*)[@\{\[]", left)
@@ -230,7 +233,7 @@ class WorkflowFactory:
 
 if __name__ == '__main__':
     MAIN_FILENAME = "sample-project-eval.wf.md"
-    main_workflow = WorkflowFactory.load_from_mdfile(MAIN_FILENAME)
+    main_workflow = WorkflowReader.load_from_mdfile(MAIN_FILENAME)
     print(f"Loaded workflow: {main_workflow.name}")
     print(f"Description: {main_workflow.description}\n")
 

@@ -6,7 +6,7 @@ import unittest
 from app.agents.agent_factory import AIAgentFactory
 from app.commands.shell_executor import ShellCommandExecutor
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_factory import WorkflowFactory
+from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.interpreter import WorkflowInterpreter
 
 
@@ -19,7 +19,7 @@ class TestAll(unittest.TestCase):
 
     def test_workflow(self):
         """Test the workflow implementation"""
-        main_workflow = WorkflowFactory.load_from_mdfile("check-toolchain.wf.md")
+        main_workflow = WorkflowReader.load_from_mdfile("check-toolchain.wf.md")
         main_interpreter = WorkflowInterpreter()
         main_interpreter.agent = AIAgentFactory.create_agent()
         main_interpreter.command_executor = ShellCommandExecutor()

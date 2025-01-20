@@ -18,13 +18,13 @@ class TestWorkflowInterpreter(unittest.TestCase):
 
     def test_interpreter_initialization(self):
         """Test WorkflowInterpreter initialization"""
-        workflow = Workflow(name="Test Workflow")
+        workflow = Workflow("Test Workflow")
         interpreter = WorkflowInterpreter(workflow)
         self.assertEqual(interpreter.workflow.name, "Test Workflow")
 
     def test_assign(self):
         """Test assign method"""
-        workflow = Workflow(name="Test Workflow")
+        workflow = Workflow("Test Workflow")
         interpreter = WorkflowInterpreter(workflow)
         interpreter.assign("'hello'")
         # Internal variable
@@ -35,14 +35,14 @@ class TestWorkflowInterpreter(unittest.TestCase):
 
     def test_set(self):
         """Test set method"""
-        workflow = Workflow(name="Test Workflow")
+        workflow = Workflow("Test Workflow")
         interpreter = WorkflowInterpreter(workflow)
         interpreter.set("foo='bar'")
         self.assertEqual(interpreter.get_value("foo"), "bar")
 
     def test_check_status(self):
         """Test check_status method"""
-        workflow = Workflow(name="Test Workflow")
+        workflow = Workflow("Test Workflow")
         interpreter = WorkflowInterpreter(workflow)
         self.assertTrue(interpreter.check("STATUS == 'CREATED'"))
         interpreter.start()
@@ -56,20 +56,18 @@ class TestWorkflowInterpreter(unittest.TestCase):
         """Test prompt method"""
         config = AIAgentConfig()
         config.load_from_environment()
-        workflow = Workflow(name="Test Workflow prompt")
+        workflow = Workflow("Test Workflow prompt")
         workflow.prompts["System"] = Prompt(Prompt.SYSTEM, "A system prompt")
-        workflow.prompts["User Name"] = Prompt(Prompt.USER, "A user prompt")
+        workflow.prompts["User Name"] = Prompt(Prompt.USER, "Just echo the following string:A user prompt")
         interpreter = WorkflowInterpreter(workflow)
-        interpreter.agent = AIAgent(config)
-
         interpreter.prompt(prompt_id="System")
         self.assertEqual(workflow.result, "")   # system prompt returns empty string
         interpreter.prompt(prompt_id="User Name")
-        self.assertEqual(workflow.result, "A user prompt")
+        self.assertEqual(workflow.result.strip(), "A user prompt")
 
     def test_loop_break(self):
         """Test loop_break method"""
-        main_workflow = Workflow(name="Test Workflow loop")
+        main_workflow = Workflow("Test Workflow loop")
         main_interpreter = WorkflowInterpreter(main_workflow)
 
         ## hardcoded workflow implementation

@@ -7,6 +7,7 @@ import logging
 import os
 import re
 from enum import Enum
+import datetime
 from dotenv import load_dotenv
 from app.agents.agent import AIAgent
 from app.agents.agent_factory import AIAgentFactory
@@ -14,8 +15,10 @@ from app.agents.prompt import Prompt
 from app.agents.prompt_factory import PromptFactory
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_factory import WorkflowFactory
+from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.operation import OperationInterpreter
+from app.workflow.workflow_writer import WorkflowWriter
+from app.workflow.history import History
 from app.commands.command import Command
 from app.commands.parser import Parser
 from app.commands.executor import CommandExecutor
@@ -42,57 +45,65 @@ class WorkflowInterpreter:
             return self.name
 
 
-    def __init__(self, workflow : Workflow = None):
+    def __init__(self, workflow : Workflow = None, parent_interpreter = None):
         self.workflow : Workflow = workflow
         self.agent : AIAgent = None   # will be set from outside
         self.command_executor : CommandExecutor = None  # will be set from outside
         self.max_hits = 3
+        self.current_activity = None
+        self.id = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{os.getpid()}"
+        self.parent_interpeter : WorkflowInterpreter = parent_interpreter
+        self.history : History = History()
 
 
     def run(self, workflow : Workflow)->Workflow.Status:
         """Run the workflow"""
         logger.info("RUN: %s", workflow.name)
         self.workflow = workflow
-        current_activity = workflow.start
-        if current_activity is None:
-            current_activity = workflow.activities[Activity.Kind.START.name]
+        history_dir = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
+        if self.parent_interpeter is not None:
+            parent_interpreter = self.parent_interpeter
+            while parent_interpreter.parent_interpeter is not None:
+                parent_interpreter = parent_interpreter.parent_interpeter
+            history_dir = os.path.join(history_dir, parent_interpreter.id)
+        else:
+            history_dir = os.path.join(history_dir, self.id)
 
-        while current_activity is not None:
+        self.current_activity = workflow.start
+        if self.current_activity is None:
+            self.current_activity = workflow.activities[Activity.Kind.START.name]
+
+        while self.current_activity is not None:
             # pre-conditions
-            if current_activity.hits > self.max_hits:
-                self.failed( f"Activity {current_activity.name} has been executed too many times")
+            WorkflowWriter(workflow).save_history(self.current_activity, self.history,
+                workflow.filepath, history_dir)
+            if self.current_activity.hits > self.max_hits:
+                self.failed( f"Activity {self.current_activity.name} " +\
+                    "has been executed too many times")
                 break
-            current_activity.hits += 1
+            self.current_activity.hits += 1
 
             # run the activity
+            activity_succeeded = True
             try:
-                next_activity = current_activity.next
-                if current_activity.kind == Activity.Kind.START:
+                if self.current_activity.kind == Activity.Kind.START:
                     self.start()
-                elif current_activity.kind == Activity.Kind.SET:
-                    self.set(current_activity.expression)
-                elif current_activity.kind == Activity.Kind.ASSIGN:
-                    self.assign(current_activity.expression)
-                elif current_activity.kind == Activity.Kind.CHECK:
-                    if not self.check(current_activity.expression):
-                        next_activity = current_activity.other
-                        if next_activity is None:
-                            self.failed()
-                            break
-                elif current_activity.kind == Activity.Kind.PROMPT:
-                    self.prompt(prompt_id = current_activity.expression)
-                elif current_activity.kind == Activity.Kind.EXECUTE:
-                    self.execute(current_activity.expression)
-                elif current_activity.kind == Activity.Kind.CALL:
-                    if not self.call(current_activity.expression):
-                        next_activity = current_activity.other
-                        if next_activity is None:
-                            self.failed()
-                            break
-                elif current_activity.kind == Activity.Kind.SUCCESS:
+                elif self.current_activity.kind == Activity.Kind.SET:
+                    activity_succeeded = self.set(self.current_activity.expression)
+                elif self.current_activity.kind == Activity.Kind.ASSIGN:
+                    activity_succeeded = self.assign(self.current_activity.expression)
+                elif self.current_activity.kind == Activity.Kind.CHECK:
+                    activity_succeeded = self.check(self.current_activity.expression)
+                elif self.current_activity.kind == Activity.Kind.PROMPT:
+                    activity_succeeded = self.prompt(prompt_id = self.current_activity.expression)
+                elif self.current_activity.kind == Activity.Kind.EXECUTE:
+                    activity_succeeded = self.execute(self.current_activity.expression)
+                elif self.current_activity.kind == Activity.Kind.CALL:
+                    activity_succeeded = self.call(self.current_activity.expression)
+                elif self.current_activity.kind == Activity.Kind.SUCCESS:
                     self.success()
                     break
-                elif current_activity.kind == Activity.Kind.FAILED:
+                elif self.current_activity.kind == Activity.Kind.FAILED:
                     self.failed()
                     break
             except Exception as e:
@@ -100,40 +111,66 @@ class WorkflowInterpreter:
                 break
 
             # post-conditions
-            current_activity = next_activity
-            if current_activity is None:
-                self.success()
-                break
+            if activity_succeeded:
+                self.current_activity = self.current_activity.next
+                if self.current_activity is None:
+                    self.success()
+                    break
+            else:
+                self.current_activity = self.current_activity.other
+                if self.current_activity is None:
+                    self.failed()
+                    break
 
+        # finalisation
+        WorkflowWriter(workflow).save_history(self.current_activity, self.history,
+            workflow.filepath, history_dir)
         logger.info("DONE:%s with result %s", workflow.name, workflow.status)
         return workflow.status
 
 
-    def start(self):
+    def start(self)->None:
         """Start the workflow"""
         logger.info("START: %s", self.workflow.name)
         self.workflow.status = Workflow.Status.DOING
+        self.history.add_record(Activity.Kind.START.value,
+            self.workflow.status, self.workflow.result)
 
 
-    def assign(self, value: str = None)->None:
+    def assign(self, value: str = None)->bool:
         """Assign a prompt to the result (like a "copy" operation)"""
         content = None
         if value is not None:
             content = self.get_value(value)
+            content = self._render_content(content)
         if content is None:
-            raise ValueError("ASSIGN Value is not set! ")
-        content = self._render_content(content)
+            logger.warning("ASSIGN: Value is not set! ")
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result = "FAILED  \nASSIGN Value is not set!"
+            self.history.add_record(f"{Activity.Kind.ASSIGN.value}: {value}",
+                self.workflow.status, self.workflow.result)
+            return False
         logger.info("ASSIGN: %s", WorkflowInterpreter.limit_str(content))
         self.workflow.result = content
 
+        self.history.add_record(f"{Activity.Kind.ASSIGN.value}: {value}",
+            self.workflow.status, self.workflow.result)
+        return True
 
-    def set(self, expression: str = None)->None:
+
+    def set(self, expression: str = None)->bool:
         """Set a variable value"""
         # parse the expression
         parts = str.split(expression, "=")
         if len(parts) < 2:
-            raise ValueError(f"SET expression={expression} is not valid! " +\
-                "Syntax: <variable>=<value>")
+            logger.warning("SET expression=%s is not valid! " +\
+                "Syntax: <variable>=<value>", expression)
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result = f"FAILED  \nSET expression={expression} is not valid!"+\
+                "Syntax: <variable>=<value>"
+            self.history.add_record(f"{Activity.Kind.SET.value}: {expression}",
+                self.workflow.status, self.workflow.result)
+            return False
 
         name = parts[0]
         value = " ".join(parts[1:])
@@ -141,12 +178,15 @@ class WorkflowInterpreter:
         value = self._render_content(value)
         self.set_value(name, value)
         logger.info("SET: %s='%s'", name, WorkflowInterpreter.limit_str(value))
+        self.history.add_record(f"{Activity.Kind.SET.value}: {expression}",
+            self.workflow.status, self.workflow.result)
+        return True
 
 
     def prompt(self,
             role : str = Prompt.USER,
             prompt_id: str = None,
-            prompt_file: str = None)->None:
+            prompt_file: str = None)->bool:
         """Send a prompt to the AI-agent"""
         # get the prompt content
         prompt_content = None
@@ -160,8 +200,15 @@ class WorkflowInterpreter:
                 role = Prompt.ASSISTANT
 
         if prompt_content is None:
-            raise ValueError("PROMPT content is not set or not found! " + \
-                f"prompt_id={prompt_id}, prompt_file={prompt_file}")
+            logger.warning("PROMPT content is not set or not found! " + \
+                "prompt_id=%s, prompt_file=%s", prompt_id, prompt_file)
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result = "PROMPT content is not set or not found! " + \
+                f"prompt_id={prompt_id}"
+            self.history.add_record(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
+                self.workflow.status, self.workflow.result)
+            return False
+
         prompt_content = self._render_content(prompt_content)
         logger.info("PROMPT: role=%s, content=%s",
             role, WorkflowInterpreter.limit_str(prompt_content))
@@ -180,22 +227,42 @@ class WorkflowInterpreter:
         else:   #if Prompt.USER == role.lower():
             self.workflow.result = self.agent.ask(prompt_content)
         logger.info("PROMPT: result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
+        self.history.add_record(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
+            self.workflow.status, f"{prompt_content}\n\n---\n\n{self.workflow.result}")
+        return True
 
 
-    def execute(self, command: str = None):
+    def execute(self, command: str = None)->bool:
         """Execute the commands in the current result"""
         logger.info("EXECUTE: %s", WorkflowInterpreter.limit_str(self.workflow.result))
 
         if self.command_executor is None:
-            raise ValueError("CommandExecutor is not set")
+            logger.error("CommandExecutor is not set")
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result("FAILED  \nCommandExecutor is not set!")
+            self.history.add_record(f"{Activity.Kind.EXECUTE.value}: {command}",
+                self.workflow.status, self.workflow.result)
+            return False
+
         if command is not None and len(command) > 0:
             commands = [Command(Command.SHELL, [command])]
         else:
             commands = Parser().parse(self.workflow.result)
         self.workflow.result = ""
+        history_result = ""
         for cmd in commands:
             self.command_executor.execute(cmd)
             self.workflow.result += cmd.output
+            history_result += "Input:\n```shell\n"
+            for shell_cmd in cmd.cmds:
+                history_result += f"{shell_cmd}\n"
+            if len(cmd.output) > 0:
+                history_result += f"```\n\nOutput:\n```shell\n{cmd.output}\n```\n\n"
+            else:
+                history_result += "```\n\nNo Output\n\n"
+        self.history.add_record(f"{Activity.Kind.EXECUTE.value}: {command}",
+            self.workflow.status, history_result)
+        return True
 
 
     def call(self, workflow_name: str = None) -> bool:
@@ -204,12 +271,22 @@ class WorkflowInterpreter:
         directory = os.path.dirname(self.workflow.filepath)
         if len(directory) == 0:
             directory = None
-        sub_workflow = WorkflowFactory.load_from_mdfile(workflow_name, directory)
+        try:
+            sub_workflow = WorkflowReader.load_from_mdfile(workflow_name, directory)
+        except FileNotFoundError:
+            logger.warning("Workflow file %s not found", workflow_name)
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result = "FAILED  \n" + \
+                f"Workflow file {workflow_name} in {directory} not found!"
+            self.history.add_record(f"{Activity.Kind.CALL.value}: {workflow_name}",
+                self.workflow.status, self.workflow.result)
+            return False
+
         sub_workflow.parent = self.workflow
         sub_workflow.result = self.workflow.result
         for key,value in self.workflow.variables.items():
             sub_workflow.variables[key] = value
-        sub_interpreter = WorkflowInterpreter()
+        sub_interpreter = WorkflowInterpreter(sub_workflow, self)
         sub_interpreter.agent = self.agent
         sub_interpreter.command_executor = self.command_executor
 
@@ -221,6 +298,8 @@ class WorkflowInterpreter:
         self.workflow.result = sub_workflow.result
         for key,value in sub_workflow.variables.items():
             self.workflow.variables[key] = value
+        self.history.add_record(f"{Activity.Kind.CALL.value}: {workflow_name}",
+            sub_status, sub_workflow.result)
         return sub_status == Workflow.Status.SUCCESS
 
 
@@ -229,19 +308,31 @@ class WorkflowInterpreter:
         # parse the expression
         parts = str.split(expression, " ")
         if len(parts) < 3:
-            raise ValueError(f"CHECK expression '{expression}' is not valid! " +\
-                "Syntax: <variable> <operation> <expected>")
+            logger.warning("CHECK expression '%s' is not valid! ", expression)
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result = f"CHECK expression {expression} is not valid!\n" +\
+                "Syntax: <variable> <operation> <expected>"
+            self.history.add_record(f"{Activity.Kind.CHECK.value}: {expression}",
+                self.workflow.status, self.workflow.result)
+            return False
 
         left = self.get_value(parts[0])
         operation = OperationInterpreter.parse_operation(parts[1])
         right = " ".join(parts[2:])
         right = self.get_value(right, right)
         if left is None or operation is None or right is None:
-            raise ValueError(f"CHECK expression '{expression}' is not valid! " +\
-                "Syntax: <variable> <operation> <expected>")
+            logger.warning("CHECK expression '%s' is not valid! ", expression)
+            self.workflow.status = Workflow.Status.FAILED
+            self.workflow.result = f"CHECK expression {expression} is not valid!\n" +\
+                "Syntax: <variable> <operation> <expected>"
+            self.history.add_record(f"{Activity.Kind.CHECK.value}: {expression}",
+                self.workflow.status, self.workflow.result)
+            return False
 
         logger.info("CHECK: '%s' %s '%s'",
             right, operation, WorkflowInterpreter.limit_str(left))
+        self.history.add_record(f"{Activity.Kind.CHECK.value}: {expression}",
+            self.workflow.status, self.workflow.result)
         return OperationInterpreter.interpret_operation(operation, left, right)
 
 
@@ -252,6 +343,8 @@ class WorkflowInterpreter:
         else:
             logger.info("SUCCESS result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
         self.workflow.status = Workflow.Status.SUCCESS
+        self.history.add_record(f"{Activity.Kind.SUCCESS.value}",
+            self.workflow.status, self.workflow.result)
 
 
     def failed(self, result : str = ''):
@@ -264,9 +357,12 @@ class WorkflowInterpreter:
                 logger.warning("FAILED without result")
         else:
             if len(result) > 0:
-                self.workflow.result = result + "\n" + self.workflow.result
+                self.workflow.result = result + "  \n" + self.workflow.result
             logger.warning("FAILED result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
         self.workflow.status = Workflow.Status.FAILED
+        self.history.add_record(f"{Activity.Kind.FAILED.value}",
+            self.workflow.status, self.workflow.result)
+
 
 
     def _render_content(self, content: str)->str:
@@ -355,7 +451,7 @@ class WorkflowInterpreter:
 
 
 if __name__ == "__main__":
-    main_workflow = WorkflowFactory.load_from_mdfile("sample-project-eval.wf.md")
+    main_workflow = WorkflowReader.load_from_mdfile("sample-project-eval.wf.md")
     main_interpreter = WorkflowInterpreter()
     main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()

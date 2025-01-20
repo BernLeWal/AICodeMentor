@@ -11,15 +11,15 @@ class Activity:
 
     class Kind(Enum):
         """Activity kind enumeration"""
-        START = 0
-        SET = 10
-        ASSIGN = 11
-        CHECK = 12
-        PROMPT = 21
-        EXECUTE = 22
-        CALL = 23
-        SUCCESS = 1
-        FAILED = 2
+        START = 'Start'
+        SET = 'Set'
+        ASSIGN = 'Assign'
+        CHECK = 'Check'
+        PROMPT = 'Prompt'
+        EXECUTE = 'Execute'
+        CALL = 'Call'
+        SUCCESS = 'SUCCESS'
+        FAILED = 'FAILED'
 
         def __str__(self):
             return self.name

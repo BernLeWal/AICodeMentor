@@ -7,8 +7,6 @@ AI-agents will autonomously evaluate source-code projects base on program requir
 ## TODOs
 Before "official" version 0.1 (the MVP):
 * Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
-* Record workflow processing logs
-* Write processing logs to md file
 * Execute the workflow in a docker container
 
 Later:
