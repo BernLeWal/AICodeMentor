@@ -10,11 +10,13 @@ from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
 
 
-# Setup logging framework
 load_dotenv()
 log_level = os.getenv('LOGLEVEL', 'INFO').upper()
-logging.basicConfig(level=log_level,
-                    format=os.getenv('LOGFORMAT', 'pretty'))
+
+# Setup logging framework
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(level=log_level,
+                        format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 logging.getLogger("openai").setLevel(log_level)
 

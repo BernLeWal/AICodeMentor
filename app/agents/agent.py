@@ -10,9 +10,10 @@ from app.agents.prompt import Prompt
 
 
 # Setup logging framework
-load_dotenv()
-logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                    format=os.getenv('LOGFORMAT', 'pretty'))
+if not logging.getLogger().hasHandlers():
+    load_dotenv()
+    logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                        format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 

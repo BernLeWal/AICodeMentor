@@ -25,10 +25,12 @@ from app.commands.executor import CommandExecutor
 from app.commands.shell_executor import ShellCommandExecutor
 
 
-# Setup logging framework
 load_dotenv()
-logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                    format=os.getenv('LOGFORMAT', 'pretty'))
+
+# Setup logging framework
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                        format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 
@@ -52,22 +54,24 @@ class WorkflowInterpreter:
         self.max_hits = 3
         self.current_activity = None
         self.id = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{os.getpid()}"
-        self.parent_interpeter : WorkflowInterpreter = parent_interpreter
+        self.parent_interpreter : WorkflowInterpreter = parent_interpreter
         self.history : History = History()
+        self.history_dir : str = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+
+        if self.parent_interpreter is not None:
+            parent = self.parent_interpreter
+            while parent.parent_interpreter is not None:
+                parent = parent.parent_interpreter
+            self.history_dir = os.path.join(self.history_dir, parent.id)
+        else:
+            self.history_dir = os.path.join(self.history_dir, self.id)
+
 
 
     def run(self, workflow : Workflow)->Workflow.Status:
         """Run the workflow"""
         logger.info("RUN: %s", workflow.name)
         self.workflow = workflow
-        history_dir = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
-        if self.parent_interpeter is not None:
-            parent_interpreter = self.parent_interpeter
-            while parent_interpreter.parent_interpeter is not None:
-                parent_interpreter = parent_interpreter.parent_interpeter
-            history_dir = os.path.join(history_dir, parent_interpreter.id)
-        else:
-            history_dir = os.path.join(history_dir, self.id)
 
         self.current_activity = workflow.start
         if self.current_activity is None:
@@ -75,8 +79,6 @@ class WorkflowInterpreter:
 
         while self.current_activity is not None:
             # pre-conditions
-            WorkflowWriter(workflow).save_history(self.current_activity, self.history,
-                workflow.filepath, history_dir)
             if self.current_activity.hits > self.max_hits:
                 self.failed( f"Activity {self.current_activity.name} " +\
                     "has been executed too many times")
@@ -123,8 +125,6 @@ class WorkflowInterpreter:
                     break
 
         # finalisation
-        WorkflowWriter(workflow).save_history(self.current_activity, self.history,
-            workflow.filepath, history_dir)
         logger.info("DONE:%s with result %s", workflow.name, workflow.status)
         return workflow.status
 
@@ -133,7 +133,7 @@ class WorkflowInterpreter:
         """Start the workflow"""
         logger.info("START: %s", self.workflow.name)
         self.workflow.status = Workflow.Status.DOING
-        self.history.add_record(Activity.Kind.START.value,
+        self._save_history(Activity.Kind.START.value,
             self.workflow.status, self.workflow.result)
 
 
@@ -147,13 +147,13 @@ class WorkflowInterpreter:
             logger.warning("ASSIGN: Value is not set! ")
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result = "FAILED  \nASSIGN Value is not set!"
-            self.history.add_record(f"{Activity.Kind.ASSIGN.value}: {value}",
+            self._save_history(f"{Activity.Kind.ASSIGN.value}: {value}",
                 self.workflow.status, self.workflow.result)
             return False
         logger.info("ASSIGN: %s", WorkflowInterpreter.limit_str(content))
         self.workflow.result = content
 
-        self.history.add_record(f"{Activity.Kind.ASSIGN.value}: {value}",
+        self._save_history(f"{Activity.Kind.ASSIGN.value}: {value}",
             self.workflow.status, self.workflow.result)
         return True
 
@@ -168,7 +168,7 @@ class WorkflowInterpreter:
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result = f"FAILED  \nSET expression={expression} is not valid!"+\
                 "Syntax: <variable>=<value>"
-            self.history.add_record(f"{Activity.Kind.SET.value}: {expression}",
+            self._save_history(f"{Activity.Kind.SET.value}: {expression}",
                 self.workflow.status, self.workflow.result)
             return False
 
@@ -178,7 +178,7 @@ class WorkflowInterpreter:
         value = self._render_content(value)
         self.set_value(name, value)
         logger.info("SET: %s='%s'", name, WorkflowInterpreter.limit_str(value))
-        self.history.add_record(f"{Activity.Kind.SET.value}: {expression}",
+        self._save_history(f"{Activity.Kind.SET.value}: {expression}",
             self.workflow.status, self.workflow.result)
         return True
 
@@ -205,7 +205,7 @@ class WorkflowInterpreter:
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result = "PROMPT content is not set or not found! " + \
                 f"prompt_id={prompt_id}"
-            self.history.add_record(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
+            self._save_history(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
                 self.workflow.status, self.workflow.result)
             return False
 
@@ -227,7 +227,7 @@ class WorkflowInterpreter:
         else:   #if Prompt.USER == role.lower():
             self.workflow.result = self.agent.ask(prompt_content)
         logger.info("PROMPT: result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
-        self.history.add_record(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
+        self._save_history(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
             self.workflow.status, f"{prompt_content}\n\n---\n\n{self.workflow.result}")
         return True
 
@@ -240,7 +240,7 @@ class WorkflowInterpreter:
             logger.error("CommandExecutor is not set")
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result("FAILED  \nCommandExecutor is not set!")
-            self.history.add_record(f"{Activity.Kind.EXECUTE.value}: {command}",
+            self._save_history(f"{Activity.Kind.EXECUTE.value}: {command}",
                 self.workflow.status, self.workflow.result)
             return False
 
@@ -260,7 +260,7 @@ class WorkflowInterpreter:
                 history_result += f"```\n\nOutput:\n```shell\n{cmd.output}\n```\n\n"
             else:
                 history_result += "```\n\nNo Output\n\n"
-        self.history.add_record(f"{Activity.Kind.EXECUTE.value}: {command}",
+        self._save_history(f"{Activity.Kind.EXECUTE.value}: {command}",
             self.workflow.status, history_result)
         return True
 
@@ -278,7 +278,7 @@ class WorkflowInterpreter:
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result = "FAILED  \n" + \
                 f"Workflow file {workflow_name} in {directory} not found!"
-            self.history.add_record(f"{Activity.Kind.CALL.value}: {workflow_name}",
+            self._save_history(f"{Activity.Kind.CALL.value}: {workflow_name}",
                 self.workflow.status, self.workflow.result)
             return False
 
@@ -298,7 +298,7 @@ class WorkflowInterpreter:
         self.workflow.result = sub_workflow.result
         for key,value in sub_workflow.variables.items():
             self.workflow.variables[key] = value
-        self.history.add_record(f"{Activity.Kind.CALL.value}: {workflow_name}",
+        self._save_history(f"{Activity.Kind.CALL.value}: {workflow_name}",
             sub_status, sub_workflow.result)
         return sub_status == Workflow.Status.SUCCESS
 
@@ -312,7 +312,7 @@ class WorkflowInterpreter:
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result = f"CHECK expression {expression} is not valid!\n" +\
                 "Syntax: <variable> <operation> <expected>"
-            self.history.add_record(f"{Activity.Kind.CHECK.value}: {expression}",
+            self._save_history(f"{Activity.Kind.CHECK.value}: {expression}",
                 self.workflow.status, self.workflow.result)
             return False
 
@@ -325,13 +325,13 @@ class WorkflowInterpreter:
             self.workflow.status = Workflow.Status.FAILED
             self.workflow.result = f"CHECK expression {expression} is not valid!\n" +\
                 "Syntax: <variable> <operation> <expected>"
-            self.history.add_record(f"{Activity.Kind.CHECK.value}: {expression}",
+            self._save_history(f"{Activity.Kind.CHECK.value}: {expression}",
                 self.workflow.status, self.workflow.result)
             return False
 
         logger.info("CHECK: '%s' %s '%s'",
             right, operation, WorkflowInterpreter.limit_str(left))
-        self.history.add_record(f"{Activity.Kind.CHECK.value}: {expression}",
+        self._save_history(f"{Activity.Kind.CHECK.value}: {expression}",
             self.workflow.status, self.workflow.result)
         return OperationInterpreter.interpret_operation(operation, left, right)
 
@@ -343,7 +343,7 @@ class WorkflowInterpreter:
         else:
             logger.info("SUCCESS result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
         self.workflow.status = Workflow.Status.SUCCESS
-        self.history.add_record(f"{Activity.Kind.SUCCESS.value}",
+        self._save_history(f"{Activity.Kind.SUCCESS.value}",
             self.workflow.status, self.workflow.result)
 
 
@@ -360,7 +360,7 @@ class WorkflowInterpreter:
                 self.workflow.result = result + "  \n" + self.workflow.result
             logger.warning("FAILED result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
         self.workflow.status = Workflow.Status.FAILED
-        self.history.add_record(f"{Activity.Kind.FAILED.value}",
+        self._save_history(f"{Activity.Kind.FAILED.value}",
             self.workflow.status, self.workflow.result)
 
 
@@ -440,6 +440,13 @@ class WorkflowInterpreter:
 
         # Set in workflow variables:
         self.workflow.variables[name] = value
+
+
+    def _save_history(self, caption : str, status : Workflow.Status, result : str)->None:
+        self.history.add_record(caption, status, result)
+        WorkflowWriter(self.workflow).save_history(self.current_activity, self.history,
+            self.workflow.filepath, self.history_dir)
+
 
 
     @staticmethod

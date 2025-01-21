@@ -13,10 +13,12 @@ from app.workflow.workflow import Workflow
 from app.workflow.workflow_reader import WorkflowReader
 
 
-# Setup logging framework
 load_dotenv()
-logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                    format=os.getenv('LOGFORMAT', 'pretty'))
+
+# Setup logging framework
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                        format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,8 @@ class WorkflowWriter:
     """Writes Workflow instances to file"""
 
     WORKFLOWS_DIR = os.getenv('WORKFLOWS_DIR', './workflows')
-    LOGFILES_DIR = os.getenv('LOGFILES_DIR', './logs')
+    OUTPUT_DIR = os.getenv('OUTPUT_DIR', './output')
+    LOGFILES_DIR = os.getenv('LOGFILES_DIR', './log')
 
     def __init__(self, workflow : Workflow):
         self.workflow : Workflow = workflow
@@ -75,7 +78,7 @@ class WorkflowWriter:
         filepath : str = None, directory = None, overwrite = True):
         """Saves Workflow instance to file"""
         if directory is None:
-            directory = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
+            directory = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
         if not os.path.exists(directory):
             os.makedirs(directory)
         if filepath is None:

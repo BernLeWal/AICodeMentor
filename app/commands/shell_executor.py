@@ -17,10 +17,12 @@ from app.commands.command import Command
 from app.commands.executor import CommandExecutor
 
 
-# Setup logging framework
 load_dotenv()
-logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                    format=os.getenv('LOGFORMAT', 'pretty'))
+
+# Setup logging framework
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                        format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 
@@ -144,7 +146,10 @@ class ShellCommandExecutor(CommandExecutor):
             try:
                 stderr_line = self._stderr_queue.get_nowait()
                 logger.warning("STDERR: %s", stderr_line[:-1])
-                self.current_output += stderr_line
+                if stderr_line == command_marker:
+                    break
+                if not stderr_line.endswith(command_marker):
+                    self.current_output += stderr_line
             except Empty:
                 pass
 

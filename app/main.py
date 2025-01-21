@@ -5,6 +5,8 @@ automatically analyse, feedback and grade source-code project submissions using 
 """
 import logging
 import sys
+import os
+from dotenv import load_dotenv
 
 from app.agents.agent_factory import AIAgentFactory
 from app.workflow.workflow_reader import WorkflowReader
@@ -13,8 +15,18 @@ from app.workflow.workflow import Workflow
 from app.commands.shell_executor import ShellCommandExecutor
 
 # Setup logging framework
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+load_dotenv()
+logfiles_dir = os.getenv('LOGFILES_DIR', './logs')
+os.makedirs(logfiles_dir, exist_ok=True)
+logfile_path = os.path.join(logfiles_dir, 'codementor.log')
+if logging.getLogger().hasHandlers():
+    logging.getLogger().handlers.clear()    #remove existing default handlers
+logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                    format=os.getenv('LOGFORMAT', 'pretty'),
+                    handlers=[
+                        logging.FileHandler(logfile_path),
+                        #logging.StreamHandler(sys.stdout)  # Optional: to also log to console
+                    ])
 logger = logging.getLogger(__name__)
 
 
@@ -44,13 +56,14 @@ if __name__ == "__main__":
         exit(0)
 
     main_workflow = WorkflowReader.load_from_mdfile(sys.argv[1], ".")
-    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})")
+    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})  ")
     if len(sys.argv) > 2:
-        print("with parameters: ")
+        print("with parameters:  ")
         for arg in sys.argv[2:]:
             key, value = arg.split("=")
-            print(f"  {key} = {value}")
+            print(f"  - {key}={value}\n")
             main_workflow.variables[key] = value
+        print("\n")
     main_interpreter = WorkflowInterpreter()
     main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()
@@ -58,8 +71,8 @@ if __name__ == "__main__":
     ## run the workflow
     main_status = main_interpreter.run(main_workflow)
     if main_status == Workflow.Status.SUCCESS:
-        print(f"Workflow completed with SUCCESS, Result:\n{main_workflow.result}")
+        print(f"Workflow completed with SUCCESS\n\n---\n{main_workflow.result}")
         exit(0)
     else:
-        print(f"Workflow completed with FAILED, Result:\n{main_workflow.result}")
+        print(f"Workflow completed with FAILED\n\n---\n{main_workflow.result}")
         exit(1)

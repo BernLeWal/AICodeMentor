@@ -7,7 +7,6 @@ AI-agents will autonomously evaluate source-code projects base on program requir
 ## TODOs
 Before "official" version 0.1 (the MVP):
 * Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
-* Execute the workflow in a docker container
 
 Later:
 * ShellExecutor command whitelist, blacklist, reputation mechanism
@@ -25,8 +24,52 @@ Later:
     - Tools are natively implemented in the agent Architecture
     - Agent learns by the feedback it gets itself by the "system"
 
+## Usage
 
-## Setup
+### Pre-Requisites
+
+- Docker environment (see https://www.docker.com/products/docker-desktop/)
+- Ensure that the shell-scripts have execution rights ```chmod a+x *.sh```
+
+### Running
+
+Run the AI CodeMentor using the prepared shell scripts:
+- On Linux: ```./run_codementor.sh [options] <workflow-file.md> [key=value ...]```
+- On Windows: ```./run_codementor.ps1 [options] <workflow-file.md> [key=value ...]```
+
+Options:
+- ```-h```, ```--help```         Show this help message and exit
+
+Arguments:
+- *<workflow-file.md>*    A Markdown file containing the definition of the workflow and prompts, see [workflows/check-toolchain.wf.md](workflows/check-toolchain.wf.md) for an example
+- *[key=value]*   Parameters to be sent to the workflow. Multiple key/value pairs are allowed.
+
+### Example
+
+To run the workflow [paperless-sprint1.wf.md](workflows/check-toolchain.wf.md) with a specific REPO_URL [https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git) as parameter.
+
+Linux:
+```bash
+$ ./run_codementor.sh workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+```
+
+Windows:
+```powershell
+PS > .\run_codementor.ps1 workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+```
+
+ATTENTION: You must use the normal slash '/' is path parameters, because the app is running in a linux environment.
+
+### Logging
+
+The console (stdin/stout/stderr) is used by the CLI interface of the application, 
+so logs are written to the file [log/codementor.log](log/codementor.log) instead - and not to console.
+Unfortunately this means, that the docker log will stay empty.
+---
+
+## Development
+
+### Setup
 
 - Install Python3 (>3.12), and pip3
     ```shell
@@ -44,7 +87,7 @@ Later:
     pip install -r requirements.txt
     ```
 
-## Running
+### Running/Debugging
 
 - Ensure that the PYTHONPATH is set when you want to run the Python files directly, e.g.
     - BASH:

@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  codementor:
+    build:
+      dockerfile: docker/codementor/Dockerfile
+      context: .
+    image: codementor-image
+    container_name: codementor
+    environment:
+      # Load environment variables from the local .env file
+      - ENV_FILE=.env
+    volumes:
+      - ./workflows:/home/mentor/workflows
+      - ./output:/home/mentor/output
+      - ./log:/home/mentor/log
+    entrypoint: ["python", "main.py"]

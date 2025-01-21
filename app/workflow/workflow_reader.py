@@ -13,10 +13,12 @@ from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
 
 
-# Setup logging framework
 load_dotenv()
-logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                    format=os.getenv('LOGFORMAT', 'pretty'))
+
+# Setup logging framework
+if not logging.getLogger().hasHandlers():
+    logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+                        format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
 
