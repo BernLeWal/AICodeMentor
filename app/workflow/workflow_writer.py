@@ -89,7 +89,7 @@ class WorkflowWriter:
 
         # First section: general
         self.file.write(f"# {self.workflow.name}\n\n")
-        self.file.write(f"filepath={self.workflow.filepath}\n")
+        self.file.write(f"- filepath={self.workflow.filepath}\n")
         self.file.write("\n")
 
         # Second section: workflow flow-chart
@@ -102,9 +102,12 @@ class WorkflowWriter:
                 "stroke:#000,stroke-width:4px,fill:#80a0ff\n")
         self.file.write("```\n\n")
 
-        self.file.write(f"{WorkflowMdSection.VARIABLES.value[0]} :\n")
+        self.file.write(f"{WorkflowMdSection.VARIABLES.value[0]}:  \n")
         for key, value in self.workflow.variables.items():
-            self.file.write(f"  - {key}={value}")
+            if len(value) > 0 and value.find('\n')>0:
+                self.file.write(f"- **{key}**:  \n{value}  \n")
+            else:
+                self.file.write(f"- **{key}**={value}  \n")
         self.file.write("\n\n")
 
         # Third section: History
@@ -149,6 +152,8 @@ class WorkflowWriter:
             self.file.write("{" + f"{activity.expression}" + "}")
         elif activity.kind == Activity.Kind.CALL:
             self.file.write(f"[[{activity.expression}]]")
+        elif activity.kind == Activity.Kind.EXECUTE:
+            self.file.write(f"[\"{activity.kind.value}: {activity.expression}\"]")
         else:
             self.file.write(f"[{activity.kind.value}: {activity.expression}]")
         self.file.write("\n")

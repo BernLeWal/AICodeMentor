@@ -187,6 +187,8 @@ class WorkflowReader:
                 # when activity_expr is in additional brackets, remove them
                 if activity_expr.startswith('[') and activity_expr.endswith(']'):
                     activity_expr = activity_expr[1:-1]
+                if activity_expr.startswith('"') and activity_expr.endswith('"'):
+                    activity_expr = activity_expr[1:-1]
             else:
                 activity_name = line
             if activity_expr.startswith('{') and not activity_name.startswith('PARAMS'):

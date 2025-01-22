@@ -25,12 +25,16 @@ class AIAgentConfig:
         self.ai_organization_id = None
         self.ai_model_name = None
 
+        self.ai_max_prompt_length = 2000
+
     def load_from_environment(self):
         """loads the configuration from the environment variables"""
         logger.debug("Loading configuration from environment...")
         self.ai_api_key = os.getenv('AI_API_KEY', '')
         self.ai_organization_id = os.getenv('AI_ORGANIZATION_ID', '')
         self.ai_model_name = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
+
+        self.ai_max_prompt_length = int(os.getenv('AI_MAX_PROMPT_LENGTH', '2000'))
         logger.debug(self)
 
     def load_from_jsonfile(self, filename):
@@ -42,6 +46,8 @@ class AIAgentConfig:
             self.ai_api_key = config['AI_API_KEY']
             self.ai_organization_id = config['AI_ORGANIZATION_ID']
             self.ai_model_name = config['AI_MODEL_NAME']
+
+            self.ai_max_prompt_length = int(config.get('AI_MAX_PROMPT_LENGTH', 2000))
         logger.debug(self)
 
     def load_from_json(self, json_data : str):
@@ -52,6 +58,8 @@ class AIAgentConfig:
         self.ai_api_key = config['AI_API_KEY']
         self.ai_organization_id = config['AI_ORGANIZATION_ID']
         self.ai_model_name = config['AI_MODEL_NAME']
+
+        self.ai_max_prompt_length = int(config.get('AI_MAX_PROMPT_LENGTH', 2000))
         logger.debug(self)
 
     # convert to str
@@ -59,7 +67,8 @@ class AIAgentConfig:
         return "AIAgentConfig: " + \
             f"AI_API_KEY={self.ai_api_key[:4]}...{self.ai_api_key[-4:]}, " + \
             f"AI_ORGANIZATION_ID={self.ai_organization_id[:4]}...{self.ai_organization_id[-4:]}, "+\
-            f"AI_MODEL_NAME={self.ai_model_name}"
+            f"AI_MODEL_NAME={self.ai_model_name}" +\
+            f"AI_MAX_PROMPT_LENGTH={self.ai_max_prompt_length}"
 
 
 if __name__ == "__main__":

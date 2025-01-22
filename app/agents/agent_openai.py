@@ -18,6 +18,7 @@ if not logging.getLogger().hasHandlers():
     logging.basicConfig(level=log_level,
                         format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
+# set the loglevel for the OpenAI SDK
 logging.getLogger("openai").setLevel(log_level)
 
 
@@ -29,12 +30,14 @@ class AIAgentOpenAI(AIAgent):
         super().__init__(config)
         logger.info("Creating AIAgentOpenAI with %s", config)
 
-        # set the loglevel for the OpenAI SDK
         self.client = OpenAI(
             api_key=config.ai_api_key,
             organization= config.ai_organization_id
         )
+
         self.model_name = config.ai_model_name
+        self.max_prompt_length = config.ai_max_prompt_length
+
 
     def system(self, prompt: str) -> str:
         """Starts with a new context (a reset), and provides the chat-systems general behavior"""
@@ -45,6 +48,10 @@ class AIAgentOpenAI(AIAgent):
     def ask(self, prompt: str) -> str:
         """Sends a prompt to ChatGPT, will track the result in messages"""
         logger.debug("Ask AIAgentOpenAI: %s", prompt)
+        if len(prompt) > self.max_prompt_length:
+            prompt = prompt[:int(self.max_prompt_length/2)] + "\n...(truncated)...\n" \
+                + prompt[int(-self.max_prompt_length/2):]
+            logger.warning("Prompt is too long, so truncated in the middle:\n%s", prompt)
         super().ask(prompt)
         messages = [msg.to_dict() for msg in self.messages]
         chat_completion = self.client.chat.completions.create(

@@ -29,17 +29,24 @@ flowchart TD
     START@{ shape: f-circ, label:"start"} --> PROMPT_SYSTEM
     PARAMS@{ shape: comment, label: "REPO_URL"}
 
-    PROMPT_SYSTEM[Prompt: System] --> CALL_CHECKTOOLS
-    CALL_CHECKTOOLS[[paperless-sprint1-musthaves.wf.md]] --> CHECK_RESULT_SUCCESS{RESULT == 'SUCCESS'}
+    PROMPT_SYSTEM[Prompt: System] --> CALL_MUSTHAVES
+    CALL_MUSTHAVES[[paperless-sprint1-musthaves.wf.md]] --> CHECK_MUSTHAVES_SUCCESS{RESULT == 'SUCCESS'}
 
-    CHECK_RESULT_SUCCESS --> |TRUE| CALL_GITCLONE
-    CHECK_RESULT_SUCCESS --> |FALSE| FAILED 
+    CHECK_MUSTHAVES_SUCCESS --> |TRUE| SET_MUSTHAVES_RESULT
+    CHECK_MUSTHAVES_SUCCESS --> |FALSE| FAILED
 
-    CALL_GITCLONE[[git-clone-repo.wf.md]] --> CHECK_CLONE_SUCCESS{RESULT == 'SUCCESS'}
+    SET_MUSTHAVES_RESULT[MUSTHAVES_RESULT=RESULT] --> CALL_CHECKSTATIC
 
-    CHECK_CLONE_SUCCESS --> |TRUE| SUCCESS
-    CHECK_CLONE_SUCCESS --> |FALSE| FAILED 
-    
+    CALL_CHECKSTATIC[[paperless-sprint1-checkstatic.wf.md]] --> SET_CHECKSTATIC_RESULT
+
+    SET_CHECKSTATIC_RESULT[CHECKSTATIC_RESULT=RESULT] --> CALL_TESTING
+
+    CALL_TESTING[[paperless-sprint1-testing.wf.md]] --> SET_TESTING_RESULT
+
+    SET_TESTING_RESULT[TESTING_RESULT=RESULT] --> PROMPT_REPORT
+
+    PROMPT_REPORT[Prompt: User Summary] --> SUCCESS
+
     SUCCESS@{ shape: stadium  }
     FAILED@{ shape: stadium }
 ```
@@ -50,8 +57,33 @@ flowchart TD
 
 You are an helpful AI assistent to help - together with other specialiced AI agents - a lecturer to review, feedback and graduate software development exercise submissions.
 
-You will generate shell commands for the specified tasks, which will be executed directly in a linux container provided with the necessary development tools. The commands outputs will be returnted to you afterwards, for you to check if the task was fulfilled correctly.
+Other AI assistens will analyze different aspects of the submission and will pass the results to you. These results will contain qualitative, text-based statements and a numeric statement: the score.
 
-Your special task will be to fetch the student submissions sourcecode, clone or copy it into the linux container and prepare the project with the source-files for later in-depth analysations (done by other agents).
+Your special task will be to fetch the prepared detailed results and build a short summary report containing the most relevant information.
+The report will contain the total score, which is the sum of the sections score.
+It will contain a list of the part scores.
+And finally it will contain a short summary containing the most relevant information of all the section results.
+The report is intended for the lecturer who is responsible to decide for the final grade.
 
-Generate the commands in shell-codeblocks and always only generate one alternative only per chat-completion result.
+Don't add suggestions for improvements.
+Don't add content which was not stated before explicitly.
+
+
+## User Summary
+
+The student submission sourcecode has been already analyzed with the results shown in the following numbered sections:
+
+### 1. MUST-HAVES:  
+
+{{MUSTHAVES_RESULT}}
+
+### 2. Static Source-Code Checks:  
+
+{{CHECKSTATIC_RESULT}}
+
+### 3. Testing:
+
+{{TESTING_RESULT}}
+
+Now write your summary as specified in the beginning.
+

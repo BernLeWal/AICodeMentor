@@ -13,6 +13,8 @@ Later:
 * feedback for the AIAgent on the prompt results for improvement (learning)
 * AIAgent collaboration sequence diagram written
 * Add Activity to ask user for input
+* --verbose mode will output logs to console, too
+* --server mode with REST API (to avoid volume-mounts)
 
 ## Research Questions
 
@@ -65,6 +67,7 @@ ATTENTION: You must use the normal slash '/' is path parameters, because the app
 The console (stdin/stout/stderr) is used by the CLI interface of the application, 
 so logs are written to the file [log/codementor.log](log/codementor.log) instead - and not to console.
 Unfortunately this means, that the docker log will stay empty.
+
 ---
 
 ## Development

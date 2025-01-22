@@ -32,10 +32,14 @@ class ShellCommandExecutor(CommandExecutor):
     """
 
     SHELL = os.getenv('SHELL', '/bin/bash')
-    if os.getenv('SHELL_TIMEOUT', None) is None:
-        SHELL_TIMEOUT = 120
+    if os.getenv('SHELL_COMMAND_TIMEOUT', None) is None:
+        SHELL_COMMAND_TIMEOUT = 600
     else:
-        SHELL_TIMEOUT = int(os.getenv('SHELL_TIMEOUT', "120"))
+        SHELL_COMMAND_TIMEOUT = int(os.getenv('SHELL_COMMAND_TIMEOUT', "600"))
+    if os.getenv('SHELL_INACTIVITY_TIMEOUT', None) is None:
+        SHELL_INACTIVITY_TIMEOUT = 120
+    else:
+        SHELL_INACTIVITY_TIMEOUT = int(os.getenv('SHELL_INACTIVITY_TIMEOUT', "120"))
 
 
     def __init__(self):
@@ -125,14 +129,25 @@ class ShellCommandExecutor(CommandExecutor):
         Read combined stdout and stderr output.
         """
         if timeout is None:
-            timeout = self.SHELL_TIMEOUT
+            command_timeout = self.SHELL_COMMAND_TIMEOUT
+            inactivity_timeout = self.SHELL_INACTIVITY_TIMEOUT
+        else:
+            command_timeout = timeout
+            inactivity_timeout = timeout
+
 
         start_time = time.time()
+        last_activity = time.time()
         while True:
-            if time.time() - start_time > timeout:
-                logger.error("Timeout of %d seconds reached while waiting for command to finish",
-                    timeout)
+            if time.time() - start_time > command_timeout:
+                logger.error("Command-Timeout of %d seconds reached " +\
+                    " while waiting for command to finish", command_timeout)
                 break
+            if time.time() - last_activity > inactivity_timeout:
+                logger.error("Inactivity-Timeout of %d seconds reached " +\
+                    " while waiting for command to finish", inactivity_timeout)
+                break
+
             try:
                 stdout_line = self._stdout_queue.get_nowait()
                 logger.debug("  STDOUT: %s", stdout_line[:-1])
@@ -140,6 +155,7 @@ class ShellCommandExecutor(CommandExecutor):
                     break
                 if not stdout_line.endswith(command_marker):
                     self.current_output += stdout_line
+                    last_activity = time.time()
             except Empty:
                 pass
 
@@ -150,6 +166,7 @@ class ShellCommandExecutor(CommandExecutor):
                     break
                 if not stderr_line.endswith(command_marker):
                     self.current_output += stderr_line
+                    last_activity = time.time()
             except Empty:
                 pass
 

@@ -245,6 +245,7 @@ class WorkflowInterpreter:
             return False
 
         if command is not None and len(command) > 0:
+            command = self._render_content(command)
             commands = [Command(Command.SHELL, [command])]
         else:
             commands = Parser().parse(self.workflow.result)
