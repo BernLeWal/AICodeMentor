@@ -9,6 +9,7 @@ import re
 from enum import Enum
 import datetime
 from dotenv import load_dotenv
+from app.util.string_utils import trunc_right, escape_linefeed
 from app.agents.agent import AIAgent
 from app.agents.agent_factory import AIAgentFactory
 from app.agents.prompt import Prompt
@@ -150,7 +151,7 @@ class WorkflowInterpreter:
             self._save_history(f"{Activity.Kind.ASSIGN.value}: {value}",
                 self.workflow.status, self.workflow.result)
             return False
-        logger.info("ASSIGN: %s", WorkflowInterpreter.limit_str(content))
+        logger.info("ASSIGN: %s", escape_linefeed(trunc_right(content)))
         self.workflow.result = content
 
         self._save_history(f"{Activity.Kind.ASSIGN.value}: {value}",
@@ -177,7 +178,7 @@ class WorkflowInterpreter:
         value = self.get_value(value, value)
         value = self._render_content(value)
         self.set_value(name, value)
-        logger.info("SET: %s='%s'", name, WorkflowInterpreter.limit_str(value))
+        logger.info("SET: %s='%s'", name, escape_linefeed(trunc_right(value)))
         self._save_history(f"{Activity.Kind.SET.value}: {expression}",
             self.workflow.status, self.workflow.result)
         return True
@@ -210,8 +211,8 @@ class WorkflowInterpreter:
             return False
 
         prompt_content = self._render_content(prompt_content)
-        logger.info("PROMPT: role=%s, content=%s",
-            role, WorkflowInterpreter.limit_str(prompt_content))
+        logger.info("PROMPT: role=%s, content=%s", role,
+            escape_linefeed(trunc_right(prompt_content)))
 
         if self.agent is None:
             self.agent = AIAgentFactory.create_agent()
@@ -226,7 +227,7 @@ class WorkflowInterpreter:
             self.workflow.result = prompt_content
         else:   #if Prompt.USER == role.lower():
             self.workflow.result = self.agent.ask(prompt_content)
-        logger.info("PROMPT: result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
+        logger.info("PROMPT: result: %s", escape_linefeed(trunc_right(self.workflow.result)))
         self._save_history(f"{Activity.Kind.PROMPT.value}: {prompt_id}",
             self.workflow.status, f"{prompt_content}\n\n---\n\n{self.workflow.result}")
         return True
@@ -234,7 +235,7 @@ class WorkflowInterpreter:
 
     def execute(self, command: str = None)->bool:
         """Execute the commands in the current result"""
-        logger.info("EXECUTE: %s", WorkflowInterpreter.limit_str(self.workflow.result))
+        logger.info("EXECUTE: %s", escape_linefeed(trunc_right(self.workflow.result)))
 
         if self.command_executor is None:
             logger.error("CommandExecutor is not set")
@@ -253,13 +254,15 @@ class WorkflowInterpreter:
         history_result = ""
         for cmd in commands:
             self.command_executor.execute(cmd)
-            self.workflow.result += cmd.output
             history_result += "Input:\n```shell\n"
             for shell_cmd in cmd.cmds:
+                self.workflow.result += f"$ {shell_cmd}\n"
                 history_result += f"{shell_cmd}\n"
             if len(cmd.output) > 0:
+                self.workflow.result += cmd.output + "\n"
                 history_result += f"```\n\nOutput:\n```shell\n{cmd.output}\n```\n\n"
             else:
+                self.workflow.result += "\n"
                 history_result += "```\n\nNo Output\n\n"
         self._save_history(f"{Activity.Kind.EXECUTE.value}: {command}",
             self.workflow.status, history_result)
@@ -294,7 +297,7 @@ class WorkflowInterpreter:
         ## run the workflow
         sub_status = sub_interpreter.run(sub_workflow)
         logger.info("CALL: Sub-Workflow %s completed with %s, Result:%s",
-            workflow_name, sub_status, WorkflowInterpreter.limit_str(sub_workflow.result))
+            workflow_name, sub_status, escape_linefeed(trunc_right(sub_workflow.result)))
         self.workflow.status = sub_status
         self.workflow.result = sub_workflow.result
         for key,value in sub_workflow.variables.items():
@@ -330,8 +333,7 @@ class WorkflowInterpreter:
                 self.workflow.status, self.workflow.result)
             return False
 
-        logger.info("CHECK: '%s' %s '%s'",
-            right, operation, WorkflowInterpreter.limit_str(left))
+        logger.info("CHECK: '%s' %s '%s'", right, operation, escape_linefeed(trunc_right(left)))
         self._save_history(f"{Activity.Kind.CHECK.value}: {expression}",
             self.workflow.status, self.workflow.result)
         return OperationInterpreter.interpret_operation(operation, left, right)
@@ -342,7 +344,7 @@ class WorkflowInterpreter:
         if self.workflow.result is None:
             logger.info("SUCCESS without result")
         else:
-            logger.info("SUCCESS result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
+            logger.info("SUCCESS result: %s", escape_linefeed(trunc_right(self.workflow.result)))
         self.workflow.status = Workflow.Status.SUCCESS
         self._save_history(f"{Activity.Kind.SUCCESS.value}",
             self.workflow.status, self.workflow.result)
@@ -353,13 +355,13 @@ class WorkflowInterpreter:
         if self.workflow.result is None or len(self.workflow.result) == 0:
             if len(result) > 0:
                 self.workflow.result = result
-                logger.warning("FAILED result: %s", WorkflowInterpreter.limit_str(result))
+                logger.warning("FAILED result: %s", escape_linefeed(trunc_right(result)))
             else:
                 logger.warning("FAILED without result")
         else:
             if len(result) > 0:
                 self.workflow.result = result + "  \n" + self.workflow.result
-            logger.warning("FAILED result: %s", WorkflowInterpreter.limit_str(self.workflow.result))
+            logger.warning("FAILED result: %s", escape_linefeed(trunc_right(self.workflow.result)))
         self.workflow.status = Workflow.Status.FAILED
         self._save_history(f"{Activity.Kind.FAILED.value}",
             self.workflow.status, self.workflow.result)
@@ -448,14 +450,6 @@ class WorkflowInterpreter:
         WorkflowWriter(self.workflow).save_history(self.current_activity, self.history,
             self.workflow.filepath, self.history_dir)
 
-
-
-    @staticmethod
-    def limit_str(content: str, length :int= 100)->str:
-        """Limit the string length to the specified number of characters"""
-        if len(content) > length:
-            return content[:length].replace("\n", "\\n") + "..."
-        return content.replace("\n", "\\n")
 
 
 if __name__ == "__main__":

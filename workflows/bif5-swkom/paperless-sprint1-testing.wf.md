@@ -5,8 +5,8 @@ Tasks to do:
 - unit tests are existing and running without failures
 - REST-Server starts successfully
 - REST-Endpoints can be executed successfully
-    - GET /api/documents: returns HTTP 200 OK
-    - POST /api/documents/post_document: returns HTTP 201 OK
+    - GET /api/documents: returns HTTP 2xx
+    - POST /api/documents/post_document: returns HTTP 2xx
 - REST-Server stops successfully
 
 Maximum total Score: 30 points 
@@ -103,8 +103,8 @@ If localhost does not answer on HTTP Requests, then just write "FAILED".
 If you can't decide if SUCCESS or FAILED explicitly, or if you need another trial, then answer with the word "CONTINUE" in the first line.
 
 In the following line print the score for the REST Tests, which is the sum of the part-scores:
-1. if the GET Request was answered with HTTP 200, then this part-score is 10 points (otherwise 0)
-2. if the POST Request was answered with HTTP 201 or HTTP 200, then this part-score is 10 points (otherwise 0)
+1. if the GET Request was answered successfully, with HTTP 200, 201 or 204, then this part-score is 10 points (otherwise 0)
+2. if the POST Request was answered successfully, with HTTP 201 or HTTP 200, then this part-score is 10 points (otherwise 0)
 
 The console output of your generated commands is:  
 ```shell

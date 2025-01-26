@@ -114,7 +114,7 @@ class WorkflowWriter:
         self.file.write(f"{WorkflowMdSection.HISTORY.value[0]}\n\n")
         counter = 1
         for record in history.records:
-            self.file.write(f"# {counter}. {record.activity_caption} " +\
+            self.file.write(f"## {counter}. {record.activity_caption} " +\
                 f" => {record.status}\n")
             self.file.write(f"<!-- ts={record.timestamp} -->\n")
             if record.result is not None and len(record.result) > 0:
@@ -123,6 +123,7 @@ class WorkflowWriter:
                 self.file.write("\n")
             counter += 1
 
+        self.file.flush()
         self.file.close()
 
 

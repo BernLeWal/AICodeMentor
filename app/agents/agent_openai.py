@@ -6,6 +6,7 @@ import logging
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from app.util.string_utils import trunc_middle
 from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
 
@@ -49,8 +50,7 @@ class AIAgentOpenAI(AIAgent):
         """Sends a prompt to ChatGPT, will track the result in messages"""
         logger.debug("Ask AIAgentOpenAI: %s", prompt)
         if len(prompt) > self.max_prompt_length:
-            prompt = prompt[:int(self.max_prompt_length/2)] + "\n...(truncated)...\n" \
-                + prompt[int(-self.max_prompt_length/2):]
+            prompt = trunc_middle(prompt, self.max_prompt_length)
             logger.warning("Prompt is too long, so truncated in the middle:\n%s", prompt)
         super().ask(prompt)
         messages = [msg.to_dict() for msg in self.messages]

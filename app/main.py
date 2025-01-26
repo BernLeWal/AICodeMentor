@@ -6,8 +6,10 @@ automatically analyse, feedback and grade source-code project submissions using 
 import logging
 import sys
 import os
+import argparse
 from dotenv import load_dotenv
 
+from app.version import __version__, __app_name__, __app_description__
 from app.agents.agent_factory import AIAgentFactory
 from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.interpreter import WorkflowInterpreter
@@ -45,25 +47,62 @@ def show_help():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        show_help()
-        exit(1)
-        #sys.argv.append("workflows/bif5-swkom/paperless-sprint1.wf.md")
-        #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
+    # For debugging, uncomment and set the following lines
+    #sys.argv.append("--verbose")
+    #sys.argv.append("workflows/bif5-swkom/paperless-sprint1.wf.md")
+    #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
-    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
-        show_help()
+    parser = argparse.ArgumentParser(
+        description=f"{__app_name__} - {__app_description__}"
+    )
+    parser.add_argument(
+        "-v", "--version",
+        action="version",
+        version=f"{__app_name__} V{__version__}",
+        help="Show program's version number and exit"
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="Write the log-output also to the console"
+    )
+    parser.add_argument(
+        '-s', '--server',
+        action='store_true',
+        help="Run the application as a server"
+    )
+    parser.add_argument(
+        'workflow_file',
+        metavar='<workflow-file.md>',
+        type=str,
+        help="Path to the workflow file in Markdown format"
+    )
+    parser.add_argument(
+        'key_values',
+        metavar='<key=value>',
+        type=str,
+        nargs='*',
+        help="Optional key-value pairs to pass to the application"
+    )
+
+    args = parser.parse_args()
+    if args.verbose or args.server:
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    if args.server:
+        #from app.server import run_server
+        #run_server()
         exit(0)
 
-    main_workflow = WorkflowReader.load_from_mdfile(sys.argv[1], ".")
+
+    main_workflow = WorkflowReader.load_from_mdfile(args.workflow_file, ".")
     print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})  ")
-    if len(sys.argv) > 2:
-        print("with parameters:  ")
-        for arg in sys.argv[2:]:
-            key, value = arg.split("=")
+    if args.key_values:
+        print("with parameters:")
+        for kv in args.key_values:
+            key, value = kv.split("=")
             print(f"  - {key}={value}\n")
             main_workflow.variables[key] = value
-        print("\n")
+
     main_interpreter = WorkflowInterpreter()
     main_interpreter.agent = AIAgentFactory.create_agent()
     main_interpreter.command_executor = ShellCommandExecutor()
