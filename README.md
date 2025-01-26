@@ -4,19 +4,23 @@ A product to automatically analyse, feedback and grade source-code project submi
 
 AI-agents will autonomously evaluate source-code projects base on program requirements and specifications. Therefore it will generate the commands (shell, etc.) which will be executed and the output analyzed autonomously.
 
-## TODOs
+## Implementation Status
+
+### TODOs
 Before "official" version 0.1 (the MVP):
 * Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
+    * sub-workflow for command-prompts supporting step-by-step and AI-Agent improvements
+* Improve end-of-command detection in ShellCommandExecutor
+* Record a video "shorts" about the idea and product --> for LinkedIn and Spusu
 
 Later:
 * ShellExecutor command whitelist, blacklist, reputation mechanism
 * feedback for the AIAgent on the prompt results for improvement (learning)
 * AIAgent collaboration sequence diagram written
 * Add Activity to ask user for input
-* --verbose mode will output logs to console, too
 * --server mode with REST API (to avoid volume-mounts)
 
-## Research Questions
+### Research Questions
 
 1. Q: How can I reach the next AI-autonomy level in this product.  
    A: Fulfil all aspects of the AI-Agent definition published by Google in their paper about [*Agents*](https://media.licdn.com/dms/document/media/v2/D561FAQH8tt1cvunj0w/feedshare-document-pdf-analyzed/B56ZQq.TtsG8AY-/0/1735887787265?e=1736985600&v=beta&t=pLuArcKyUcxE9B1Her1QWfMHF_UxZL9Q-Y0JTDuSn38)
@@ -25,6 +29,13 @@ Later:
     - Managed session with multi-turn inference between the "system" and the "agent"
     - Tools are natively implemented in the agent Architecture
     - Agent learns by the feedback it gets itself by the "system"
+
+### Lessons Learned
+
+1. Classical- --vs-- AI-included Programming:  
+    - The output and behavior of AI-Agents is not so deterministic as with formal programming.
+    - E.g. there is no "grammar" to parse AI-Agent output; parsers have to be implemented to be more error-prone (which is up to creativity and intuition of the programmer)
+    - a better approach would be for the parser to ask the AIAgent to improve the output
 
 ## Usage
 
@@ -36,15 +47,17 @@ Later:
 ### Running
 
 Run the AI CodeMentor using the prepared shell scripts:
-- On Linux: ```./run_codementor.sh [options] <workflow-file.md> [key=value ...]```
-- On Windows: ```./run_codementor.ps1 [options] <workflow-file.md> [key=value ...]```
+- On Linux: ```./run_codementor.sh [options] <workflow-file.md> [<key=value> ...]```
+- On Windows: ```./run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]```
 
 Options:
 - ```-h```, ```--help```         Show this help message and exit
+- ```-v```, ```--version```      Show application version
+- ```-verbose```                 Display application log also in console
 
 Arguments:
 - *<workflow-file.md>*    A Markdown file containing the definition of the workflow and prompts, see [workflows/check-toolchain.wf.md](workflows/check-toolchain.wf.md) for an example
-- *[key=value]*   Parameters to be sent to the workflow. Multiple key/value pairs are allowed.
+- *[<key=value> ...]*   Parameters to be sent to the workflow. Multiple key/value pairs are allowed.
 
 ### Example
 
@@ -123,7 +136,7 @@ Unfortunately this means, that the docker log will stay empty.
 
 - Run the console app to evaluate a sample project
     ```sh
-    python app/main.py workflows/bif5-swkom/paperless-sprint1.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+    python app/main.py workflows/swkom/paperless-sprint1.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
     ```
 
 ## Documentation

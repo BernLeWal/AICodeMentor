@@ -49,7 +49,7 @@ def show_help():
 if __name__ == "__main__":
     # For debugging, uncomment and set the following lines
     #sys.argv.append("--verbose")
-    #sys.argv.append("workflows/bif5-swkom/paperless-sprint1.wf.md")
+    #sys.argv.append("workflows/swkom/paperless-sprint1.wf.md")
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
     parser = argparse.ArgumentParser(

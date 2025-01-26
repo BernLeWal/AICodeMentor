@@ -4,7 +4,7 @@ services:
     build:
       dockerfile: docker/codementor/Dockerfile
       context: .
-    image: codementor-image
+    image: codementor
     container_name: codementor
     environment:
       # Load environment variables from the local .env file
@@ -14,3 +14,20 @@ services:
       - ./output:/home/mentor/output
       - ./log:/home/mentor/log
     entrypoint: ["python", "main.py"]
+    restart: never
+
+  codementor-java:
+    build:
+      dockerfile: docker/codementor-java/Dockerfile
+      context: .
+    image: codementor-java
+    container_name: codementor
+    environment:
+      # Load environment variables from the local .env file
+      - ENV_FILE=.env
+    volumes:
+      - ./workflows:/home/mentor/workflows
+      - ./output:/home/mentor/output
+      - ./log:/home/mentor/log
+    entrypoint: ["python", "main.py"]
+    restart: never

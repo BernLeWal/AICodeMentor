@@ -1,4 +1,6 @@
-# AI CodeMentor
+# AI CodeMentor Docker Image
+
+This image contains the base tools for AI CodeMentor supporting the Python Tools and the Bash Commandshell.
 
 ## Pre-Requisites
 
@@ -8,6 +10,6 @@
 
 From the project root directory run the following command:
 ```shell
-docker build -t codementor-image -f docker/codementor/Dockerfile .
+docker build -t codementor -f docker/codementor/Dockerfile .
 ```
 
