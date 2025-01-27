@@ -52,6 +52,10 @@ class Parser:
                     # Inside code SHELL block:
                     # create one Command instance per line
                     if len(line) > 0:
+                        # remove the shell prompt, often used in agent outputs
+                        if line.startswith("$ "):
+                            line = line[2:]
+
                         if len(current_code_lines) > 0 and not collapse_next_line:
                             if not line.startswith(" ") and not line.startswith("\t") \
                                 and not is_code_block:
@@ -100,7 +104,7 @@ if __name__ == "__main__":
         "git --version && echo \"Git is installed\" || echo \"Git is not installed\"\n" + \
         "\n" + \
         "# Check if GitHub is reachable\n" + \
-        "ping -c 4 github.com\n" + \
+        "$ ping -c 4 github.com\n" + \
         "```\n"
     # Print the parsed commands
     for command in main_parser.parse(MAIN_AGENT_MESSAGE):

@@ -21,7 +21,7 @@ load_dotenv()
 
 # Setup logging framework
 if not logging.getLogger().hasHandlers():
-    logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
+    logging.basicConfig(level=os.getenv('LOGLEVEL', 'DEBUG').upper(),
                         format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class ShellCommandExecutor(CommandExecutor):
                 self.shell_process.stdin.write(cmd)
 
                 # Signal the end of the command
-                cmd = f"\necho {command_marker_end}\n"
+                cmd = f"\nprintf '\\n{command_marker_end}\\n'\n"
                 logger.debug("  STDIN:  %s",cmd)
                 cmd = cmd.replace('\r\n', '\n')
                 self.shell_process.stdin.write(cmd)

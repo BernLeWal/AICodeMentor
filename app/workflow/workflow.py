@@ -10,6 +10,8 @@ from app.workflow.activity import Activity
 class Workflow:
     """The base class for all Workflow implementations"""
 
+    instance_count = 0
+
     class Status(Enum):
         """Workflow status enumeration"""
         CREATED = -1
@@ -26,6 +28,8 @@ class Workflow:
         self.name = filepath.replace('.md', '')
         self.parent : Workflow = parent  # parent workflow
         self.description : str = ''
+        Workflow.instance_count += 1
+        self.instance_nr = Workflow.instance_count
 
         self.status : Workflow.Status = Workflow.Status.CREATED
         self.result : str = None

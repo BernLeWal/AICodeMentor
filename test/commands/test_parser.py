@@ -18,6 +18,14 @@ class TestParser(unittest.TestCase):
         self.assertEqual(commands[0].type, Command.SHELL)
         self.assertEqual(commands[0].cmds, ["ls -la"])
 
+    def test_parse_single_command_with_prompt(self):
+        """Test parsing a single command"""
+        agent_msg = "```bash\n$ ls -la\n```"
+        commands = self.parser.parse(agent_msg)
+        self.assertEqual(len(commands), 1)
+        self.assertEqual(commands[0].type, Command.SHELL)
+        self.assertEqual(commands[0].cmds, ["ls -la"])
+
     def test_parse_multiple_commands(self):
         """Test parsing multiple commands"""
         agent_msg = "```bash\nls -la\n```\n```python\nprint('Hello, world!')\n```"
@@ -27,6 +35,16 @@ class TestParser(unittest.TestCase):
         self.assertEqual(commands[0].cmds, ["ls -la"])
         self.assertEqual(commands[1].type, "python")
         self.assertEqual(commands[1].cmds, ["print('Hello, world!')"])
+
+    def test_parse_multiple_commands_with_prompt(self):
+        """Test parsing multiple commands"""
+        agent_msg = "```bash\n$ ls -la\n$ echo 'Hello, world!'\n```"
+        commands = self.parser.parse(agent_msg)
+        self.assertEqual(len(commands), 2)
+        self.assertEqual(commands[0].type, Command.SHELL)
+        self.assertEqual(commands[0].cmds, ["ls -la"])
+        self.assertEqual(commands[1].type, Command.SHELL)
+        self.assertEqual(commands[1].cmds, ["echo 'Hello, world!'"])
 
     def test_parse_no_commands(self):
         """Test parsing when there are no commands"""

@@ -35,6 +35,8 @@ if not logging.getLogger().hasHandlers():
 logger = logging.getLogger(__name__)
 
 
+
+
 class WorkflowInterpreter:
     """The base class for all WorkflowInterpreter implementations"""
 
@@ -54,11 +56,11 @@ class WorkflowInterpreter:
         self.command_executor : CommandExecutor = None  # will be set from outside
         self.max_hits = 3
         self.current_activity = None
-        self.id = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{os.getpid()}"
+        self.id = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.parent_interpreter : WorkflowInterpreter = parent_interpreter
+
         self.history : History = History()
         self.history_dir : str = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
-
         if self.parent_interpreter is not None:
             parent = self.parent_interpreter
             while parent.parent_interpreter is not None:
@@ -66,7 +68,6 @@ class WorkflowInterpreter:
             self.history_dir = os.path.join(self.history_dir, parent.id)
         else:
             self.history_dir = os.path.join(self.history_dir, self.id)
-
 
 
     def run(self, workflow : Workflow)->Workflow.Status:
@@ -447,8 +448,10 @@ class WorkflowInterpreter:
 
     def _save_history(self, caption : str, status : Workflow.Status, result : str)->None:
         self.history.add_record(caption, status, result)
-        WorkflowWriter(self.workflow).save_history(self.current_activity, self.history,
-            self.workflow.filepath, self.history_dir)
+        WorkflowWriter(self.workflow).save_history(
+            current_activity = self.current_activity,
+            history = self.history,
+            directory = self.history_dir)
 
 
 

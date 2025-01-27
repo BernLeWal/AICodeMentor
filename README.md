@@ -10,7 +10,6 @@ AI-agents will autonomously evaluate source-code projects base on program requir
 Before "official" version 0.1 (the MVP):
 * Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
     * sub-workflow for command-prompts supporting step-by-step and AI-Agent improvements
-* Improve end-of-command detection in ShellCommandExecutor
 * Record a video "shorts" about the idea and product --> for LinkedIn and Spusu
 
 Later:

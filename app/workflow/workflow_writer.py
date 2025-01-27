@@ -82,9 +82,10 @@ class WorkflowWriter:
         if not os.path.exists(directory):
             os.makedirs(directory)
         if filepath is None:
-            filepath = self.workflow.filepath
-        # get just the filename without directory and extensions from filepath
-        filepath = os.path.basename(self.workflow.filepath)
+            filepath = os.path.basename(self.workflow.filepath)
+            filepath = f"{self.workflow.instance_nr:02d}_" + filepath.replace(".wf.md", ".wfh.md")
+        else:
+            filepath = os.path.basename(filepath)
         self._open_file(filepath, directory, overwrite)
 
         # First section: general
