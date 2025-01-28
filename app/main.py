@@ -91,7 +91,7 @@ if __name__ == "__main__":
     if args.server:
         #from app.server import run_server
         #run_server()
-        exit(0)
+        sys.exit(0)
 
 
     main_workflow = WorkflowReader.load_from_mdfile(args.workflow_file, ".")
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     main_status = main_interpreter.run(main_workflow)
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_workflow.result}")
-        exit(0)
+        sys.exit(0)
     else:
         print(f"Workflow completed with FAILED\n\n---\n{main_workflow.result}")
-        exit(1)
+        sys.exit(1)

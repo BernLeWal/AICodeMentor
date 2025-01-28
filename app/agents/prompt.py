@@ -35,8 +35,7 @@ class Prompt:
     def __str__(self):
         if len(self.content) > 100:
             return f"{self.role}: {self.content[:100]}...".replace("\n", "\\n")
-        else:
-            return f"{self.role}: {self.content}".replace("\n", "\\n")
+        return f"{self.role}: {self.content}".replace("\n", "\\n")
 
 
 class PromptEncoder(json.JSONEncoder):

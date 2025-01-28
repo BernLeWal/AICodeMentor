@@ -27,10 +27,10 @@ class Activity:
 
     class Succeeded(Enum):
         """Activity succeeded enumeration"""
-        YES = 'YES',
-        TRUE = 'TRUE',
-        OK = 'OK',
-        SUCCESS = 'SUCCESS',
+        YES = 'YES'
+        TRUE = 'TRUE'
+        OK = 'OK'
+        SUCCESS = 'SUCCESS'
 
         def __str__(self):
             return self.name
@@ -38,12 +38,12 @@ class Activity:
 
     class Failed(Enum):
         """Activity failed enumeration"""
-        NO = 'NO',
-        FALSE = 'FALSE',
-        ERROR = 'ERROR',
-        FAILED = 'FAILED',
-        ELSE = 'ELSE',
-        FAIL = 'FAIL',
+        NO = 'NO'
+        FALSE = 'FALSE'
+        ERROR = 'ERROR'
+        FAILED = 'FAILED'
+        ELSE = 'ELSE'
+        FAIL = 'FAIL'
         OTHER = 'OTHER'
 
         def __str__(self):

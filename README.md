@@ -29,12 +29,14 @@ Later:
     - Tools are natively implemented in the agent Architecture
     - Agent learns by the feedback it gets itself by the "system"
 
-### Lessons Learned
-
-1. Classical- --vs-- AI-included Programming:  
+2. Q: How does software-development differ when dealing with AI-agents vs. the classical approach  
+   A: Classical- --vs-- AI-included Programming:  
     - The output and behavior of AI-Agents is not so deterministic as with formal programming.
     - E.g. there is no "grammar" to parse AI-Agent output; parsers have to be implemented to be more error-prone (which is up to creativity and intuition of the programmer)
     - a better approach would be for the parser to ask the AIAgent to improve the output
+
+### Lessons Learned
+
 
 ## Usage
 
@@ -46,8 +48,9 @@ Later:
 ### Running
 
 Run the AI CodeMentor using the prepared shell scripts:
-- On Linux: ```./run_codementor.sh [options] <workflow-file.md> [<key=value> ...]```
-- On Windows: ```./run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]```
+- On Linux: ```bin/run_codementor.sh [options] <workflow-file.md> [<key=value> ...]```
+- On Windows: ```bin/run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]```
+see [bin/README.md](./bin/README.md) for details.
 
 Options:
 - ```-h```, ```--help```         Show this help message and exit
@@ -60,16 +63,16 @@ Arguments:
 
 ### Example
 
-To run the workflow [paperless-sprint1.wf.md](workflows/check-toolchain.wf.md) with a specific REPO_URL [https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git) as parameter.
+To run the workflow [check-toolchain.wf.md](workflows/check-toolchain.wf.md) with a specific REPO_URL [https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git) as parameter.
 
 Linux:
 ```bash
-$ ./run_codementor.sh workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+$ bin/run_codementor-java.sh workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
 ```
 
 Windows:
 ```powershell
-PS > .\run_codementor.ps1 workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+PS > bin\run_codementor-java.ps1 workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
 ```
 
 ATTENTION: You must use the normal slash '/' is path parameters, because the app is running in a linux environment.

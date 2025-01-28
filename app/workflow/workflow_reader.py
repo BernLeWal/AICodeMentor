@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 class WorkflowMdSection(Enum):
     """Sections inside a Markdown file"""
-    NONE = "",
-    WORKFLOW = "# Workflow",
+    NONE = ""
+    WORKFLOW = "# Workflow"
     PROMPTS = "# Prompts"
 
     def __str__(self):
@@ -131,10 +131,9 @@ class WorkflowReader:
     def __check_section(line_strip : str) -> WorkflowMdSection:
         if line_strip.startswith('# Workflow'):
             return WorkflowMdSection.WORKFLOW
-        elif line_strip.startswith('# Prompts'):
+        if line_strip.startswith('# Prompts'):
             return WorkflowMdSection.PROMPTS
-        else:
-            return WorkflowMdSection.NONE
+        return WorkflowMdSection.NONE
 
     @staticmethod
     def __parse_flowchart_line(workflow : Workflow, line : str) -> None:

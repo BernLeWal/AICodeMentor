@@ -6,10 +6,11 @@ WorkflowInterpreter module  - Interpreter for Workflow instances
 import logging
 import os
 import re
+import sys
 from enum import Enum
 import datetime
 from dotenv import load_dotenv
-from app.util.string_utils import trunc_right, escape_linefeed
+from app.util.string_utils import trunc_right, escape_linefeed, trunc_middle
 from app.agents.agent import AIAgent
 from app.agents.agent_factory import AIAgentFactory
 from app.agents.prompt import Prompt
@@ -68,6 +69,7 @@ class WorkflowInterpreter:
             self.history_dir = os.path.join(self.history_dir, parent.id)
         else:
             self.history_dir = os.path.join(self.history_dir, self.id)
+        self.history_max_length = int(os.getenv('AI_MAX_PROMPT_LENGTH', '2000'))
 
 
     def run(self, workflow : Workflow)->Workflow.Status:
@@ -447,7 +449,7 @@ class WorkflowInterpreter:
 
 
     def _save_history(self, caption : str, status : Workflow.Status, result : str)->None:
-        self.history.add_record(caption, status, result)
+        self.history.add_record(caption, status, trunc_middle(result, self.history_max_length))
         WorkflowWriter(self.workflow).save_history(
             current_activity = self.current_activity,
             history = self.history,
@@ -465,7 +467,7 @@ if __name__ == "__main__":
     main_status = main_interpreter.run(main_workflow)
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS, Result:\n{main_workflow.result}")
-        exit(0)
+        sys.exit(0)
     else:
         print(f"Workflow completed with FAILED, Result:\n{main_workflow.result}")
-        exit(1)
+        sys.exit(1)

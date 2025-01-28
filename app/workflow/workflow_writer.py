@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 
 class WorkflowMdSection(Enum):
     """Sections inside a Markdown file"""
-    GENERAL = "",
-    VARIABLES = "## Variables",
+    GENERAL = ""
+    VARIABLES = "## Variables"
 
-    WORKFLOW = "# Workflow",
-    PROMPTS = "# Prompts",
-    HISTORY = "# History",
+    WORKFLOW = "# Workflow"
+    PROMPTS = "# Prompts"
+    HISTORY = "# History"
 
     def __str__(self):
         return self.name
