@@ -1,8 +1,28 @@
-# AI SourceCode Mentor
+# AI Code Mentor
 
-A product to automatically analyse, feedback and grade source-code project submissions using AI agents.
+A **runtime** on which to build applications with integrated autonomous AI-agents. The applications are defined as workflows, which are written together with prompts in Markdown files (.wf.md) which will be interpreted by the CodeMentor.
 
-AI-agents will autonomously evaluate source-code projects base on program requirements and specifications. Therefore it will generate the commands (shell, etc.) which will be executed and the output analyzed autonomously.
+The **AI-agents** (mutliple instances are provided) will generate commands (bash shell commands, etc.), which will be executed directly and the output fed back to the AI-agents to make them analyze the outcome of their tasks. A feature is, that the AI-agents may iterate over their tasks to improve the results when necessary. Currently Platform OpenAI is integrated, but in future there will be added alternatives.
+
+A provided **sample scenario: automatic grading of software-development assignments** is a workflow to automatically analyse, feedback and grade source-code project submissions using AI agents (the author comes from the software development education area): AI-agents will autonomously evaluate source-code projects base on program requirements and specifications. 
+
+Added benefits/differences to use ChatGPT:
+- The **data working on is staying local** (and not uploaded into the cloud completely), and is worked with inside the docker container. AI is used with Prompts to generate commands which work on the data locally.
+- The **commands the AI suggests are excecuted automatically** in the local container, so there is no manual copy&paste of text between the chat window and your machine. 
+- ChatGPT **Canvas is still limited**, it can execute commands also, but will do that in the cloud and is limited (currently) when it comes to deal with multiple files and complex execution environments.
+- **Multiple AI-agents** run on the same workflow at the same time, separating the tasks and individual task-goals.
+- AI needs good context to better fulfil its tasks, with the **workflows** the goal and way to achieve it is defined much more clear compared to only text prompts. Especially paths, branches and alternative ways can be modelled.
+- CodeMentor allows to easily **automate and scale** for using the same workflow on multiple targets, e.g. run the same workflow not only of one sourcecode-submission (the sample scenario above), but for 100.
+- **Traceability** allows to analyse which prompts and which commands are executed with which result in a step-by-step manner. This opens up the "black box" to see what is really happening inside the runtime.
+
+Screenshots of the running application:
+- Part of the defined workflow (here for REST-Service function evaluation):
+
+![](./docs/Screenshot_run_workflow.png)
+
+- Console output with the result of the CodeMentor run
+
+![](./docs/screenshot_run_console_output.png)
 
 ## Implementation Status
 
@@ -10,9 +30,9 @@ AI-agents will autonomously evaluate source-code projects base on program requir
 Before "official" version 0.1 (the MVP):
 * Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
     * sub-workflow for command-prompts supporting step-by-step and AI-Agent improvements
-* Record a video "shorts" about the idea and product --> for LinkedIn and Spusu
 
 Later:
+* Record a video "shorts" about the idea and product --> for LinkedIn, YouTube
 * ShellExecutor command whitelist, blacklist, reputation mechanism
 * feedback for the AIAgent on the prompt results for improvement (learning)
 * AIAgent collaboration sequence diagram written
@@ -34,8 +54,6 @@ Later:
     - The output and behavior of AI-Agents is not so deterministic as with formal programming.
     - E.g. there is no "grammar" to parse AI-Agent output; parsers have to be implemented to be more error-prone (which is up to creativity and intuition of the programmer)
     - a better approach would be for the parser to ask the AIAgent to improve the output
-
-### Lessons Learned
 
 
 ## Usage
@@ -81,7 +99,7 @@ ATTENTION: You must use the normal slash '/' is path parameters, because the app
 
 The console (stdin/stout/stderr) is used by the CLI interface of the application, 
 so logs are written to the file [log/codementor.log](log/codementor.log) instead - and not to console.
-Unfortunately this means, that the docker log will stay empty.
+Unfortunately this means, that the docker log will stay empty as long as not running with "--verbose" or in server ("--server") mode.
 
 ---
 
