@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 RUN apt-get update && \
-    apt-get -y install curl git wget procps
+    apt-get -y install curl git wget procps lsb-release jq
 
 RUN pip install --upgrade pip
 
@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app /home/mentor/app
 
 # Copy the .env file (optional, but you can override it with docker run or volumes)
-COPY .env /home/mentor/.env
+#COPY .env /home/mentor/.env
 
 # Change ownership of the app directory to the "mentor" user
 RUN chown -R mentor:mentor /home/mentor/app

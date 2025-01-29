@@ -4,7 +4,7 @@ This image contains the base tools for AI CodeMentor supporting the Python Tools
 
 ## Pre-Requisites
 
-- Generate your own .env file into the current directory, based on [../../.env.sample](../../.env.sample)
+- Generate your own .env file into the parent (docker/) directory, based on [../.env.sample](../.env.sample)
 
 ## Build the image
 

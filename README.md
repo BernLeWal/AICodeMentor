@@ -1,105 +1,128 @@
 # AI Code Mentor
 
-A **runtime** on which to build applications with integrated autonomous AI-agents. The applications are defined as workflows, which are written together with prompts in Markdown files (.wf.md) which will be interpreted by the CodeMentor.
+AI Code Mentor is a **runtime environment** designed for building applications with **integrated autonomous AI agents**. These applications are defined as **workflows**, written in Markdown files (`.wf.md`), which are interpreted and executed by the Code Mentor system.
 
-The **AI-agents** (mutliple instances are provided) will generate commands (bash shell commands, etc.), which will be executed directly and the output fed back to the AI-agents to make them analyze the outcome of their tasks. A feature is, that the AI-agents may iterate over their tasks to improve the results when necessary. Currently Platform OpenAI is integrated, but in future there will be added alternatives.
+The AI agents (multiple instances are supported) generate and execute commands (e.g., Bash shell commands) directly, feeding the output back to the AI for analysis and iteration. This allows AI agents to **self-improve their tasks** when necessary. Currently, OpenAI's platform is integrated, with plans to add alternative AI models in the future.
 
-A provided **sample scenario: automatic grading of software-development assignments** is a workflow to automatically analyse, feedback and grade source-code project submissions using AI agents (the author comes from the software development education area): AI-agents will autonomously evaluate source-code projects base on program requirements and specifications. 
+## Features & Benefits
 
-Added benefits/differences to use ChatGPT:
-- The **data working on is staying local** (and not uploaded into the cloud completely), and is worked with inside the docker container. AI is used with Prompts to generate commands which work on the data locally.
-- The **commands the AI suggests are excecuted automatically** in the local container, so there is no manual copy&paste of text between the chat window and your machine. 
-- ChatGPT **Canvas is still limited**, it can execute commands also, but will do that in the cloud and is limited (currently) when it comes to deal with multiple files and complex execution environments.
-- **Multiple AI-agents** run on the same workflow at the same time, separating the tasks and individual task-goals.
-- AI needs good context to better fulfil its tasks, with the **workflows** the goal and way to achieve it is defined much more clear compared to only text prompts. Especially paths, branches and alternative ways can be modelled.
-- CodeMentor allows to easily **automate and scale** for using the same workflow on multiple targets, e.g. run the same workflow not only of one sourcecode-submission (the sample scenario above), but for 100.
-- **Traceability** allows to analyse which prompts and which commands are executed with which result in a step-by-step manner. This opens up the "black box" to see what is really happening inside the runtime.
+### Key Features
+- **Local Execution**: Data remains local and is processed inside a **Docker container**, avoiding unnecessary cloud uploads.
+- **Autonomous Execution**: AI-generated commands are executed automatically within the container, eliminating the need for manual copy-pasting.
+- **Multi-Agent Support**: Multiple AI agents can operate simultaneously within the same workflow, distributing tasks efficiently.
+- **Structured Workflow Definition**: Workflows define clear goals, paths, branches, and alternative solutions, providing better AI context compared to free-text prompting.
+- **Scalability & Automation**: Execute workflows on multiple targets, e.g., grading 100+ source code submissions automatically.
+- **Traceability & Transparency**: All AI-generated commands and their results are logged, providing visibility into the execution process.
 
-Screenshots of the running application:
-- Part of the defined workflow (here for REST-Service function evaluation):
+<!--ChatGPT's **Canvas is still limited**. It can execute commands also, but will do that in the cloud and is limited (currently) when it comes to deal with multiple files and complex execution environments.-->
 
+### Example Use Case: Automatic Grading of Software Development Assignments
+
+AI Code Mentor enables **autonomous evaluation of source code projects** based on program requirements and specifications. The AI agents:
+1. Analyze student submissions.
+2. Provide feedback.
+3. Assign grades automatically.
+4. Iterate if necessary to refine evaluations.
+
+This is particularly useful for software development educators, reducing manual grading effort while maintaining fairness and transparency.  
+For more details see [AI CodeMentor – Automating the Evaluation of Programming Assignments](./docs/pitch/educators-pitch.md).
+
+---
+
+## Screenshots
+
+### Workflow Execution for REST Service Evaluation
 ![](./docs/Screenshot_run_workflow.png)
 
-- Console output with the result of the CodeMentor run
-
+### Console Output of an AI Code Mentor Run
 ![](./docs/screenshot_run_console_output.png)
+
+---
 
 ## Implementation Status
 
-### TODOs
-Before "official" version 0.1 (the MVP):
-* Write workflow for https://github.com/BernLeWal/fhtw-bif5-swkom-paperless
-    * sub-workflow for command-prompts supporting step-by-step and AI-Agent improvements
+### TODOs (Before MVP v0.1)
+- Provide necessary documentation: HOWTO-Guide, Markdown-Format description
 
-Later:
-* Record a video "shorts" about the idea and product --> for LinkedIn, YouTube
-* ShellExecutor command whitelist, blacklist, reputation mechanism
-* feedback for the AIAgent on the prompt results for improvement (learning)
-* AIAgent collaboration sequence diagram written
-* Add Activity to ask user for input
-* --server mode with REST API (to avoid volume-mounts)
+### Future Enhancements
+- Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
+  - Add sub-workflows for command prompts supporting **step-by-step execution and AI-driven refinements**.
+- Create a short demo video for LinkedIn & YouTube.
+- Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
+- Enhance AI agent feedback loops for **self-improvement**.
+- Develop a **collaboration model** for AI agents.
+- Implement **user interaction prompts** within workflows.
+- Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
 
-### Research Questions
+---
 
-1. Q: How can I reach the next AI-autonomy level in this product.  
-   A: Fulfil all aspects of the AI-Agent definition published by Google in their paper about [*Agents*](https://media.licdn.com/dms/document/media/v2/D561FAQH8tt1cvunj0w/feedshare-document-pdf-analyzed/B56ZQq.TtsG8AY-/0/1735887787265?e=1736985600&v=beta&t=pLuArcKyUcxE9B1Her1QWfMHF_UxZL9Q-Y0JTDuSn38)
+## Research Questions
 
-    - Connected to external systems
-    - Managed session with multi-turn inference between the "system" and the "agent"
-    - Tools are natively implemented in the agent Architecture
-    - Agent learns by the feedback it gets itself by the "system"
+### 1. How can AI Code Mentor achieve **full AI autonomy**?
+- Follow Google's [AI Agent definition](https://www.kaggle.com/whitepaper-agents):
+  - Integration with **external systems**.
+  - **Session-based interactions** with multi-turn inference.
+  - **Native tool integration** within the AI agent architecture.
+  - AI agents **learn from feedback** without external intervention.
 
-2. Q: How does software-development differ when dealing with AI-agents vs. the classical approach  
-   A: Classical- --vs-- AI-included Programming:  
-    - The output and behavior of AI-Agents is not so deterministic as with formal programming.
-    - E.g. there is no "grammar" to parse AI-Agent output; parsers have to be implemented to be more error-prone (which is up to creativity and intuition of the programmer)
-    - a better approach would be for the parser to ask the AIAgent to improve the output
+### 2. How does AI-driven software development differ from traditional methods?
+- AI-generated output is inherently **non-deterministic**, requiring flexible error-handling mechanisms.
+- Unlike structured programming, AI-driven execution lacks **formal grammars**, requiring **robust parsers** for interpreting agent outputs.
+- AI-generated outputs should be **iteratively improved** rather than statically parsed.
 
+---
 
 ## Usage
 
-### Pre-Requisites
+### Prerequisites
+- Install **Docker**: [Get Docker](https://www.docker.com/products/docker-desktop)
+- Create an .env file in the docker/ directory, based on the [docker/.env.sample](./docker/.env.sample) file.
+- Ensure shell scripts have execution permissions:
+  ```sh
+  chmod a+x bin/*.sh
+  ```
 
-- Docker environment (see https://www.docker.com/products/docker-desktop/)
-- Ensure that the shell-scripts have execution rights ```chmod a+x *.sh```
+### Running AI Code Mentor
 
-### Running
+**Linux:**
+  ```sh
+  bin/run_codementor.sh [options] <workflow-file.md> [<key=value> ...]
+  ```
+**Windows:**
+  ```powershell
+  bin\run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]
+  ```
+For more details, see [bin/README.md](bin/README.md).
 
-Run the AI CodeMentor using the prepared shell scripts:
-- On Linux: ```bin/run_codementor.sh [options] <workflow-file.md> [<key=value> ...]```
-- On Windows: ```bin/run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]```
-see [bin/README.md](./bin/README.md) for details.
+### Command-Line Options:
+| Option | Description |
+|--------|-------------|
+|-h, --help | Show help message |
+|-v, --version | Display version info |
+|--verbose | Show log output in console |
 
-Options:
-- ```-h```, ```--help```         Show this help message and exit
-- ```-v```, ```--version```      Show application version
-- ```-verbose```                 Display application log also in console
+### Arguments:
+- ```<workflow-file.md>```: Markdown file defining the workflow (e.g., [workflows/check-toolchain.wf.md](workflows/check-toolchain.wf.md)).
+- ```[<key=value> ...]```: Optional key-value parameters passed to the workflow.
 
-Arguments:
-- *<workflow-file.md>*    A Markdown file containing the definition of the workflow and prompts, see [workflows/check-toolchain.wf.md](workflows/check-toolchain.wf.md) for an example
-- *[<key=value> ...]*   Parameters to be sent to the workflow. Multiple key/value pairs are allowed.
+### Example Execution
+Run the check-toolchain workflow with a specific REPO_URL:
 
-### Example
+**Linux:**
+  ```sh
+  bin/run_codementor-java.sh workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+  ```
 
-To run the workflow [check-toolchain.wf.md](workflows/check-toolchain.wf.md) with a specific REPO_URL [https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git) as parameter.
-
-Linux:
-```bash
-$ bin/run_codementor-java.sh workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
-```
-
-Windows:
-```powershell
-PS > bin\run_codementor-java.ps1 workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
-```
-
-ATTENTION: You must use the normal slash '/' is path parameters, because the app is running in a linux environment.
+**Windows:**
+  ```powershell
+  PS > bin\run_codementor-java.ps1 workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+  ```
+⚠️ **Note**: Path parameters must use forward slashes (```/```) since the application runs in a Linux-based environment.
 
 ### Logging
-
-The console (stdin/stout/stderr) is used by the CLI interface of the application, 
-so logs are written to the file [log/codementor.log](log/codementor.log) instead - and not to console.
-Unfortunately this means, that the docker log will stay empty as long as not running with "--verbose" or in server ("--server") mode.
+- The console (```stdout```/```stderr```) is reserved for CLI output.
+- Logs are stored in: [log/codementor.log](log/codementor.log)
+- Docker logs remain empty unless running with ```--verbose``` or in ```--server``` mode.
 
 ---
 
@@ -107,58 +130,56 @@ Unfortunately this means, that the docker log will stay empty as long as not run
 
 ### Setup
 
-- Install Python3 (>3.12), and pip3
-    ```shell
-    sudo apt install python3 python3-pip -y
-    ```
-- Create and activate a virtual environment, e.g. venv
-    ```shell
-    #sudo apt install python3-venv -y
-    pip install virtualenv
-    python -m virtualenv .venv
-    source .venv/bin/activate
-    ```
-- Install required libraries:
-    ```shell
-    pip install -r requirements.txt
-    ```
+**Install Python & Dependencies**
+  ```sh
+  sudo apt install python3 python3-pip -y
+  pip install virtualenv
+  python -m virtualenv .venv
+  source .venv/bin/activate
+  pip install -r requirements.txt
+  ```
 
-### Running/Debugging
+### Running & Debugging
 
-- Ensure that the PYTHONPATH is set when you want to run the Python files directly, e.g.
-    - BASH:
-    ```sh
-    export PYTHONPATH=$(pwd)
-    ```
+1. Set ```PYTHONPATH``` before running:
+
+    - Linux (Bash):
+      ```sh
+      export PYTHONPATH=$(pwd)
+      ```
+
     - Windows (PowerShell):
-    ```powershell
-    $env:PYTHONPATH = (Get-Location).Path
-    ```
+      ```powershell
+      $env:PYTHONPATH = (Get-Location).Path
+      ```
 
-- Run the console app providing a workflow Markdown file
-    ```sh
-    python app/main.py workflows/check-toolchain.wf.md
-    ```
+2. Run the application with a workflow file:
 
-    The usage of the tool is as follows:
-    ```sh
-    $ python app/main.py -h
-    AI CodeMentor - automatically analyse, feedback and grade source-code project submissions using AI agents
+  ```sh
+  python app/main.py workflows/check-toolchain.wf.md
+  ```
 
-    Usage: python main.py [options] <workflow-file.md> [key=value ...]
+3. Help & Usage:
 
-    Options:
-        -h, --help         Show this help message and exit
+  ```sh
+  python app/main.py -h
+  ```
 
-    Example:
-        python main.py workflow.md FOO1=BAR1 FOO2=BAR2
-    ```
+### Sample Workflow Execution
 
-- Run the console app to evaluate a sample project
-    ```sh
-    python app/main.py workflows/swkom/paperless-sprint1.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
-    ```
+```sh
+python app/main.py workflows/source-eval/paperless-sprint1.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
+```
+
+---
 
 ## Documentation
 
-Software Architecture and Implementation Documentation see [docs/README.md](./docs/README.md)
+For software architecture and implementation details, see [docs/README.md](docs/README.md).
+
+---
+
+## License
+
+This project is licensed under the **[AGPLv3](./LICENSE)** open-source license.
+

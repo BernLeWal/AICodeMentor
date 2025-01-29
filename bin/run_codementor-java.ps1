@@ -15,7 +15,7 @@ $currentDir = Get-Location
 
 # Run the container with the given arguments
 docker run --rm `
-    --env-file docker\codementor-java\.env `
+    --env-file docker\.env `
     -v "$($currentDir)\workflows:/home/mentor/workflows" `
     -v "$($currentDir)\output:/home/mentor/output" `
     -v "$($currentDir)\log:/home/mentor/log" `

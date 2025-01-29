@@ -11,7 +11,7 @@ The AI-Agents in this solution differs from just LLM models like used in ChatGPT
 | No native tool implementation. | **Tools are natively implemented** in agent architecture. |
 | No native logic layer implemented. Users can form prompts as simple questions or use reasoning frameworks (CoT, ReAct, etc.) to form complex prompts to guide the model in prediction. | Native cognitive architecture that uses reasoning frameworks like CoT, ReAct, or other pre-built agent frameworks like LangChain.  |
 
-Reference: [*Agents* published by Google](https://media.licdn.com/dms/document/media/v2/D561FAQH8tt1cvunj0w/feedshare-document-pdf-analyzed/B56ZQq.TtsG8AY-/0/1735887787265?e=1736985600&v=beta&t=pLuArcKyUcxE9B1Her1QWfMHF_UxZL9Q-Y0JTDuSn38)
+Reference: [*Agents* published by Google](https://www.kaggle.com/whitepaper-agents)
 
 
 # AI-Agent Classes

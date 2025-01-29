@@ -14,7 +14,7 @@ fi
 
 # Run the container with the given arguments
 docker run --rm \
-    --env-file docker/codementor/.env \
+    --env-file docker/.env \
     -v "$(pwd)/workflows:/home/mentor/workflows" \
     -v "$(pwd)/output:/home/mentor/output" \
     -v "$(pwd)/log:/home/mentor/log" \

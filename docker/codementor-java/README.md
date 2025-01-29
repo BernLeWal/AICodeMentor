@@ -7,7 +7,7 @@ ATTENTION: if the java-project uses dynamic versions (aka "LATEST") or SNAPSHOT 
 
 ## Pre-Requisites
 
-- Generate your own .env file into the current directory, based on [../../.env.sample](../../.env.sample)
+- Generate your own .env file into the parent (docker/) directory, based on [../.env.sample](../.env.sample)
 
 ## Build the image
 

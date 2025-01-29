@@ -47,7 +47,7 @@ Afterwards check if the files are existing and in which sub-directory the pom.xm
 ## User CommandResults
 
 Your generated commands have been executed and the output is now shown to you.
-It the output shows, that the repository is cloned correctly and the exact paths to the pom.xml files are available, then just answer with the word "SUCCESS" in the first line.
+If the output shows, that the repository is cloned correctly and the exact paths to the pom.xml files are available, then just answer with the word "SUCCESS" in the first line.
 If the output shows, that the git commands failed or there are no pom.xml files, then just answer with the word "FAILED" in the first line.
 If you can't decide if SUCCESS or FAILED explicitly, or if you need another trial, then answer with the word "CONTINUE" in the first line.
 In the following lines of your answer summarize with only a few sentences the outcome of your activities and state the paths to the pom.xml file(s).

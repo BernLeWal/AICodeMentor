@@ -60,14 +60,14 @@ class WorkflowWriter:
         self.file.write(f"{self.workflow.description}\n\n")
 
         # Second section: workflow flow-chart
-        self.file.write(f"{WorkflowMdSection.WORKFLOW.value[0]}\n\n")
+        self.file.write(f"{WorkflowMdSection.WORKFLOW.value}\n\n")
         self.file.write("```mermaid\n")
         self.file.write("flowchart TD\n")
         self._write_activity(self.workflow.start)
         self.file.write("```\n\n")
 
         # Third section: Prompts
-        self.file.write(f"{WorkflowMdSection.PROMPTS.value[0]}\n\n")
+        self.file.write(f"{WorkflowMdSection.PROMPTS.value}\n\n")
         for name, prompt in self.workflow.prompts:
             self.file.write(f"## {name}\n\n{prompt}\n\n")
 
@@ -94,7 +94,7 @@ class WorkflowWriter:
         self.file.write("\n")
 
         # Second section: workflow flow-chart
-        self.file.write(f"{WorkflowMdSection.WORKFLOW.value[0]}\n")
+        self.file.write(f"{WorkflowMdSection.WORKFLOW.value}\n")
         self.file.write("```mermaid\n")
         self.file.write("flowchart TD\n")
         self._write_activity(self.workflow.start)
@@ -103,7 +103,7 @@ class WorkflowWriter:
                 "stroke:#000,stroke-width:4px,fill:#80a0ff\n")
         self.file.write("```\n\n")
 
-        self.file.write(f"{WorkflowMdSection.VARIABLES.value[0]}:  \n")
+        self.file.write(f"{WorkflowMdSection.VARIABLES.value}:  \n")
         for key, value in self.workflow.variables.items():
             if len(value) > 0 and value.find('\n')>0:
                 self.file.write(f"- **{key}**:  \n{value}  \n")
@@ -112,7 +112,7 @@ class WorkflowWriter:
         self.file.write("\n\n")
 
         # Third section: History
-        self.file.write(f"{WorkflowMdSection.HISTORY.value[0]}\n\n")
+        self.file.write(f"{WorkflowMdSection.HISTORY.value}\n\n")
         counter = 1
         for record in history.records:
             self.file.write(f"## {counter}. {record.activity_caption} " +\
