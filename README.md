@@ -41,12 +41,10 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-### TODOs (Before MVP v0.1)
-- Provide necessary documentation: HOWTO-Guide, Markdown-Format description
-
 ### Future Enhancements
 - Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
   - Add sub-workflows for command prompts supporting **step-by-step execution and AI-driven refinements**.
+- Improve tutorial and Markdown-Format description
 - Create a short demo video for LinkedIn & YouTube.
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
 - Enhance AI agent feedback loops for **self-improvement**.
@@ -76,11 +74,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ### Prerequisites
 - Install **Docker**: [Get Docker](https://www.docker.com/products/docker-desktop)
+- You need an **[Platform OpenAI](https://platform.openai.com/)** account, for the API_KEY to be configured in the .env file
 - Create an .env file in the docker/ directory, based on the [docker/.env.sample](./docker/.env.sample) file.
-- Ensure shell scripts have execution permissions:
-  ```sh
-  chmod a+x bin/*.sh
-  ```
 
 ### Running AI Code Mentor
 
@@ -123,6 +118,30 @@ Run the check-toolchain workflow with a specific REPO_URL:
 - The console (```stdout```/```stderr```) is reserved for CLI output.
 - Logs are stored in: [log/codementor.log](log/codementor.log)
 - Docker logs remain empty unless running with ```--verbose``` or in ```--server``` mode.
+
+
+### Create your own Workflows
+
+See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating your own worklfows
+
+---
+
+## Contents
+
+```
+.
+├── app                         # The CodeMentor sources (Python)
+├── artwork                     # Logos, etc.
+├── bin                         # Scripts to run (and build) the CodeMentor
+├── docker                      # Docker-Environment in which the CodeMentor will run
+│   ├── codementor              # - CodeMentor can execute BASH (and Python) commands
+│   └── codementor-java         # - CodeMentor can execute BASH commands and has a Java21+Maven environment
+├── docs                        # Documentation
+├── log                         # AI CodeMentor will output the application logs into that directory
+├── output                      # AI CodeMentor will output the trace-files here, for detailed investigations
+├── test                        # Unit-Tests for the Python application
+└── workflows                   # Contains the workflow files, which AI CodeMentor will execute
+```
 
 ---
 
@@ -177,9 +196,10 @@ python app/main.py workflows/source-eval/paperless-sprint1.wf.md REPO_URL=https:
 
 For software architecture and implementation details, see [docs/README.md](docs/README.md).
 
+User documentation and Tutorials are here: [docs/tutorial](./docs/tutorial/README.md).
+
 ---
 
 ## License
 
 This project is licensed under the **[AGPLv3](./LICENSE)** open-source license.
-
