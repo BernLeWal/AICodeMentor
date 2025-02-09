@@ -1,6 +1,26 @@
 # AI-Agents
 
+## Introduction 
+
 This application implements autonomous AI-Agents, which is **AI-autonomous level 2**: An (limited) autonomous actor with defined goals and tasks. It interacts with technicians who perform similar tasks (see Jörg Neumann, Neno Loje; BASTA! Konferenz 2023)
+
+## "Agents" whitepaper (published by Google)
+Five Key Takeaways from "Agents" published by Google (compiled by Sacha Ghiglione): 
+1. Agents are AI on steroids: They go beyond basic models by 
+    - **using tools**, 
+    - **making plans**, 
+    - and **taking actions**—more like humans solving problems.
+2. It’s all about the setup: To work, agents need three things: 
+    - a **smart model** for decisions, 
+    - **tools to interact** with the real world, 
+    - and a **system to manage** how they plan and act.
+3. **Tools make all the difference**: APIs, databases, and real-time data give agents superpowers to move beyond just answering questions—they can actually do things.
+4. **Building agents is getting easier**: Platforms like LangChain and Vertex AI make it simple to create and deploy agents, even for complex tasks.
+5. **There’s still work to do**: Big challenges like making agents easy to use, interoperable, and privacy-friendly need solving before they truly take off.
+
+Reference: [*Agents* published by Google](https://www.kaggle.com/whitepaper-agents)
+
+## AI-Agents versus LLM
 
 The AI-Agents in this solution differs from just LLM models like used in ChatGPT.
 
@@ -11,10 +31,11 @@ The AI-Agents in this solution differs from just LLM models like used in ChatGPT
 | No native tool implementation. | **Tools are natively implemented** in agent architecture. |
 | No native logic layer implemented. Users can form prompts as simple questions or use reasoning frameworks (CoT, ReAct, etc.) to form complex prompts to guide the model in prediction. | Native cognitive architecture that uses reasoning frameworks like CoT, ReAct, or other pre-built agent frameworks like LangChain.  |
 
-Reference: [*Agents* published by Google](https://www.kaggle.com/whitepaper-agents)
+---
 
+# AI CodeMentor - Agent Architecture
 
-# AI-Agent Classes
+## AI-Agent Classes
 
 Classes respresenting the AI-Agents which will work on the tasks using chat completion.
 The decision which AI-Technology/-Platform in which configuration to select is taken flexible on the time of AI-agent instance creation done by the AIAgentFactory.

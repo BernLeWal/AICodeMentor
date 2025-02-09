@@ -42,9 +42,10 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 ## Implementation Status
 
 ### Future Enhancements
+- Improve tutorial and Markdown-Format description
+- Add ON_SUCCES and ON_FAILED handlers
 - Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
   - Add sub-workflows for command prompts supporting **step-by-step execution and AI-driven refinements**.
-- Improve tutorial and Markdown-Format description
 - Create a short demo video for LinkedIn & YouTube.
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
 - Enhance AI agent feedback loops for **self-improvement**.
