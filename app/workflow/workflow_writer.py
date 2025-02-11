@@ -98,6 +98,12 @@ class WorkflowWriter:
         self.file.write("```mermaid\n")
         self.file.write("flowchart TD\n")
         self._write_activity(self.workflow.start)
+        if self.workflow.on_success is not None:
+            self.file.write(f"\n  %% Event-handler: {self.workflow.on_success.name}\n")
+            self._write_activity(self.workflow.on_success)
+        if self.workflow.on_failed is not None:
+            self.file.write(f"\n  %% Event-handler: {self.workflow.on_failed.name}\n")
+            self._write_activity(self.workflow.on_failed)
         if current_activity is not None:
             self.file.write(f"\n  style {current_activity.name} " + \
                 "stroke:#000,stroke-width:4px,fill:#80a0ff\n")
@@ -149,6 +155,8 @@ class WorkflowWriter:
         elif activity.kind == Activity.Kind.SUCCESS:
             self.file.write("@{ shape: stadium  }")
         elif activity.kind == Activity.Kind.FAILED:
+            self.file.write("@{ shape: stadium  }")
+        elif activity.kind == Activity.Kind.ON:
             self.file.write("@{ shape: stadium  }")
         elif activity.kind == Activity.Kind.CHECK:
             self.file.write("{" + f"{activity.expression}" + "}")

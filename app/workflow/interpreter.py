@@ -59,6 +59,7 @@ class WorkflowInterpreter:
         self.current_activity = None
         self.id = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.parent_interpreter : WorkflowInterpreter = parent_interpreter
+        self.is_in_onfailed = False
 
         self.history : History = History()
         self.history_dir : str = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
@@ -84,9 +85,9 @@ class WorkflowInterpreter:
         while self.current_activity is not None:
             # pre-conditions
             if self.current_activity.hits > self.max_hits:
-                self.failed( f"Activity {self.current_activity.name} " +\
-                    "has been executed too many times")
-                break
+                msg = f"Activity {self.current_activity.name} has been executed too many times"
+                if self.failed(msg):
+                    break
             self.current_activity.hits += 1
 
             # run the activity
@@ -107,26 +108,29 @@ class WorkflowInterpreter:
                 elif self.current_activity.kind == Activity.Kind.CALL:
                     activity_succeeded = self.call(self.current_activity.expression)
                 elif self.current_activity.kind == Activity.Kind.SUCCESS:
-                    self.success()
-                    break
+                    if self.success():
+                        break
                 elif self.current_activity.kind == Activity.Kind.FAILED:
-                    self.failed()
-                    break
+                    if self.failed():
+                        break
             except Exception as e:
-                self.failed(str(e))
-                break
+                if self.failed(str(e)):
+                    break
 
             # post-conditions
             if activity_succeeded:
                 self.current_activity = self.current_activity.next
                 if self.current_activity is None:
-                    self.success()
-                    break
+                    if self.is_in_onfailed:
+                        self.failed()
+                        break
+                    if self.success():
+                        break
             else:
                 self.current_activity = self.current_activity.other
                 if self.current_activity is None:
-                    self.failed()
-                    break
+                    if self.failed():
+                        break
 
         # finalisation
         logger.info("DONE:%s with result %s", workflow.name, workflow.status)
@@ -342,8 +346,14 @@ class WorkflowInterpreter:
         return OperationInterpreter.interpret_operation(operation, left, right)
 
 
-    def success(self):
+    def success(self) -> bool:
         """Finish workflow with status SUCCESS"""
+        # is there an on_success event-handler? if yes, the go along there
+        if self.workflow.on_success is not None and self.workflow.on_success.hits == 0:
+            self.current_activity = self.workflow.on_success
+            return False
+
+        # finish the workflow
         if self.workflow.result is None:
             logger.info("SUCCESS without result")
         else:
@@ -351,10 +361,21 @@ class WorkflowInterpreter:
         self.workflow.status = Workflow.Status.SUCCESS
         self._save_history(f"{Activity.Kind.SUCCESS.value}",
             self.workflow.status, self.workflow.result)
+        return True
 
 
-    def failed(self, result : str = ''):
+    def failed(self, result : str = '') -> bool:
         """Finish workflow with status FAILED"""
+        # is there an on_failed event-handler? if yes, the go along there
+        if self.workflow.on_failed is not None and self.workflow.on_failed.hits == 0:
+            if len(result) > 0:
+                self.workflow.result = result
+                self.workflow.status = Workflow.Status.FAILED
+            self.current_activity = self.workflow.on_failed
+            self.is_in_onfailed = True
+            return False
+
+        # finish the workflow
         if self.workflow.result is None or len(self.workflow.result) == 0:
             if len(result) > 0:
                 self.workflow.result = result
@@ -368,6 +389,7 @@ class WorkflowInterpreter:
         self.workflow.status = Workflow.Status.FAILED
         self._save_history(f"{Activity.Kind.FAILED.value}",
             self.workflow.status, self.workflow.result)
+        return True
 
 
 

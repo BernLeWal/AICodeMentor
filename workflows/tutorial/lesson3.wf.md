@@ -30,7 +30,13 @@ flowchart TD
 
     PROMPT_IMPROVE[Prompt: User Improve] --> EXECUTE_OUTPUT
 
-    SUCCESS@{ shape: stadium  }
+    SUCCESS([ SUCCESS ])
+
+
+    %% Event-handler: ON_FAILED
+    ON_FAILED@{ shape: stadium } --> PROMPT_FAILED_REPORT
+    PROMPT_FAILED_REPORT[Prompt: User Failed-Report]
+
 ```
 
 # Prompts
@@ -68,3 +74,11 @@ The console output of your generated commands are:
 
 Your previous suggestions of commands failed to use the web search.
 Try it again use a different approach.
+
+## User Failed-Report
+
+Your previous commands failed, see the results:
+{{RESULT}}
+
+Write a short summary about the issue.
+Any ideas how to fix the problem?

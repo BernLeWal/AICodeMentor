@@ -38,6 +38,8 @@ class Workflow:
         self.prompts : dict = {}  # prompt_id -> Prompt instance
         self.activities : dict = {}  # activity_name -> Activity instance
         self.start : Activity = None
+        self.on_failed : Activity = None
+        self.on_success : Activity = None
 
 
     def __str__(self):

@@ -123,6 +123,14 @@ class WorkflowReader:
 
         if workflow.start is None:
             workflow.start = workflow.activities[Activity.Kind.START.name]
+        if workflow.on_failed is None:
+            on_failed_name = f"{Activity.Kind.ON.name}_{Activity.Kind.FAILED.name}"
+            if on_failed_name in workflow.activities:
+                workflow.on_failed = workflow.activities[on_failed_name]
+        if workflow.on_success is None:
+            on_success_name = f"{Activity.Kind.ON.name}_{Activity.Kind.START.name}"
+            if on_success_name in workflow.activities:
+                workflow.on_success = workflow.activities[on_success_name]
 
         return workflow
 
@@ -137,6 +145,10 @@ class WorkflowReader:
 
     @staticmethod
     def __parse_flowchart_line(workflow : Workflow, line : str) -> None:
+        # Remove comments
+        if line.strip().startswith("%%"):
+            return
+
         # Check if line contains a flow definition (activity -> activity)
         pos = line.find('-->')
         if pos > 0:
@@ -184,6 +196,8 @@ class WorkflowReader:
                 if activity_expr.endswith(']') or activity_expr.endswith('}'):
                     activity_expr = activity_expr[:-1]
                 # when activity_expr is in additional brackets, remove them
+                if activity_expr.startswith('(') and activity_expr.endswith(')'):
+                    activity_expr = activity_expr[1:-1]
                 if activity_expr.startswith('[') and activity_expr.endswith(']'):
                     activity_expr = activity_expr[1:-1]
                 if activity_expr.startswith('"') and activity_expr.endswith('"'):
@@ -251,3 +265,7 @@ if __name__ == '__main__':
     print("\nLoaded prompts:")
     for key, prompt in main_workflow.prompts.items():
         print(f"  {key}: {prompt}")
+
+    print(f"\nStart activity:      {main_workflow.start}")
+    print(f"On_Success activity: {main_workflow.on_success}")
+    print(f"On_Failed activity:  {main_workflow.on_failed}")

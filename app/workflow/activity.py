@@ -20,6 +20,7 @@ class Activity:
         CALL = 'Call'
         SUCCESS = 'SUCCESS'
         FAILED = 'FAILED'
+        ON = 'ON'
 
         def __str__(self):
             return self.name
