@@ -23,8 +23,12 @@ class HistoryRecord:
 
 class History:
     """A history of Workflow activities"""
-    def __init__(self):
+    def __init__(self, history_dir : str, max_record_length : int = 2000):
+        self.history_dir : str = history_dir
+        self.max_record_length : int = max_record_length
+
         self.records : list = []
+
 
     def add_record(self, activity_caption : str, status : Workflow.Status, result : str):
         """Add a record to the history"""

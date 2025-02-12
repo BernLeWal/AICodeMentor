@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 RUN apt-get update && \
-    apt-get -y install curl git wget procps lsb-release jq
+    apt-get -y install curl git wget procps lsb-release jq lynx
 
 # Install OpenJDK 21 - see https://www.tecmint.com/install-java-on-debian-12/
 RUN wget https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb && \

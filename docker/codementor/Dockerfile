@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 RUN apt-get update && \
-    apt-get -y install curl git wget procps lsb-release jq
+    apt-get -y install curl git wget procps lsb-release jq lynx
 
 RUN pip install --upgrade pip
 

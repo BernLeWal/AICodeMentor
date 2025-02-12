@@ -231,9 +231,9 @@ class WorkflowReader:
                         if len(param) > 0:
                             if param.find('=') > 0:
                                 param_key, param_value = param.split('=')
-                                workflow.variables[param_key] = param_value
+                                workflow.params[param_key] = param_value
                             else:
-                                workflow.variables[param] = ''
+                                workflow.params[param] = ''
                 else:
                     # Process activity kind
                     activity_kind = Activity.parse_kind(activity_kindname)
@@ -254,8 +254,8 @@ if __name__ == '__main__':
     print(f"Loaded workflow: {main_workflow.name}")
     print(f"Description: {main_workflow.description}\n")
 
-    print("Loaded variables:")
-    for key, value in main_workflow.variables.items():
+    print("Loaded parameters:")
+    for key, value in main_workflow.params.items():
         print(f"  {key}: {value}")
 
     print("\nLoaded activities:")

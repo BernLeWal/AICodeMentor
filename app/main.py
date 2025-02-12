@@ -14,6 +14,7 @@ from app.agents.agent_factory import AIAgentFactory
 from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.interpreter import WorkflowInterpreter
 from app.workflow.workflow import Workflow
+from app.workflow.context import Context
 from app.commands.shell_executor import ShellCommandExecutor
 
 # Setup logging framework
@@ -49,7 +50,7 @@ def show_help():
 if __name__ == "__main__":
     # For debugging, uncomment and set the following lines
     #sys.argv.append("--verbose")
-    #sys.argv.append("workflows/source-eval/paperless-sprint1.wf.md")
+    #sys.argv.append("workflows/sample-project-eval.wf.md")
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
     parser = argparse.ArgumentParser(
@@ -101,17 +102,16 @@ if __name__ == "__main__":
         for kv in args.key_values:
             key, value = kv.split("=")
             print(f"  - {key}={value}\n")
-            main_workflow.variables[key] = value
+            main_workflow.params[key] = value
 
-    main_interpreter = WorkflowInterpreter()
-    main_interpreter.agent = AIAgentFactory.create_agent()
-    main_interpreter.command_executor = ShellCommandExecutor()
+    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
+    main_interpreter = WorkflowInterpreter(main_workflow, main_context)
 
     ## run the workflow
-    main_status = main_interpreter.run(main_workflow)
+    (main_status, main_result) = main_interpreter.run()
     if main_status == Workflow.Status.SUCCESS:
-        print(f"Workflow completed with SUCCESS\n\n---\n{main_workflow.result}")
+        print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)
     else:
-        print(f"Workflow completed with FAILED\n\n---\n{main_workflow.result}")
+        print(f"Workflow completed with FAILED\n\n---\n{main_result}")
         sys.exit(1)

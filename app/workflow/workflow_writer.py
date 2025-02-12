@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from app.workflow.activity import Activity
 from app.workflow.history import History
 from app.workflow.workflow import Workflow
+from app.workflow.context import Context
 from app.workflow.workflow_reader import WorkflowReader
 
 
@@ -74,7 +75,7 @@ class WorkflowWriter:
         self.file.close()
 
 
-    def save_history(self, current_activity : Activity, history : History,
+    def save_history(self, current_activity : Activity, context : Context, history : History,
         filepath : str = None, directory = None, overwrite = True):
         """Saves Workflow instance to file"""
         if directory is None:
@@ -109,13 +110,14 @@ class WorkflowWriter:
                 "stroke:#000,stroke-width:4px,fill:#80a0ff\n")
         self.file.write("```\n\n")
 
-        self.file.write(f"{WorkflowMdSection.VARIABLES.value}:  \n")
-        for key, value in self.workflow.variables.items():
-            if len(value) > 0 and value.find('\n')>0:
-                self.file.write(f"- **{key}**:  \n{value}  \n")
-            else:
-                self.file.write(f"- **{key}**={value}  \n")
-        self.file.write("\n\n")
+        if context is not None:
+            self.file.write(f"{WorkflowMdSection.VARIABLES.value}:  \n")
+            for key, value in context.variables.items():
+                if len(value) > 0 and value.find('\n')>0:
+                    self.file.write(f"- **{key}**:  \n{value}  \n")
+                else:
+                    self.file.write(f"- **{key}**={value}  \n")
+            self.file.write("\n\n")
 
         # Third section: History
         self.file.write(f"{WorkflowMdSection.HISTORY.value}\n\n")
@@ -193,4 +195,8 @@ if __name__ == '__main__':
     main_workflow = WorkflowReader.load_from_mdfile(MAIN_FILENAME)
 
     main_writer = WorkflowWriter(main_workflow)
-    main_writer.save_history(main_workflow.start, History())
+    history_dir = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+    main_writer.save_history(
+        current_activity = main_workflow.start,
+        context = None,
+        history = History(history_dir) )

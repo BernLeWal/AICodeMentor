@@ -54,7 +54,7 @@ Generate the commands in shell-codeblocks and always only generate one alternati
 
 ## User Search
 
-Use DuckDuckGo to search for articles about "AI-Agents" and list the link of the found results.
+Use DuckDuckGo to search for articles about "AI Agents" and list the link of the found results. Use search engine API rather than the URLs used for web-browsers. You may use curl or lynx to do it.
 
 ## User Check Results
 

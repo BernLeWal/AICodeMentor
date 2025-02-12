@@ -31,16 +31,14 @@ class Workflow:
         Workflow.instance_count += 1
         self.instance_nr = Workflow.instance_count
 
-        self.status : Workflow.Status = Workflow.Status.CREATED
-        self.result : str = None
-        self.variables : dict = {}
-
+        self.params : dict = {}
         self.prompts : dict = {}  # prompt_id -> Prompt instance
         self.activities : dict = {}  # activity_name -> Activity instance
+
         self.start : Activity = None
         self.on_failed : Activity = None
         self.on_success : Activity = None
 
 
     def __str__(self):
-        return f"Workflow(name={self.name}, status={self.status}, result={self.result})"
+        return f"Workflow(name={self.name})"

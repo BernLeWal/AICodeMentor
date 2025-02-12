@@ -15,21 +15,17 @@ class TestWorkflow(unittest.TestCase):
         """Test Workflow initialization"""
         workflow = Workflow("Test Workflow")
         self.assertEqual(workflow.name, "Test Workflow")
-        self.assertEqual(workflow.status, Workflow.Status.CREATED)
-        self.assertEqual(workflow.result, None)
 
 
     def test_workflow_load_from_mdfile(self):
         """Test Workflow load_from_mdfile method"""
         workflow = WorkflowReader.load_from_mdfile("check-toolchain.wf.md")
         self.assertEqual(workflow.name, "Check Toolchain")
-        self.assertEqual(workflow.status, Workflow.Status.CREATED)
-        self.assertEqual(workflow.result, None)
 
         print(f"Loaded workflow: {workflow.name}")
         print(f"Description: {workflow.description}\n")
-        print("Loaded variables:")
-        for key, value in workflow.variables.items():
+        print("Loaded parameters:")
+        for key, value in workflow.params.items():
             print(f"  {key}: {value}")
         print("Loaded activities:")
         for key, activity in workflow.activities.items():
