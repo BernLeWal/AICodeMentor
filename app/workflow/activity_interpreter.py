@@ -15,7 +15,7 @@ from app.workflow.activity import Activity, ActivityVisitor
 from app.workflow.workflow import Workflow
 from app.workflow.context import Context
 from app.workflow.workflow_writer import WorkflowWriter
-from app.workflow.history import History
+from app.workflow.history import History, HistoryRecord
 from app.workflow.operation import OperationInterpreter
 
 
@@ -168,6 +168,9 @@ class ActivityInterpreter(ActivityVisitor):
         if self.context.agent is None:
             self.context.agent = AIAgentFactory.create_agent()
 
+        history_record = self._save_history(activity, f"{Activity.Kind.PROMPT.value}: {prompt_id}",
+            self.context.status,
+            f"{prompt_content}\n\n---\n\n...")
         if Prompt.SYSTEM == role.lower():
             # The system prompt starts a new agent
             self.context.agent = AIAgentFactory.create_agent()
@@ -180,10 +183,27 @@ class ActivityInterpreter(ActivityVisitor):
             self.context.result = self.context.agent.ask(prompt_content)
         logger.info("PROMPT: result: %s",
                     escape_linefeed(trunc_right(self.context.result)))
-        self._save_history(activity, f"{Activity.Kind.PROMPT.value}: {prompt_id}",
-            self.context.status,
-            f"{prompt_content}\n\n---\n\n{self.context.result}")
+        self._update_history(history_record, f"{prompt_content}\n\n---\n\n{self.context.result}")
         self.activity_succeeded = True
+
+
+    def visit_ask(self, activity: Activity) -> None:
+        """Ask a question to the user via console"""
+        logger.info("EXECUTE: %s", escape_linefeed(trunc_right(self.context.result)))
+        history_record = self._save_history(activity, f"{Activity.Kind.ASK.value} ",
+            self.context.status, "...")
+        history_result = f"Input:\n{self.context.result}\n\n"
+        print(self.context.result)
+        # catch Strg+C to stop the workflow
+        try:
+            self.context.result = input()
+            self.activity_succeeded = True
+        except KeyboardInterrupt:
+            self.context.status = Workflow.Status.FAILED
+            self.context.result = "FAILED  \nInterrupted by user!"
+            self.activity_succeeded = False
+        history_result += f"Output:\n{self.context.result}\n\n"
+        self._update_history(history_record, history_result)
 
 
     def visit_execute(self, activity: Activity) -> None:
@@ -205,6 +225,8 @@ class ActivityInterpreter(ActivityVisitor):
             commands = [Command(Command.SHELL, [command])]
         else:
             commands = Parser().parse(self.context.result)
+        history_record = self._save_history(activity, f"{Activity.Kind.EXECUTE.value}: {command}",
+            self.context.status, "...")
         self.context.result = ""
         history_result = ""
         for cmd in commands:
@@ -219,8 +241,7 @@ class ActivityInterpreter(ActivityVisitor):
             else:
                 self.context.result += "\n"
                 history_result += "```\n\nNo Output\n\n"
-        self._save_history(activity, f"{Activity.Kind.EXECUTE.value}: {command}",
-            self.context.status, history_result)
+        self._update_history(history_record, history_result)
         self.activity_succeeded = True
 
 
@@ -326,13 +347,26 @@ class ActivityInterpreter(ActivityVisitor):
 
 
     def _save_history(self, activity : Activity, caption : str,
-                      status : Workflow.Status, result : str)->None:
+                      status : Workflow.Status, result : str)->HistoryRecord:
         if self.history is None:
             logger.info("History-Record: caption=%s, status=%s, result=%s", caption, status, result)
-            return
-        self.history.add_record(caption,status,trunc_middle(result,self.history.max_record_length))
+            return None
+        record = self.history.add_record(caption,status,
+                                         trunc_middle(result,self.history.max_record_length))
         WorkflowWriter(self.context.workflow).save_history(
             current_activity = activity,
+            context = self.context,
+            history = self.history,
+            directory = self.history.history_dir)
+        return record
+
+
+    def _update_history(self, record: HistoryRecord, result: str)->None:
+        if self.history is None:
+            return
+        record.result = trunc_middle(result,self.history.max_record_length)
+        WorkflowWriter(self.context.workflow).save_history(
+            current_activity = None,
             context = self.context,
             history = self.history,
             directory = self.history.history_dir)

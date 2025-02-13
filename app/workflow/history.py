@@ -30,6 +30,8 @@ class History:
         self.records : list = []
 
 
-    def add_record(self, activity_caption : str, status : Workflow.Status, result : str):
+    def add_record(self, caption: str, status: Workflow.Status, result: str) -> HistoryRecord:
         """Add a record to the history"""
-        self.records.append( HistoryRecord(activity_caption, status, result) )
+        record = HistoryRecord(caption, status, result)
+        self.records.append( record )
+        return record

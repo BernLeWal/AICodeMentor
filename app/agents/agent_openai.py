@@ -9,6 +9,7 @@ from openai import OpenAI
 from app.util.string_utils import trunc_middle
 from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
+from app.agents.prompt import Prompt
 
 
 load_dotenv()
@@ -61,6 +62,7 @@ class AIAgentOpenAI(AIAgent):
         self.last_result = ""
         for choice in chat_completion.choices:
             self.last_result += choice.message.content + "\n"
+        self.messages.append( Prompt(Prompt.ASSISTANT, self.last_result) )
         logger.debug("OpenAI returned: %s", self.last_result)
         return self.last_result
 

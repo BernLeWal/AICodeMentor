@@ -42,7 +42,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 ## Implementation Status
 
 ### Future Enhancements
-- Implement **user interaction prompts** within workflows (an ASK activity).
+- Workflow Validation
+- Integrate **reasoning AI agents** (o1-mini, o3-mini, etc.); create agent instead of Prompt System
 - Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
   - Add sub-workflows for command prompts supporting **step-by-step execution and AI-driven refinements**.
 - Create a short demo video for LinkedIn & YouTube.

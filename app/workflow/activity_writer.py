@@ -15,7 +15,7 @@ class ActivityWriter(ActivityVisitor):
 
     def visit_start(self, activity: Activity) -> None:
         """Write the START activity"""
-        self._write(activity, "@{ shape: f-circ, label:\"start\"}")
+        self._write(activity, "@{ shape: f-circ, label: \"start\"}")
 
     def visit_set(self, activity: Activity) -> None:
         """Write the SET activity"""
@@ -32,6 +32,11 @@ class ActivityWriter(ActivityVisitor):
     def visit_prompt(self, activity: Activity) -> None:
         """Write the PROMPT activity"""
         self._write(activity, f"[{activity.kind.value}: {activity.expression}]")
+
+    def visit_ask(self, activity: Activity) -> None:
+        """Write the ASK activity"""
+        self._write(activity, "@{ shape: manual-input, label: \"" + \
+                    f"{activity.kind.value}: {activity.expression}" + "\" }")
 
     def visit_execute(self, activity: Activity) -> None:
         """Write the EXECUTE activity"""

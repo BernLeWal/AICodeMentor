@@ -16,6 +16,7 @@ class Activity:
         ASSIGN = 'Assign'
         CHECK = 'Check'
         PROMPT = 'Prompt'
+        ASK = 'Ask'
         EXECUTE = 'Execute'
         CALL = 'Call'
         SUCCESS = 'SUCCESS'
@@ -87,6 +88,8 @@ class Activity:
             visitor.visit_check(self)
         elif self.kind == Activity.Kind.PROMPT:
             visitor.visit_prompt(self)
+        elif self.kind == Activity.Kind.ASK:
+            visitor.visit_ask(self)
         elif self.kind == Activity.Kind.EXECUTE:
             visitor.visit_execute(self)
         elif self.kind == Activity.Kind.CALL:
@@ -112,31 +115,34 @@ class ActivityVisitor:
     # to separate concrete functions based on activities from the activity class
 
     def visit_start(self, activity: Activity) -> None:
-        """Visit the start activity"""
+        """Visit the START activity"""
 
     def visit_set(self, activity: Activity) -> None:
-        """Visit the set activity"""
+        """Visit the SET activity"""
 
     def visit_assign(self, activity: Activity) -> None:
-        """Visit the assign activity"""
+        """Visit the ASSIGN activity"""
 
     def visit_check(self, activity: Activity) -> None:
-        """Visit the check activity"""
+        """Visit the CHECK activity"""
 
     def visit_prompt(self, activity: Activity) -> None:
-        """Visit the prompt activity"""
+        """Visit the PROMPT activity"""
+
+    def visit_ask(self, activity: Activity) -> None:
+        """Visit the ASK activity"""
 
     def visit_execute(self, activity: Activity) -> None:
-        """Visit the execute activity"""
+        """Visit the EXECUTE activity"""
 
     def visit_call(self, activity: Activity) -> None:
-        """Visit the call activity"""
+        """Visit the CALL activity"""
 
     def visit_success(self, activity: Activity) -> None:
-        """Visit the success activity"""
+        """Visit the SUCCESS activity"""
 
     def visit_failed(self, activity: Activity) -> None:
-        """Visit the failed activity"""
+        """Visit the FAILED activity"""
 
     def visit_on(self, activity: Activity) -> None:
-        """Visit the on activity"""
+        """Visit the ON activity"""

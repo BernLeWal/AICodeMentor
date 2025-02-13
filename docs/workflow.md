@@ -92,6 +92,13 @@ The file consists of the following sections:
         PROMPT_ASK[Prompt: User Task-Desc]
     ```
 
+* **ASK**: Asks the user a question using the console for output and input. Must start with `ASK_` and the caption must start with `"Ask: "`. 
+    ```mermaid
+    flowchart TD
+        START@{ shape: manual-input, label: "Ask: " }
+    ```
+    The content of *RESULT* will be printed to the user via STDOUT. Then the user inputs a string and presses the Enter-key. The user-inputs will be taken from STDIN and stored in the *RESULT* variable.
+
 * **EXECUTE**: Activities beginning with **"EXECUTE_"** execute commands. This activity extracts commands from the previous *RESULT* by scanning the `` ``` `` code blocks in the Markdown text. These commands are then parsed, classified (e.g., as BASH shell commands), and executed within the AI CodeMentor runtime environment, which is provided via a Docker container.    
    **Important:** The caption must start with `"Execute: "`. 
     ```mermaid

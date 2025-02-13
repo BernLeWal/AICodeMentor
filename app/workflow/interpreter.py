@@ -15,7 +15,7 @@ from app.workflow.workflow import Workflow
 from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.workflow_writer import WorkflowWriter
 from app.workflow.context import Context
-from app.workflow.history import History
+from app.workflow.history import History, HistoryRecord
 from app.workflow.activity_interpreter import ActivityInterpreter
 from app.commands.shell_executor import ShellCommandExecutor
 
@@ -141,6 +141,8 @@ class WorkflowInterpreter:
         for key,value in self.context.variables.items():
             sub_context.variables[key] = value
         sub_context.result = self.context.result
+        history_record = self._save_history(activity,
+                f"{Activity.Kind.CALL.value}: {sub_workflow_name}", Workflow.Status.DOING, "...")
         (sub_status, sub_result) = sub_interpreter.run(sub_context)
         logger.info("CALL: Sub-Workflow %s completed with %s, Result:%s",
             sub_workflow_name, sub_status, escape_linefeed(trunc_right(sub_result)))
@@ -148,19 +150,31 @@ class WorkflowInterpreter:
         self.context.result = sub_result
         for key,value in sub_context.variables.items():
             self.context.variables[key] = value
-        self._save_history(activity, f"{Activity.Kind.CALL.value}: {sub_workflow_name}",
-                           sub_status, sub_result)
+        self._update_history(history_record, sub_status, sub_result)
         return sub_status == Workflow.Status.SUCCESS
 
 
     def _save_history(self, current_activity : Activity, caption : str,
-                      status : Workflow.Status, result : str)->None:
+                      status : Workflow.Status, result : str)->HistoryRecord:
         if status is None:
             status = self.workflow.status
-        self.history.add_record(caption,status,
+        record = self.history.add_record(caption,status,
                                 trunc_middle(result,self.history.max_record_length))
         WorkflowWriter(self.workflow).save_history(
             current_activity = current_activity,
+            context = self.context,
+            history = self.history,
+            directory = self.history.history_dir)
+        return record
+
+
+    def _update_history(self, record: HistoryRecord, status: Workflow.Status, result: str)->None:
+        if self.history is None:
+            return
+        record.status = status
+        record.result = trunc_middle(result,self.history.max_record_length)
+        WorkflowWriter(self.context.workflow).save_history(
+            current_activity = None,
             context = self.context,
             history = self.history,
             directory = self.history.history_dir)
