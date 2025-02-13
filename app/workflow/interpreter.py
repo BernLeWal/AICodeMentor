@@ -35,10 +35,10 @@ class WorkflowInterpreter:
     """The base class for all WorkflowInterpreter implementations"""
 
 
-    def __init__(self, workflow : Workflow, context : Context, parent_interpreter = None):
+    def __init__(self, workflow : Workflow, parent_interpreter = None):
         self.id = f"{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.workflow = workflow
-        self.context = context
+        self.context : Context = None
 
         self.parent_interpreter : WorkflowInterpreter = parent_interpreter
         self.max_activity_hits = 3
@@ -56,8 +56,9 @@ class WorkflowInterpreter:
 
 
     # return a tuple containing Workflow.Status and str
-    def run(self) -> tuple[Workflow.Status, str]:
+    def run(self, context : Context) -> tuple[Workflow.Status, str]:
         """Run the workflow"""
+        self.context = context
         logger.info("RUN: %s", self.workflow.name)
         activity_interpreter = ActivityInterpreter(self.context, self.history)
 
@@ -78,7 +79,7 @@ class WorkflowInterpreter:
                 if current_activity.kind == Activity.Kind.CALL:
                     # handle call (with workflow-interpreters) outside of activity interpreter
                     activity_interpreter.activity_succeeded = \
-                        self.call(current_activity)
+                        self._call(current_activity)
                 else:
                     current_activity.accept(activity_interpreter)
 
@@ -114,7 +115,7 @@ class WorkflowInterpreter:
 
 
 
-    def call(self, activity : Activity) -> bool:
+    def _call(self, activity : Activity) -> bool:
         """Call another workflow as sub-workflow"""
         sub_workflow_name = activity.expression
         logger.info("CALL: %s", sub_workflow_name)
@@ -122,7 +123,7 @@ class WorkflowInterpreter:
         if len(directory) == 0:
             directory = None
         try:
-            sub_workflow = WorkflowReader.load_from_mdfile(sub_workflow_name, directory)
+            sub_workflow = WorkflowReader().load_from_mdfile(sub_workflow_name, directory)
         except FileNotFoundError:
             logger.warning("Workflow file %s not found", sub_workflow_name)
             self.context.status = Workflow.Status.FAILED
@@ -135,12 +136,12 @@ class WorkflowInterpreter:
         sub_workflow.parent = self.workflow
 
         ## run the workflow
+        sub_interpreter = WorkflowInterpreter(sub_workflow, parent_interpreter=self )
         sub_context = Context(sub_workflow, self.context.agent, self.context.command_executor)
         for key,value in self.context.variables.items():
             sub_context.variables[key] = value
         sub_context.result = self.context.result
-        sub_interpreter = WorkflowInterpreter(sub_workflow, sub_context, parent_interpreter=self )
-        (sub_status, sub_result) = sub_interpreter.run()
+        (sub_status, sub_result) = sub_interpreter.run(sub_context)
         logger.info("CALL: Sub-Workflow %s completed with %s, Result:%s",
             sub_workflow_name, sub_status, escape_linefeed(trunc_right(sub_result)))
         self.context.status = sub_status
@@ -166,12 +167,12 @@ class WorkflowInterpreter:
 
 
 if __name__ == "__main__":
-    main_workflow = WorkflowReader.load_from_mdfile("sample-project-eval.wf.md")
-    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
-    main_interpreter = WorkflowInterpreter(main_workflow, main_context)
+    main_workflow = WorkflowReader().load_from_mdfile("sample-project-eval.wf.md")
+    main_interpreter = WorkflowInterpreter(main_workflow)
 
     ## run the workflow
-    (main_status, main_result) = main_interpreter.run()
+    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
+    (main_status, main_result) = main_interpreter.run(main_context)
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS, Result:\n{main_result}")
         sys.exit(0)

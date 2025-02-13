@@ -20,12 +20,12 @@ class TestAll(unittest.TestCase):
 
     def test_workflow(self):
         """Test the workflow implementation"""
-        main_workflow = WorkflowReader.load_from_mdfile("check-toolchain.wf.md")
-        main_context = Context(main_workflow,AIAgentFactory.create_agent(),ShellCommandExecutor())
-        main_interpreter = WorkflowInterpreter(main_workflow, main_context)
+        main_workflow = WorkflowReader().load_from_mdfile("check-toolchain.wf.md")
+        main_interpreter = WorkflowInterpreter(main_workflow)
 
         ## run the workflow
-        (main_status, main_result) = main_interpreter.run()
+        main_context = Context(main_workflow,AIAgentFactory.create_agent(),ShellCommandExecutor())
+        (main_status, main_result) = main_interpreter.run(main_context)
         print(f"Workflow completed with {main_status}, Result:\n{main_result}")
         self.assertEqual(main_status, Workflow.Status.SUCCESS)
 

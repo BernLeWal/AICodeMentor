@@ -46,9 +46,9 @@ class TestWorkflowInterpreter(unittest.TestCase):
         checkstatus_success.other = failed
 
         ## run the workflow
-        main_context = Context( main_workflow, None, None)
-        main_interpreter = WorkflowInterpreter(main_workflow, main_context)
-        (main_status, main_result) = main_interpreter.run()
+        main_interpreter = WorkflowInterpreter(main_workflow)
+        main_context = Context(main_workflow, None, None)
+        (main_status, main_result) = main_interpreter.run(main_context)
         print(f"Workflow completed with {main_status}, Result:\n{main_result}")
         self.assertEqual(main_status, Workflow.Status.FAILED)
 

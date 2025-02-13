@@ -25,3 +25,7 @@ For the instructions follow the link: [lesson2.md](lesson2.md)
 ### Lessons 3: Use iterations for the AI-Agent to improve its result
 
 - See the full source file: [workflows/tutorial/lesson3.wf.md](../../workflows/tutorial/lesson3.wf.md)
+
+## Reference Documentation
+
+* The Workflow file-format and the description of all activities is in [../workflow.md](../workflow.md)

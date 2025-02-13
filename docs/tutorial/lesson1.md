@@ -21,12 +21,12 @@ The file consists of the following sections:
 - **Workflow Definition**: Defined using the Mermaid Flowchart Diagram syntax.  
   This example contains the following four steps, executed in a linear sequence from `START` to `SUCCESS`:
 
-| Step | Name | Description |
-|------|------|------------|
-| 1 | **START** | The starting point of every workflow. Defined as `START` in Mermaid syntax. |
-| 2 | **PROMPT_SYSTEM** | Sends a system prompt to the AI-Agent. Must start with `PROMPT_` and have a caption beginning with `Prompt:`. |
-| 3 | **PROMPT_ASK** | Sends a user-specific prompt. Named `User Ask` in this example. Leads to `SUCCESS`. |
-| 4 | **SUCCESS** | The mandatory endpoint of every workflow. |
+  | Step | Name | Description |
+  |------|------|------------|
+  | 1 | **START** | The starting point of every workflow. Defined as `START` in Mermaid syntax. |
+  | 2 | **PROMPT_SYSTEM** | Sends a system prompt to the AI-Agent. Must start with `PROMPT_` and have a caption beginning with `Prompt:`. |
+  | 3 | **PROMPT_ASK** | Sends a user-specific prompt. Named `User Ask` in this example. Leads to `SUCCESS`. |
+  | 4 | **SUCCESS** | The mandatory endpoint of every workflow. |
 
 - **Prompts**: The header-1 section `# Prompts` defines the prompts used in the workflow. Separating prompts from the flowchart allows for better readability and reusability.
 - **Prompt Definitions**: This section contains multiple prompt definitions. In this example:

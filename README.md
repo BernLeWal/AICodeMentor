@@ -31,7 +31,7 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Screenshots
 
-### Workflow Execution for REST Service Evaluation
+### Workflow Execution for a REST Service Evaluation
 ![](./docs/Screenshot_run_workflow.png)
 
 ### Console Output of an AI Code Mentor Run
@@ -42,14 +42,13 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 ## Implementation Status
 
 ### Future Enhancements
-- Improve tutorial and Markdown-Format description
+- Implement **user interaction prompts** within workflows (an ASK activity).
 - Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
   - Add sub-workflows for command prompts supporting **step-by-step execution and AI-driven refinements**.
 - Create a short demo video for LinkedIn & YouTube.
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
 - Enhance AI agent feedback loops for **self-improvement**.
 - Develop a **collaboration model** for AI agents.
-- Implement **user interaction prompts** within workflows (an ASK activity).
 - Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
 
 ---
@@ -174,15 +173,22 @@ See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating 
 
 2. Run the application with a workflow file:
 
-  ```sh
-  python app/main.py workflows/check-toolchain.wf.md
-  ```
+    ```sh
+    python app/main.py workflows/check-toolchain.wf.md
+    ```
 
 3. Help & Usage:
 
-  ```sh
-  python app/main.py -h
-  ```
+    ```sh
+    python app/main.py -h
+    ```
+
+4. Run the Test-Suite
+  
+    Pytest is used to run the unit-tests, start it from the project root directory:
+    ```sh
+    pytest
+    ```
 
 ### Sample Workflow Execution
 

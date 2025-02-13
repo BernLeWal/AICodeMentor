@@ -95,7 +95,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
 
-    main_workflow = WorkflowReader.load_from_mdfile(args.workflow_file, ".")
+    main_workflow = WorkflowReader().load_from_mdfile(args.workflow_file, ".")
     print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})  ")
     if args.key_values:
         print("with parameters:")
@@ -104,11 +104,11 @@ if __name__ == "__main__":
             print(f"  - {key}={value}\n")
             main_workflow.params[key] = value
 
-    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
-    main_interpreter = WorkflowInterpreter(main_workflow, main_context)
+    main_interpreter = WorkflowInterpreter(main_workflow)
 
     ## run the workflow
-    (main_status, main_result) = main_interpreter.run()
+    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
+    (main_status, main_result) = main_interpreter.run(main_context)
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)
