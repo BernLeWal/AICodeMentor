@@ -25,6 +25,7 @@ class Workflow:
 
     def __init__(self, filepath: str, parent=None):
         self.filepath = filepath
+        self.directory = None
         self.name = filepath.replace('.md', '')
         self.parent : Workflow = parent  # parent workflow
         self.description : str = ''

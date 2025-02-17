@@ -49,6 +49,13 @@ class AIAgent:
             self.messages.append( Prompt(Prompt.ASSISTANT, answer) )
         self.last_result = answer
 
+    def answer(self, answer: str):
+        """Store the answer of the AIAgent"""
+        logger.debug("AIAgent's Answer: %s", answer)
+        if not answer is None:
+            self.messages.append( Prompt(Prompt.ASSISTANT, answer) )
+        self.last_result = answer
+
 
 if __name__ == "__main__":
     main_config = AIAgentConfig()

@@ -55,6 +55,7 @@ class WorkflowReader:
             directory = os.path.abspath(WorkflowReader.WORKFLOWS_DIR)
         else:
             directory = os.path.abspath(directory)
+        self.workflow.directory = directory
         abs_file_path = os.path.join(directory, filename)
         with open(abs_file_path, 'r', encoding='utf-8') as f:
             content = f.readlines()

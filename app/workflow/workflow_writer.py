@@ -98,7 +98,8 @@ class WorkflowWriter:
         if include_description:
             file.write(f"{self.workflow.description}\n")
         if write_workflow_path:
-            file.write(f"- filepath={self.workflow.filepath}\n")
+            file.write(f"- filepath={self.workflow.filepath} in "
+                       f" directory={self.workflow.directory}\n")
         file.write("\n")
 
 
@@ -164,7 +165,7 @@ class WorkflowWriter:
 
 
 if __name__ == '__main__':
-    MAIN_FILENAME = "sample-project-eval.wf.md"
+    MAIN_FILENAME = "coth.wf.md"
     main_workflow = WorkflowReader().load_from_mdfile(MAIN_FILENAME)
 
     main_writer = WorkflowWriter(main_workflow)

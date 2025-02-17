@@ -22,9 +22,15 @@ You will see the AI-Agent in action, where it will execute commands by itself an
 
 For the instructions follow the link: [lesson2.md](lesson2.md)
 
-### Lessons 3: Use iterations for the AI-Agent to improve its result
+### Lesson 3: Use iterations for the AI-Agent to improve its result
 
 - See the full source file: [workflows/tutorial/lesson3.wf.md](../../workflows/tutorial/lesson3.wf.md)
+
+### Lesson 4: Play with the AI
+
+Let the AI collaborate and interact with an human user during the workflow process.
+
+- See the full source file: [workflows/tutorial/lesson4.wf.md](../../workflows/tutorial/lesson4.wf.md)
 
 ## Reference Documentation
 

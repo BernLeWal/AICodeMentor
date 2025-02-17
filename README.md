@@ -42,15 +42,15 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 ## Implementation Status
 
 ### Future Enhancements
+- Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
 - Workflow Validation
 - Integrate **reasoning AI agents** (o1-mini, o3-mini, etc.); create agent instead of Prompt System
-- Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
-  - Add sub-workflows for command prompts supporting **step-by-step execution and AI-driven refinements**.
 - Create a short demo video for LinkedIn & YouTube.
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
 - Enhance AI agent feedback loops for **self-improvement**.
 - Develop a **collaboration model** for AI agents.
 - Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
+- CodeRunner Integration? (as docker-container)
 
 ---
 

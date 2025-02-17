@@ -31,6 +31,52 @@ The AI-Agents in this solution differs from just LLM models like used in ChatGPT
 | No native tool implementation. | **Tools are natively implemented** in agent architecture. |
 | No native logic layer implemented. Users can form prompts as simple questions or use reasoning frameworks (CoT, ReAct, etc.) to form complex prompts to guide the model in prediction. | Native cognitive architecture that uses reasoning frameworks like CoT, ReAct, or other pre-built agent frameworks like LangChain.  |
 
+## AI-Agents one of topmost breaktrough technologies in 2025 (IEEE)
+
+IEEE's team of experts forsees 22 breaktrough technologies set to redefine industries and shape the future of our world for decades to come. AI-Agents are rated on 3rd place (after LLMs and Drone Adoption) of the most important technologies, get the report from https://www.computer.org/resources/2025-top-technology-predictions
+
+The following section is an excerpt from the report:
+
+*"AI agents combining LLMs, ML models, and rule-based systems will provide autonomous, highly specialized  solutions for finance, manufacturing, and retail operations."*
+
+Problems/Demands:
+- Repetitive task requiring low level of expert knowledge and/or creativity, can be performed by AI agent
+- Challenges to scale up small business due to inability to hire skilled workers to perform specific tasks
+- Users should be able to interact with AI agents in their preferred human language, including flexible or informal expression
+- Enabling AI agents to automatically generate and deliver relevant content based on a given context or subject
+
+Opportunities:
+- AI agents will **enable automation of more complex tasks with minimal human input**, requiring only task descriptions
+- **Work efficiency will increase** as some tasks will be performed faster by AI agents than humans with less error
+- **Enabling small businesses to scale up** without the need to hire more skilled workers
+- AI agents will **create new job opportunities** centered around their development and maintenance.
+- Guidance of AI agent development of their own logic in suitable directions
+- Have AI agents as allies and even drivers in the development of sustainable activities
+- **Education can become more accessible and personalized** through AI agent tutors
+
+Impact:
+- **Jobs will evolve** as AI agents take on certain specialized tasks, creating opportunities for new roles
+- The **need for upskilling will grow** as some jobs fade, while others evolve into active collaborations with AI agents to achieve desired outcomes
+- Increased training for workers on effectively collaborating with AI agents
+- **Small businesses will scale faster** by deploying AI agents, reducing the need for extensive labor investments
+
+Sustainable solutions / business opportunity:
+- Solutions with a friendly user interface to interact with AI agents
+- AI agents will enable sustainable solutions by performing specific roles or assisting humans, promoting efficient and responsible practices
+- AI agents to drive trends to sustainability
+
+**Enablers**: 
+- advancement of small language models will lower hardware requirements and enable easier finetuning
+- open-source AI libraries and models will allow for model and data ownership
+- cloud solutions with friendly user interface and low code approach will increase the accessibility of AI agent solutions
+
+**Inhibitors**: 
+- data quality and preparation will remain important for quality solutions
+- limited computational resources and energy costs can hinder progress
+- challenge from LLM hallucinations generating inaccurate information 
+- potential loss of employment
+- risks related to AI agents developing their own logic
+
 ---
 
 # AI CodeMentor - Agent Architecture

@@ -59,7 +59,8 @@ class WorkflowInterpreter:
     def run(self, context : Context) -> tuple[Workflow.Status, str]:
         """Run the workflow"""
         self.context = context
-        logger.info("RUN: %s", self.workflow.name)
+        self.max_activity_hits = int(self.context.get_value("MAX_ACTIVITY_HITS","3"))
+        logger.info("RUN: %s (MAX_ACTIVITY_HITS=%d)", self.workflow.name, self.max_activity_hits)
         activity_interpreter = ActivityInterpreter(self.context, self.history)
 
         current_activity = self.workflow.start
@@ -78,8 +79,7 @@ class WorkflowInterpreter:
             try:
                 if current_activity.kind == Activity.Kind.CALL:
                     # handle call (with workflow-interpreters) outside of activity interpreter
-                    activity_interpreter.activity_succeeded = \
-                        self._call(current_activity)
+                    activity_interpreter.activity_succeeded = self._call(current_activity)
                 else:
                     current_activity.accept(activity_interpreter)
 
@@ -118,10 +118,10 @@ class WorkflowInterpreter:
     def _call(self, activity : Activity) -> bool:
         """Call another workflow as sub-workflow"""
         sub_workflow_name = activity.expression
-        logger.info("CALL: %s", sub_workflow_name)
+        logger.info("CALL: %s from dir %s", sub_workflow_name, self.workflow.directory)
         directory = os.path.dirname(self.workflow.filepath)
         if len(directory) == 0:
-            directory = None
+            directory = self.workflow.directory
         try:
             sub_workflow = WorkflowReader().load_from_mdfile(sub_workflow_name, directory)
         except FileNotFoundError:
