@@ -42,12 +42,14 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 ## Implementation Status
 
 ### Future Enhancements
+- Integrate local running AI agents (using Huggingface)
+- Integrate **reasoning AI agents** (o1-mini, o3-mini-high, etc.); **create agent** instead of "Prompt: System"; upgrade Completions-API to use role "developer" (see docs)
+- Fix **COTH mixup** with reasoning AI-Agents
+- Implement **PLaG** technique (see [docs/literature/PLaG.md](./docs/literature/PLaG.md)) as a sample - should fit perfectly to CodeMentor
+- Enhance AI agent feedback loops for **self-improvement**: Adapt temperature Setting: start with 0, increase on IMPROVE path
 - Implement workflow for [fhtw-bif5-swkom-paperless](https://github.com/BernLeWal/fhtw-bif5-swkom-paperless)
 - Workflow Validation
-- Integrate **reasoning AI agents** (o1-mini, o3-mini, etc.); create agent instead of Prompt System
-- Create a short demo video for LinkedIn & YouTube.
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
-- Enhance AI agent feedback loops for **self-improvement**.
 - Develop a **collaboration model** for AI agents.
 - Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
 - CodeRunner Integration? (as docker-container)
