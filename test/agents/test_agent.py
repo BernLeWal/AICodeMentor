@@ -13,8 +13,8 @@ class TestAIAgent(unittest.TestCase):
         config = AIAgentConfig()
         config.ai_api_key="test_api_key"
         config.ai_organization_id="test_org_id"
-        config.ai_model_name="test_model_name"
         self.agent = AIAgent(config)
+        self.agent.model_name = "test_model_name"
 
     def test_system_prompt(self):
         """Test storing a system prompt"""

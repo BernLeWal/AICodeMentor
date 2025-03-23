@@ -37,9 +37,6 @@ class AIAgentOpenAI(AIAgent):
             organization= config.ai_organization_id
         )
 
-        self.model_name = config.ai_model_name
-        self.max_prompt_length = config.ai_max_prompt_length
-
 
     def system(self, prompt: str) -> str:
         """Starts with a new context (a reset), and provides the chat-systems general behavior"""

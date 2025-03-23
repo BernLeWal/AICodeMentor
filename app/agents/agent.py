@@ -23,6 +23,10 @@ class AIAgent:
     def __init__(self, config: AIAgentConfig):
         logger.debug("Initializing AIAgent with config: %s", config)
         self.config : AIAgentConfig = config
+        self.model_name = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
+        self.max_prompt_length = int(os.getenv('AI_MAX_PROMPT_LENGTH', '2000'))
+
+
         self.messages : list = []
         self.last_result : str = None
 

@@ -91,7 +91,6 @@ classDiagram
     class AIAgentConfig {
         + ai_api_key
         + ai_organization_name
-        + ai_model_name
         + load_from_environment()
         + load_from_jsonfile(String filename)
         + load_from_json(String json_data)
@@ -100,6 +99,8 @@ classDiagram
     class AIAgent {
         - List~str~ messages
         - AIAgentConfig config
+        + ai_model_name
+        + ai_max_prompt_length
 
         + AIAgent( AIAgentConfig config )
         + system( str prompt )* str

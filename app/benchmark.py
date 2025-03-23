@@ -35,7 +35,7 @@ def open_csv_file(workflow_file: str) -> str:
 
     if not os.path.exists(csv_file_path):
         with open(csv_file_path, "w", encoding="utf-8") as f:
-            f.write("sourcefile;timestamp;duration_sec;status;" +\
+            f.write("sourcefile;model;timestamp;duration_sec;status;" +\
                     "result_length_score;result_facts_score\n")
     return csv_file_path
 
@@ -52,19 +52,21 @@ def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status,
     return (main_status, main_result, elapsed_time.total_seconds())
 
 
-def score_workflow(workflow_file:str, results:tuple[Workflow.Status, str, float],
-                   expected_facts:list, csv_file: str):
+def score_workflow(workflow_file:str, model:str,
+                   results:tuple[Workflow.Status, str, float],
+                   expected_length:int, expected_facts:list,
+                   csv_file: str):
     """Scores the workflow results and writes to a CSV file"""
     with open(csv_file, "a", encoding="utf-8") as f:
         workflow_file_basename = os.path.basename(workflow_file)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         main_status, main_result, duration_sec = results
 
-        content_length_score = score_result_length(main_result, 100)
+        content_length_score = score_result_length(main_result, expected_length)
 
         content_items_score = score_result_facts(main_result, expected_facts)
 
-        f.write(f"{workflow_file_basename};{timestamp};{duration_sec};{main_status};" +\
+        f.write(f"{workflow_file_basename};{model};{timestamp};{duration_sec};{main_status};" +\
                 f"{content_length_score};{content_items_score}\n")
 
 
@@ -75,7 +77,8 @@ def score_result_length(result: str, expected_length: int) -> int:
     :return: The score
     """
     wc = len(result.split())    # word count
-    result_length_score = wc if ( wc<=expected_length ) else ((2*expected_length)-wc)
+    el = expected_length
+    result_length_score = ( wc if ( wc<=el ) else (2*el)-wc )*100/el
     if result_length_score < 0:
         result_length_score = 0
     return result_length_score
@@ -105,7 +108,7 @@ if __name__ == "__main__":
         "Java",
         "Spring Boot",
         ["REST", "RESTful"],
-        "web service",
+        ["web service","microservice","micro service"],
         ["temperature", "weather"],
         "city",
         ["get weather","get city weather","get temperature","get city temperature"],
@@ -115,11 +118,28 @@ if __name__ == "__main__":
         ["Vienna","Prague","Berlin","Munich"],
         ["in-memory","list","records","data"],
         ]
+    MODEL_NAMES = [
+        ## Platform OpenAI GPT Chat Models
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-3.5-turbo",
+        "gpt-4",
+        "gpt-4-turbo",
+
+        ## Platform OpenAI Reasoning Models
+        #"o1",
+        "o1-mini",
+        "o3-mini",
+    ]
 
 
     # Add the benchmark results to a CSV file
     CSV_FILE = open_csv_file(WORKFLOW_FILE)
 
-    # Run the workflow
-    RESULTS = run_workflow(WORKFLOW_FILE, KEY_VALUES)
-    score_workflow(WORKFLOW_FILE, RESULTS, EXPECTED_FACTS, CSV_FILE)
+    for model_name in MODEL_NAMES:
+        logger.info("- Running benchmark for model: %s", model_name)
+        os.environ['AI_MODEL_NAME'] = model_name
+
+        # Run the workflow
+        RESULTS = run_workflow(WORKFLOW_FILE, KEY_VALUES)
+        score_workflow(WORKFLOW_FILE, model_name, RESULTS, 200, EXPECTED_FACTS, CSV_FILE)

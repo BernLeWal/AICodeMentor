@@ -26,16 +26,33 @@ class AIAgentFactory:
     """
 
     @staticmethod
-    def create_agent() -> AIAgent:
+    def create_agent(model_name:str = None) -> AIAgent:
         """
         Creates an AI-Agent instance of type AIAgentOpenAI
         """
-        logger.debug("Creating agent")
+        if model_name is None:
+            model_name = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
+        logger.debug("Creating agent for model: %s", model_name)
+
         config = AIAgentConfig()
         config.load_from_environment()
-        agent = AIAgentOpenAI(config)
-        return agent
 
+        # Platform OpenAI GPT Chat Models:
+        if model_name.startswith("gpt-"):
+            return AIAgentOpenAI(config)
+        # Platform OpenAI Reasoning Models (o1/o3):
+        elif model_name.startswith("o1-") or model_name.startswith("o3-"):
+            return AIAgentOpenAI(config)
+
+        raise ValueError(f"Unsupported model name: {model_name}")
+
+
+    @staticmethod
+    def get_model_name() -> str:
+        """
+        Returns the model name of the AI-Agent instance
+        """
+        return os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
 
 
 if __name__ == "__main__":

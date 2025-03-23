@@ -53,7 +53,8 @@ def run(workflow_file, key_values) -> tuple[Workflow.Status, str]:
     :return: Exit code
     """
     main_workflow = WorkflowReader().load_from_mdfile(workflow_file, ".")
-    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})  ")
+    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath}) "+\
+          f"using AI-model {AIAgentFactory.get_model_name()} ")
     if key_values:
         print("with parameters:")
         for kv in key_values:
