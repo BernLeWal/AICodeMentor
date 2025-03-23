@@ -33,7 +33,7 @@ logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
 logger = logging.getLogger(__name__)
 
 
-def show_help():
+def show_help() -> None:
     """Show help"""
     print("AI CodeMentor - automatically analyse, feedback and grade " +\
         "source-code project submissions using AI agents")
@@ -45,6 +45,28 @@ def show_help():
     print()
     print("Example:")
     print("  python main.py workflow.md FOO1=BAR1 FOO2=BAR2")
+
+
+def run(workflow_file, key_values) -> tuple[Workflow.Status, str]:
+    """Run the AI CodeMentor application
+    :param workflow_file: Path to the workflow file in Markdown format
+    :return: Exit code
+    """
+    main_workflow = WorkflowReader().load_from_mdfile(workflow_file, ".")
+    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})  ")
+    if key_values:
+        print("with parameters:")
+        for kv in key_values:
+            key, value = kv.split("=")
+            print(f"  - {key}={value}\n")
+            main_workflow.params[key] = value
+
+    main_interpreter = WorkflowInterpreter(main_workflow)
+
+    ## run the workflow
+    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
+    return main_interpreter.run(main_context)
+
 
 
 if __name__ == "__main__":
@@ -94,21 +116,7 @@ if __name__ == "__main__":
         #run_server()
         sys.exit(0)
 
-
-    main_workflow = WorkflowReader().load_from_mdfile(args.workflow_file, ".")
-    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath})  ")
-    if args.key_values:
-        print("with parameters:")
-        for kv in args.key_values:
-            key, value = kv.split("=")
-            print(f"  - {key}={value}\n")
-            main_workflow.params[key] = value
-
-    main_interpreter = WorkflowInterpreter(main_workflow)
-
-    ## run the workflow
-    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
-    (main_status, main_result) = main_interpreter.run(main_context)
+    (main_status, main_result) = run(args.workflow_file, args.key_values)
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)
