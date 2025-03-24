@@ -44,7 +44,7 @@ class AIAgentOpenAIInstruct(AIAgent):
         self.messages = []
         super().system(prompt)
         logger.warning("Instruct models do not support System propmts! Ignoring: %s", prompt)
-        self.messages = []                
+        self.messages = []
         return ""
 
     def ask(self, prompt: str) -> str:
@@ -60,6 +60,7 @@ class AIAgentOpenAIInstruct(AIAgent):
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model=self.model_name,
+            #temperature=self.temperature  # not supported on instruct models!
             top_p=self.top_p,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,

@@ -58,6 +58,58 @@ class AIAgentConfig:
             f"...{self.ai_organization_id[-4:]}"
 
 
+    # ------------------------------------------------------
+    @staticmethod
+    def get_model_name() -> str:
+        """
+        Returns the model name of the AI-Agent instance
+        """
+        return os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
+
+    @staticmethod
+    def get_temperature() -> float:
+        """
+        Returns the temperature of the AI-Agent instance
+        """
+        return float(os.getenv('AI_TEMPERATURE', '0.7'))
+
+    @staticmethod
+    def get_top_p() -> float:
+        """
+        Returns the top-p value of the AI-Agent instance
+        """
+        return float(os.getenv('AI_TOP_P', '1.0'))
+
+    @staticmethod
+    def get_frequency_penalty() -> float:
+        """"
+        Returns the frequency penalty of the AI-Agent instance
+        """
+        return float(os.getenv('AI_FREQUENCY_PENALTY', '0.0'))
+
+    @staticmethod
+    def get_presence_penalty() -> float:
+        """
+        Returns the presence penalty of the AI-Agent instance
+        """
+        return float(os.getenv('AI_PRESENCE_PENALTY', '0.0'))
+
+    @staticmethod
+    def get_max_output_tokens() -> int:
+        """
+        Returns the maximum number of output tokens of the AI-Agent instance
+        """
+        return int(os.getenv("AI_MAX_OUTPUT_TOKENS", '1024'))
+
+    @staticmethod
+    def get_stop_sequences() -> list:
+        """
+        Returns the stop sequences of the AI-Agent instance
+        """
+        stop_seq:str = os.getenv('AI_STOP_SEQUENCE', None)     # stop gen. at this seq.
+        return stop_seq.split('|') if stop_seq else None
+
+
 if __name__ == "__main__":
     main_config = AIAgentConfig()
     main_config.load_from_environment()

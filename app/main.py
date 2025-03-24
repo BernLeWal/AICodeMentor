@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 from app.version import __version__, __app_name__, __app_description__
 from app.agents.agent_factory import AIAgentFactory
+from app.agents.agent_config import AIAgentConfig
 from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.interpreter import WorkflowInterpreter
 from app.workflow.workflow import Workflow
@@ -54,7 +55,7 @@ def run(workflow_file, key_values) -> tuple[Workflow.Status, str]:
     """
     main_workflow = WorkflowReader().load_from_mdfile(workflow_file, ".")
     print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath}) "+\
-          f"using AI-model {AIAgentFactory.get_model_name()} ")
+          f"using AI-model {AIAgentConfig.get_model_name()} ")
     if key_values:
         print("with parameters:")
         for kv in key_values:

@@ -25,14 +25,13 @@ class AIAgent:
         self.config : AIAgentConfig = config
 
         # common LLM configs
-        self.model_name:str = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini') # LLM model used
-        self.temperature = float(os.getenv('AI_TEMPERATURE', '0.7'))       # output randomness
-        self.top_p = float(os.getenv('AI_TOP_P', '1.0'))                   # nucleus sampling
-        self.frequency_penalty = float(os.getenv('AI_FREQUENCY_PENALTY', '0.0'))
-        self.presence_penalty = float(os.getenv('AI_PRESENCE_PENALTY', '0.0'))
-        self.max_output_tokens = int(os.getenv("AI_MAX_OUTPUT_TOKENS", '1024'))
-        stop_seq:str = os.getenv('AI_STOP_SEQUENCE', None)     # stop gen. at this seq.
-        self.stop_sequences = stop_seq.split('|') if stop_seq else None
+        self.model_name:str = AIAgentConfig.get_model_name() # LLM model used
+        self.temperature = AIAgentConfig.get_temperature() # output randomness
+        self.top_p = AIAgentConfig.get_top_p() # nucleus sampling
+        self.frequency_penalty = AIAgentConfig.get_frequency_penalty()
+        self.presence_penalty = AIAgentConfig.get_presence_penalty()
+        self.max_output_tokens = AIAgentConfig.get_max_output_tokens()
+        self.stop_sequences = AIAgentConfig.get_stop_sequences()
 
         # further processing configs
         self.max_prompt_length = int(os.getenv('AI_MAX_PROMPT_LENGTH', '2000'))

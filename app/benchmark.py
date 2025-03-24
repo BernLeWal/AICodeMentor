@@ -9,6 +9,7 @@ import datetime
 from dotenv import load_dotenv
 
 from app.main import run
+from app.agents.agent_config import AIAgentConfig
 from app.workflow.workflow import Workflow
 from app.workflow.workflow_writer import WorkflowWriter
 
@@ -35,8 +36,10 @@ def open_csv_file(workflow_file: str) -> str:
 
     if not os.path.exists(csv_file_path):
         with open(csv_file_path, "w", encoding="utf-8") as f:
-            f.write("sourcefile;model;timestamp;duration_sec;status;" +\
-                    "result_length_score;result_facts_score\n")
+            f.write("sourcefile;"+\
+                    "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
+                    "run_timestamp;run_duration_sec;" +\
+                    "result_status;result_length_score;result_facts_score\n")
     return csv_file_path
 
 
@@ -52,22 +55,28 @@ def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status,
     return (main_status, main_result, elapsed_time.total_seconds())
 
 
-def score_workflow(workflow_file:str, model:str,
+def score_workflow(workflow_file:str,
+                   cfg_model:str, cfg_temp, cfg_top_p, cfg_f_penalty, cfg_p_penalty,
                    results:tuple[Workflow.Status, str, float],
                    expected_length:int, expected_facts:list,
                    csv_file: str):
     """Scores the workflow results and writes to a CSV file"""
     with open(csv_file, "a", encoding="utf-8") as f:
         workflow_file_basename = os.path.basename(workflow_file)
+        # Data of configuration
+
+        # Data of workflow run
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        main_status, main_result, duration_sec = results
 
-        content_length_score = score_result_length(main_result, expected_length)
+        # Data of results
+        result_status, result_content, duration_sec = results
+        content_length_score = score_result_length(result_content, expected_length)
+        content_items_score = score_result_facts(result_content, expected_facts)
 
-        content_items_score = score_result_facts(main_result, expected_facts)
-
-        f.write(f"{workflow_file_basename};{model};{timestamp};{duration_sec};{main_status};" +\
-                f"{content_length_score};{content_items_score}\n")
+        f.write(f"{workflow_file_basename};"+\
+                f"{cfg_model};{cfg_temp};{cfg_top_p};{cfg_f_penalty};{cfg_p_penalty};"+\
+                f"{timestamp};{duration_sec};" +\
+                f"{result_status};{content_length_score};{content_items_score}\n")
 
 
 def score_result_length(result: str, expected_length: int) -> int:
@@ -120,16 +129,16 @@ if __name__ == "__main__":
         ]
     MODEL_NAMES = [
         ## Platform OpenAI GPT Chat Models
-        "gpt-4o",
+        #"gpt-4o",
         "gpt-4o-mini",
-        "gpt-4",
+        #"gpt-4",
         "gpt-4-turbo",
         "gpt-3.5-turbo",
 
         ## Platform OpenAI Reasoning Models
         "o3-mini",
         "o1-mini",
-        "o1",
+        #"o1",
     ]
 
 
@@ -139,7 +148,14 @@ if __name__ == "__main__":
     for model_name in MODEL_NAMES:
         logger.info("- Running benchmark for model: %s", model_name)
         os.environ['AI_MODEL_NAME'] = model_name
+        temp = AIAgentConfig.get_temperature()
+        top_p = AIAgentConfig.get_top_p()
+        f_penalty = AIAgentConfig.get_frequency_penalty()
+        p_penalty = AIAgentConfig.get_presence_penalty()
 
         # Run the workflow
         RESULTS = run_workflow(WORKFLOW_FILE, KEY_VALUES)
-        score_workflow(WORKFLOW_FILE, model_name, RESULTS, 200, EXPECTED_FACTS, CSV_FILE)
+        score_workflow(WORKFLOW_FILE,
+                       model_name, temp, top_p, f_penalty, p_penalty,
+                       RESULTS, 200, EXPECTED_FACTS,
+                       CSV_FILE)

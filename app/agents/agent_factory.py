@@ -42,18 +42,12 @@ class AIAgentFactory:
         if model_name.startswith("gpt-"):
             return AIAgentOpenAIGpt(config)
         # Platform OpenAI Reasoning Models (o1/o3):
+        elif model_name in ["o1","o3"]:
+            return AIAgentOpenAIInstruct(config)
         elif model_name.startswith("o1-") or model_name.startswith("o3-"):
             return AIAgentOpenAIInstruct(config)
 
         raise ValueError(f"Unsupported model name: {model_name}")
-
-
-    @staticmethod
-    def get_model_name() -> str:
-        """
-        Returns the model name of the AI-Agent instance
-        """
-        return os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
 
 
 if __name__ == "__main__":
