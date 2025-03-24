@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from app.main import run
 from app.agents.agent_config import AIAgentConfig
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_writer import WorkflowWriter
+from app.workflow.batch_config import BatchConfig
 
 
 # Setup logging framework
@@ -20,27 +20,6 @@ if not logging.getLogger().hasHandlers():
     logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
                         format=os.getenv('LOGFORMAT', 'pretty'))
 logger = logging.getLogger(__name__)
-
-
-def open_csv_file(workflow_file: str) -> str:
-    """Creates or appends to a CSV file for benchmarking results
-    :param workflow_file: Path to the workflow file in Markdown format
-    :return: Path to the CSV file
-    """
-    directory = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    directory = os.path.abspath(directory)
-    csv_file_name = os.path.basename(workflow_file.replace(".wf.md", ".csv"))
-    csv_file_path = os.path.join(directory, csv_file_name)
-
-    if not os.path.exists(csv_file_path):
-        with open(csv_file_path, "w", encoding="utf-8") as f:
-            f.write("sourcefile;"+\
-                    "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
-                    "run_timestamp;run_duration_sec;" +\
-                    "result_status;result_length_score;result_facts_score\n")
-    return csv_file_path
 
 
 def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status, str, float]:
@@ -55,65 +34,74 @@ def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status,
     return (main_status, main_result, elapsed_time.total_seconds())
 
 
-def score_workflow(workflow_file:str,
-                   cfg_model:str, cfg_temp, cfg_top_p, cfg_f_penalty, cfg_p_penalty,
-                   results:tuple[Workflow.Status, str, float],
-                   expected_length:int, expected_facts:list,
-                   csv_file: str):
-    """Scores the workflow results and writes to a CSV file"""
-    with open(csv_file, "a", encoding="utf-8") as f:
-        workflow_file_basename = os.path.basename(workflow_file)
-        # Data of configuration
 
-        # Data of workflow run
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+def run_workflow_file(cfg: BatchConfig, workflow_file: str):
+    """Runs a workflow and collects benchmarking data"""
+    # Add the benchmark results to a CSV file
+    cfg.open_csv_file(workflow_file)
 
-        # Data of results
-        result_status, result_content, duration_sec = results
-        content_length_score = score_result_length(result_content, expected_length)
-        content_items_score = score_result_facts(result_content, expected_facts)
+    for _ in range(cfg.repeats):
+        for model_name in cfg.ai_model_names or [AIAgentConfig.get_model_name()]:
+            logger.info("- Running benchmark for model: %s", model_name)
+            os.environ['AI_MODEL_NAME'] = model_name
 
-        f.write(f"{workflow_file_basename};"+\
-                f"{cfg_model};{cfg_temp};{cfg_top_p};{cfg_f_penalty};{cfg_p_penalty};"+\
-                f"{timestamp};{duration_sec};" +\
-                f"{result_status};{content_length_score};{content_items_score}\n")
+            for temp in cfg.ai_temperature_values or [AIAgentConfig.get_temperature()]:
+                os.environ['AI_TEMPERATURE'] = str(temp)
 
+                for top_p in cfg.ai_top_p_values or [AIAgentConfig.get_top_p()]:
+                    os.environ['AI_TOP_P'] = str(top_p)
 
-def score_result_length(result: str, expected_length: int) -> int:
-    """Scores the content length of the result
-    :param result: The content to score
-    :param expected_length: The expected length
-    :return: The score
-    """
-    wc = len(result.split())    # word count
-    el = expected_length
-    result_length_score = ( wc if ( wc<=el ) else (2*el)-wc )*100/el
-    if result_length_score < 0:
-        result_length_score = 0
-    return result_length_score
+                    for f_penalty in cfg.ai_f_penalty_values or [AIAgentConfig.get_frequency_penalty()]:
+                        os.environ['AI_FREQUENCY_PENALTY'] = str(f_penalty)
+
+                        for p_penalty in cfg.ai_p_penalty_values or [AIAgentConfig.get_presence_penalty()]:
+                            os.environ['AI_PRESENCE_PENALTY'] = str(p_penalty)
+
+                            # Run the workflow
+                            results = run_workflow(workflow_file, cfg.key_values)
+
+                            cfg.score_workflow(workflow_file,
+                                        model_name, temp, top_p, f_penalty, p_penalty,
+                                        results)
 
 
-def score_result_facts(result: str, expected_facts: list) -> float:
-    """Scores the content facts of the result
-    :param result: The content to score
-    :param expected_facts: The expected facts
-    :return: The score
-    """
-    content_items_score = 0
-    fact_score = 100 / len(expected_facts)
-    for fact in expected_facts:
-        if isinstance(fact, list):
-            if any( f in result for f in fact ):
-                content_items_score += fact_score
-        elif fact in result:
-            content_items_score += fact_score
-    return content_items_score
+
+def run_batch(cfg: BatchConfig):
+    """Runs a batch of workflows and collects benchmarking data"""
+    if cfg.setup_workflow_file is not None:
+        logger.info("Setting up the environment...")
+        run_workflow(cfg.setup_workflow_file, cfg.key_values)
+
+    if cfg.workflow_files is None:
+        logger.error("No workflow files given!")
+        return
+    # if workflow_files is a list of string then process all files each
+    if isinstance(cfg.workflow_files, list):
+        for workflow_file in cfg.workflow_files:
+            run_workflow_file(cfg, workflow_file)
+    else:
+        run_workflow_file(cfg, cfg.workflow_files)
 
 
 if __name__ == "__main__":
-    WORKFLOW_FILE = "workflows/benchmarks/summarize-sourcefile.wf.md"
-    KEY_VALUES = {}
-    EXPECTED_FACTS = [
+    CFG = BatchConfig()
+
+    CFG.workflow_files = "workflows/benchmarks/summarize-sourcefile.wf.md"
+    CFG.ai_model_names = [
+        ## Platform OpenAI GPT Chat Models
+        #"gpt-4o",
+        "gpt-4o-mini",
+        #"gpt-4",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo",
+
+        ## Platform OpenAI Reasoning Models
+        "o3-mini",
+        "o1-mini",
+        #"o1",
+    ]
+    CFG.expected_length = 200
+    CFG.expected_facts = [
         "Java",
         "Spring Boot",
         ["REST", "RESTful"],
@@ -127,35 +115,5 @@ if __name__ == "__main__":
         ["Vienna","Prague","Berlin","Munich"],
         ["in-memory","list","records","data"],
         ]
-    MODEL_NAMES = [
-        ## Platform OpenAI GPT Chat Models
-        #"gpt-4o",
-        "gpt-4o-mini",
-        #"gpt-4",
-        "gpt-4-turbo",
-        "gpt-3.5-turbo",
 
-        ## Platform OpenAI Reasoning Models
-        "o3-mini",
-        "o1-mini",
-        #"o1",
-    ]
-
-
-    # Add the benchmark results to a CSV file
-    CSV_FILE = open_csv_file(WORKFLOW_FILE)
-
-    for model_name in MODEL_NAMES:
-        logger.info("- Running benchmark for model: %s", model_name)
-        os.environ['AI_MODEL_NAME'] = model_name
-        temp = AIAgentConfig.get_temperature()
-        top_p = AIAgentConfig.get_top_p()
-        f_penalty = AIAgentConfig.get_frequency_penalty()
-        p_penalty = AIAgentConfig.get_presence_penalty()
-
-        # Run the workflow
-        RESULTS = run_workflow(WORKFLOW_FILE, KEY_VALUES)
-        score_workflow(WORKFLOW_FILE,
-                       model_name, temp, top_p, f_penalty, p_penalty,
-                       RESULTS, 200, EXPECTED_FACTS,
-                       CSV_FILE)
+    run_batch(CFG)

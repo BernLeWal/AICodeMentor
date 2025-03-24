@@ -119,6 +119,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     (main_status, main_result) = run(args.workflow_file, args.key_values)
+    
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)
