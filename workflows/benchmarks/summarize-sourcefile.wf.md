@@ -34,16 +34,15 @@ You are a helpful assistant who will analyse and summarize source files.
 Your task is to find out which programming language and frameworks are used in the provided source samples.
 Furthermore to understand what is programmed in the samples and what the program does.
 
-At the end write a summary with 200 words length. 
-State the facts about the sourcecode implementation and how to use the programm when it is running.
-Order them from highest priority to lowest.
-
 Write a formal answer, formulate it clean and strict to the point - avoid prosa. 
-Also avoid unecessary information so that your 200 words summary is good to read and understand.
+Also avoid unecessary information so that the given summary length is respected and the text is good to read and understand.
 
 ## User Sourcecode
 
-Write your summary about the following sourcecode sample:
+Write a summary with 200 words length about the following sourcecode sample.
+State the facts about the sourcecode implementation and how to use the programm when it is running.
+Order them from highest priority to lowest.
+
 ```
 package at.fhtw.weather.exercise;
 

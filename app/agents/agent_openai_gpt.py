@@ -1,6 +1,6 @@
 #!/bin/python
 """
-The AI-Agent implementation using the Platform OpenAI
+The AI-Agent implementation using the Platform OpenAI GPT models (gpt-)
 """
 import logging
 import os
@@ -25,7 +25,7 @@ logging.getLogger("openai").setLevel(log_level)
 
 
 # app/agents/AIAgentOpenAI.py
-class AIAgentOpenAI(AIAgent):
+class AIAgentOpenAIGpt(AIAgent):
     """Accesses the OpenAI API, will keep track of the context"""
 
     def __init__(self, config):
@@ -51,11 +51,21 @@ class AIAgentOpenAI(AIAgent):
             prompt = trunc_middle(prompt, self.max_prompt_length)
             logger.warning("Prompt is too long, so truncated in the middle:\n%s", prompt)
         super().ask(prompt)
+
         messages = [msg.to_dict() for msg in self.messages]
+
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model=self.model_name,
+            temperature=self.temperature,
+            top_p=self.top_p,
+            frequency_penalty=self.frequency_penalty,
+            presence_penalty=self.presence_penalty,
+            max_tokens=self.max_output_tokens,
+            stop=self.stop_sequences
         )
+
+
         self.last_result = ""
         for choice in chat_completion.choices:
             self.last_result += choice.message.content + "\n"
@@ -68,7 +78,7 @@ if __name__ == "__main__":
     main_config = AIAgentConfig()
     main_config.load_from_environment()
 
-    main_agent = AIAgentOpenAI(main_config)
+    main_agent = AIAgentOpenAIGpt(main_config)
 
     main_agent.system("You are a helpful assistant")
     MAIN_PROMPT = "What is the answer to life, the universe and everything?"

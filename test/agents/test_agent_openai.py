@@ -3,7 +3,7 @@
 
 import unittest
 from app.agents.agent_config import AIAgentConfig
-from app.agents.agent_openai import AIAgentOpenAI
+from app.agents.agent_openai_gpt import AIAgentOpenAIGpt
 
 
 class TestAIAgentOpenAI(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestAIAgentOpenAI(unittest.TestCase):
     def setUp(self):
         config = AIAgentConfig()
         config.load_from_environment()
-        self.agent = AIAgentOpenAI(config)
+        self.agent = AIAgentOpenAIGpt(config)
 
 
     def test_chat(self):

@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 from app.agents.prompt_factory import PromptFactory
 from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
-from app.agents.agent_openai import AIAgentOpenAI
+from app.agents.agent_openai_gpt import AIAgentOpenAIGpt
+from app.agents.agent_openai_instruct import AIAgentOpenAIInstruct
 
 
 # Setup logging framework
@@ -39,10 +40,10 @@ class AIAgentFactory:
 
         # Platform OpenAI GPT Chat Models:
         if model_name.startswith("gpt-"):
-            return AIAgentOpenAI(config)
+            return AIAgentOpenAIGpt(config)
         # Platform OpenAI Reasoning Models (o1/o3):
         elif model_name.startswith("o1-") or model_name.startswith("o3-"):
-            return AIAgentOpenAI(config)
+            return AIAgentOpenAIInstruct(config)
 
         raise ValueError(f"Unsupported model name: {model_name}")
 

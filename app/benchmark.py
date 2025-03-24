@@ -122,14 +122,14 @@ if __name__ == "__main__":
         ## Platform OpenAI GPT Chat Models
         "gpt-4o",
         "gpt-4o-mini",
-        "gpt-3.5-turbo",
         "gpt-4",
         "gpt-4-turbo",
+        "gpt-3.5-turbo",
 
         ## Platform OpenAI Reasoning Models
-        #"o1",
-        "o1-mini",
         "o3-mini",
+        "o1-mini",
+        "o1",
     ]
 
 
