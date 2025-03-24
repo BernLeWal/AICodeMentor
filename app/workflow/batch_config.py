@@ -4,6 +4,7 @@ Configuration for the AI CodeMentor Batch-Processing Engine
 """
 import os
 import datetime
+import json
 
 from app.workflow.workflow import Workflow
 from app.workflow.workflow_writer import WorkflowWriter
@@ -35,7 +36,7 @@ class BatchConfig:
         self.cleanup_workflow_file = None # if given, the workflow file to cleanup the environment
 
 
-    def open_csv_file(self, workflow_file: str) -> str:
+    def open_csv_file(self, file_path: str = None) -> str:
         """Creates or appends to a CSV file for benchmarking results
         :param workflow_file: Path to the workflow file in Markdown format
         :return: Path to the CSV file
@@ -44,17 +45,17 @@ class BatchConfig:
         if not os.path.exists(directory):
             os.makedirs(directory)
         directory = os.path.abspath(directory)
-        csv_file_name = os.path.basename(workflow_file.replace(".wf.md", ".csv"))
-        csv_file_path = os.path.join(directory, csv_file_name)
+        if (self.csv_file is None) and (file_path is not None):
+            csv_file_name = os.path.basename(file_path).replace(".wf.md","").replace(".cfg.json","") + ".csv"
+            self.csv_file = os.path.join(directory, csv_file_name)
 
-        if not os.path.exists(csv_file_path):
-            with open(csv_file_path, "w", encoding="utf-8") as f:
+        if not os.path.exists(self.csv_file):
+            with open(self.csv_file, "w", encoding="utf-8") as f:
                 f.write("sourcefile;"+\
                         "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
                         "run_timestamp;run_duration_sec;" +\
                         "result_status;result_length_score;result_facts_score\n")
-        self.csv_file = csv_file_path
-        return csv_file_path
+        return self.csv_file
 
 
     def score_result_length(self, result: str):
@@ -98,8 +99,8 @@ class BatchConfig:
                     results:tuple[Workflow.Status, str, float]):
         """Scores the workflow results and writes to a CSV file"""
         with open(self.csv_file, "a", encoding="utf-8") as f:
-            workflow_file_basename = os.path.basename(workflow_file)
-            f.write(f"{workflow_file_basename};")
+            #workflow_file_basename = os.path.basename(workflow_file)
+            f.write(f"{workflow_file};")
 
             # Data of configuration
             f.write(f"{cfg_model};{cfg_temp};{cfg_top_p};{cfg_f_penalty};{cfg_p_penalty};")
@@ -115,3 +116,31 @@ class BatchConfig:
 
             f.write(f"{result_status};{content_length_score};{content_items_score}\n")
             f.flush()
+
+
+    def save_to_json_file(self, json_file_path : str):
+        """Saves the configuration to a JSON file"""
+        with open(json_file_path, "w", encoding="utf-8") as f:
+            f.write(self.to_json())
+
+
+    def to_json(self) -> str:
+        """Converts the configuration to a JSON string"""
+        return json.dumps(self.__dict__, indent=4)
+
+
+    @staticmethod
+    def from_json(json_str : str):
+        """Converts a JSON string to a BatchConfig object"""
+        bc = BatchConfig()
+        bc.__dict__ = json.loads(json_str)
+        return bc
+
+
+    @staticmethod
+    def from_json_file(json_file_path : str):
+        """Converts a JSON file to a BatchConfig object"""
+        with open(json_file_path, "r", encoding="utf-8") as f:
+            bc = BatchConfig.from_json(f.read())
+            bc.open_csv_file(json_file_path)
+            return bc

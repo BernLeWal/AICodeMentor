@@ -1,0 +1,73 @@
+{
+    "setup_workflow_file": null,
+    "csv_file": null,
+    "workflow_files": "workflows/benchmarks/summarize-sourcefile.wf.md",
+    "key_values": {},
+    "repeats": 1,
+    "ai_model_names": [
+        "gpt-4o-mini",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo",
+        "o3-mini",
+        "o1-mini"
+    ],
+    "ai_temperature_values": null,
+    "ai_top_p_values": null,
+    "ai_f_penalty_values": null,
+    "ai_p_penalty_values": null,
+    "expected_length": 200,
+    "expected_facts": [
+        "Java",
+        "Spring Boot",
+        [
+            "REST",
+            "RESTful"
+        ],
+        [
+            "web service",
+            "microservice",
+            "micro service"
+        ],
+        [
+            "temperature",
+            "weather"
+        ],
+        "city",
+        [
+            "get weather",
+            "get city weather",
+            "get temperature",
+            "get city temperature"
+        ],
+        [
+            "add weather",
+            "add city weather",
+            "add temperature",
+            "add city temperature"
+        ],
+        [
+            "update weather",
+            "update city weather",
+            "update temperature",
+            "update city temperature"
+        ],
+        [
+            "GET /city/{id}",
+            "POST /city/add",
+            "PUT /city/update/{id}"
+        ],
+        [
+            "Vienna",
+            "Prague",
+            "Berlin",
+            "Munich"
+        ],
+        [
+            "in-memory",
+            "list",
+            "records",
+            "data"
+        ]
+    ],
+    "cleanup_workflow_file": null
+}

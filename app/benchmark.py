@@ -35,7 +35,7 @@ def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status,
 
 
 
-def run_workflow_file(cfg: BatchConfig, workflow_file: str):
+def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
     """Runs a workflow and collects benchmarking data"""
     # Add the benchmark results to a CSV file
     cfg.open_csv_file(workflow_file)
@@ -78,42 +78,12 @@ def run_batch(cfg: BatchConfig):
     # if workflow_files is a list of string then process all files each
     if isinstance(cfg.workflow_files, list):
         for workflow_file in cfg.workflow_files:
-            run_workflow_file(cfg, workflow_file)
+            run_batch_workflow(cfg, workflow_file)
     else:
-        run_workflow_file(cfg, cfg.workflow_files)
+        run_batch_workflow(cfg, cfg.workflow_files)
 
 
 if __name__ == "__main__":
-    CFG = BatchConfig()
-
-    CFG.workflow_files = "workflows/benchmarks/summarize-sourcefile.wf.md"
-    CFG.ai_model_names = [
-        ## Platform OpenAI GPT Chat Models
-        #"gpt-4o",
-        "gpt-4o-mini",
-        #"gpt-4",
-        "gpt-4-turbo",
-        "gpt-3.5-turbo",
-
-        ## Platform OpenAI Reasoning Models
-        "o3-mini",
-        "o1-mini",
-        #"o1",
-    ]
-    CFG.expected_length = 200
-    CFG.expected_facts = [
-        "Java",
-        "Spring Boot",
-        ["REST", "RESTful"],
-        ["web service","microservice","micro service"],
-        ["temperature", "weather"],
-        "city",
-        ["get weather","get city weather","get temperature","get city temperature"],
-        ["add weather","add city weather","add temperature","add city temperature"],
-        ["update weather","update city weather","update temperature","update city temperature"],
-        [r"GET /city/{id}","POST /city/add",r"PUT /city/update/{id}"],
-        ["Vienna","Prague","Berlin","Munich"],
-        ["in-memory","list","records","data"],
-        ]
+    CFG = BatchConfig.from_json_file("workflows/benchmarks/summarize-sourcefile.cfg.json")
 
     run_batch(CFG)
