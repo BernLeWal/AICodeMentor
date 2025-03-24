@@ -6,6 +6,7 @@ automatically analyse, feedback and grade source-code project submissions using 
 import logging
 import sys
 import os
+import datetime
 import argparse
 from dotenv import load_dotenv
 
@@ -13,6 +14,7 @@ from app.version import __version__, __app_name__, __app_description__
 from app.agents.agent_factory import AIAgentFactory
 from app.agents.agent_config import AIAgentConfig
 from app.workflow.workflow_reader import WorkflowReader
+from app.workflow.batch_config import BatchConfig
 from app.workflow.interpreter import WorkflowInterpreter
 from app.workflow.workflow import Workflow
 from app.workflow.context import Context
@@ -32,20 +34,6 @@ logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
                         #logging.StreamHandler(sys.stdout)  # Optional: to also log to console
                     ])
 logger = logging.getLogger(__name__)
-
-
-def show_help() -> None:
-    """Show help"""
-    print("AI CodeMentor - automatically analyse, feedback and grade " +\
-        "source-code project submissions using AI agents")
-    print()
-    print("Usage: python main.py [options] <workflow-file.md> [key=value ...]")
-    print()
-    print("Options:")
-    print("  -h, --help         Show this help message and exit")
-    print()
-    print("Example:")
-    print("  python main.py workflow.md FOO1=BAR1 FOO2=BAR2")
 
 
 def run(workflow_file, key_values) -> tuple[Workflow.Status, str]:
@@ -70,18 +58,90 @@ def run(workflow_file, key_values) -> tuple[Workflow.Status, str]:
     return main_interpreter.run(main_context)
 
 
+def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status, str, float]:
+    """Runs a workflow and returns the results and status code
+    :param workflow_file: Path to the workflow file in Markdown format
+    :return: (status, result)
+    """
+    start_time = datetime.datetime.now()
+    (status, result) = run(workflow_file, key_values)
+    elapsed_time = datetime.datetime.now() - start_time
+
+    return (status, result, elapsed_time.total_seconds())
+
+
+
+def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
+    """Runs a workflow and collects benchmarking data"""
+    # Add the benchmark results to a CSV file
+    cfg.open_csv_file(workflow_file)
+
+    for _ in range(cfg.repeats):
+        for model_name in cfg.ai_model_names or [AIAgentConfig.get_model_name()]:
+            logger.info("- Running benchmark for model: %s", model_name)
+            os.environ['AI_MODEL_NAME'] = model_name
+
+            for temp in cfg.ai_temperature_values or [AIAgentConfig.get_temperature()]:
+                os.environ['AI_TEMPERATURE'] = str(temp)
+
+                for top_p in cfg.ai_top_p_values or [AIAgentConfig.get_top_p()]:
+                    os.environ['AI_TOP_P'] = str(top_p)
+
+                    for f_penalty in cfg.ai_f_penalty_values or [AIAgentConfig.get_frequency_penalty()]:
+                        os.environ['AI_FREQUENCY_PENALTY'] = str(f_penalty)
+
+                        for p_penalty in cfg.ai_p_penalty_values or [AIAgentConfig.get_presence_penalty()]:
+                            os.environ['AI_PRESENCE_PENALTY'] = str(p_penalty)
+
+                            # Run the workflow
+                            results = run_workflow(workflow_file, cfg.key_values)
+
+                            cfg.score_workflow(workflow_file,
+                                        model_name, temp, top_p, f_penalty, p_penalty,
+                                        results)
+
+
+
+def run_batch(cfg: BatchConfig):
+    """Runs a batch of workflows and collects benchmarking data"""
+    if cfg.setup_workflow_file is not None:
+        logger.info("Setting up the environment...")
+        run_workflow(cfg.setup_workflow_file, cfg.key_values)
+
+    if cfg.workflow_files is None:
+        logger.error("No workflow files given!")
+        return
+    # if workflow_files is a list of string then process all files each
+    if isinstance(cfg.workflow_files, list):
+        for workflow_file in cfg.workflow_files:
+            run_batch_workflow(cfg, workflow_file)
+    else:
+        run_batch_workflow(cfg, cfg.workflow_files)
+
+    if cfg.cleanup_workflow_file is not None:
+        logger.info("Cleaning up the environment...")
+        run_workflow(cfg.cleanup_workflow_file, cfg.key_values)
+
+
 
 if __name__ == "__main__":
-    # For debugging, uncomment and set the following lines
+    # For debugging, uncomment and set the following lines:
+    #sys.argv.append("--help")
+
+    # Scenario 1: workflow execution
     #sys.argv.append("--verbose")
     #sys.argv.append("workflows/sample-project-eval.wf.md")
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
+
+    # Scenario 2: batch execution
+    #sys.argv.append("--batch")
+    #sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
 
     parser = argparse.ArgumentParser(
         description=f"{__app_name__} - {__app_description__}"
     )
     parser.add_argument(
-        "-v", "--version",
+        "--version", "-v",
         action="version",
         version=f"{__app_name__} V{__version__}",
         help="Show program's version number and exit"
@@ -92,15 +152,21 @@ if __name__ == "__main__":
         help="Write the log-output also to the console"
     )
     parser.add_argument(
-        '-s', '--server',
+        '--server', '-s',
         action='store_true',
         help="Run the application as a server"
     )
     parser.add_argument(
+        '--batch', '-b',
+        action='store_true',
+        help="Run the application in batch mode"
+    )
+    parser.add_argument(
         'workflow_file',
-        metavar='<workflow-file.md>',
+        metavar='<workflow-file.md|batch-config.json>',
         type=str,
-        help="Path to the workflow file in Markdown format"
+        help="Path to the workflow file (in Markdown format) "+\
+            "or batch configuration file (in JSON format)"
     )
     parser.add_argument(
         'key_values',
@@ -113,13 +179,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.verbose or args.server:
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+
     if args.server:
         #from app.server import run_server
         #run_server()
+        sys.exit(1) # not implemented yet
+    if args.batch:
+        batch_cfg = BatchConfig.from_json_file(args.workflow_file)
+        batch_cfg.key_values = args.key_values
+        run_batch(batch_cfg)
         sys.exit(0)
-
+    # else normal workflow execution
     (main_status, main_result) = run(args.workflow_file, args.key_values)
-    
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)
