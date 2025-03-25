@@ -41,6 +41,14 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
+🚀Latest News in version: 0.1.5
+- Added **batch-processing**, e.g. to run benchmarks
+- AI-Agent configuration **parameters** support, e.g temperature, n_top, f_penalty,..
+- AI-Agent **telemetry** recording, e.g. tokens used, duration, iterations
+- added **Google Gemini** (as AI-Agent) support
+
+Version history see [app/version.py](./app/version.py)
+
 ### Future Enhancements
 - Integrate local running AI agents (using Huggingface)
 - **create agent** instead of "Prompt: System"

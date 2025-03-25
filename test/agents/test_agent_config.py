@@ -20,8 +20,8 @@ class TestAIAgentConfig(unittest.TestCase):
 
         self.config.load_from_environment()
 
-        self.assertEqual(self.config.ai_api_key, 'test_api_key')
-        self.assertEqual(self.config.ai_organization_id, 'test_org_id')
+        self.assertEqual(self.config.openai_api_key, 'test_api_key')
+        self.assertEqual(self.config.openai_organization_id, 'test_org_id')
 
     def test_load_from_jsonfile(self):
         """Checks if the configuration is loaded from a JSON file"""
@@ -36,8 +36,8 @@ class TestAIAgentConfig(unittest.TestCase):
 
         self.config.load_from_jsonfile('test_config.json')
 
-        self.assertEqual(self.config.ai_api_key, 'file_api_key')
-        self.assertEqual(self.config.ai_organization_id, 'file_org_id')
+        self.assertEqual(self.config.openai_api_key, 'file_api_key')
+        self.assertEqual(self.config.openai_organization_id, 'file_org_id')
 
         os.remove('test_config.json')
 
@@ -52,8 +52,8 @@ class TestAIAgentConfig(unittest.TestCase):
 
         self.config.load_from_json(json_data)
 
-        self.assertEqual(self.config.ai_api_key, 'json_api_key')
-        self.assertEqual(self.config.ai_organization_id, 'json_org_id')
+        self.assertEqual(self.config.openai_api_key, 'json_api_key')
+        self.assertEqual(self.config.openai_organization_id, 'json_org_id')
 
 
 if __name__ == "__main__":

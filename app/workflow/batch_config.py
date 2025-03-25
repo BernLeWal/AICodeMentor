@@ -5,7 +5,6 @@ Configuration for the AI CodeMentor Batch-Processing Engine
 import os
 import json
 
-from app.agents.agent import AIAgent
 from app.workflow.workflow import Workflow
 from app.workflow.workflow_writer import WorkflowWriter
 from app.workflow.workflow_runner import WorkflowRunner
@@ -124,8 +123,9 @@ class BatchConfig:
             agent = workflow_runner.get_agent()
             if agent is not None:
                 f.write(f"{agent.total_duration_sec};{agent.total_iterations};")
-                f.write(f"{agent.total_prompt_tokens};{agent.total_completion_tokens};"+\
-                        f"{agent.total_tokens};")
+                f.write(f"{agent.total_prompt_tokens if agent.total_prompt_tokens is not None else ""};"+\
+                        f"{agent.total_completion_tokens if agent.total_completion_tokens is not None else ""};"+\
+                        f"{agent.total_tokens if agent.total_tokens is not None else ""};")
                 f.write(f"{agent.total_prompt_chars};{agent.total_completion_chars};"+\
                         f"{agent.total_chars};")
                 f.write(f"{content_length_score};{content_items_score}\n")
@@ -168,16 +168,23 @@ if __name__ == "__main__":
     cfg.workflow_files = "<your_workflow_file.wf.md>"
     cfg.ai_model_names = [
         ## Platform OpenAI GPT Chat Models
-        "gpt-4o",
+        "gpt-4o",           #expensive
         "gpt-4o-mini",
-        "gpt-4",
+        "gpt-4",            #expensive
         "gpt-4-turbo",
         "gpt-3.5-turbo",
 
         ## Platform OpenAI Reasoning Models
         "o3-mini",
         "o1-mini",
-        "o1",
+        "o1",               #expensive
+
+        ## Google Gemini Models
+        # see https://ai.google.dev/gemini-api/docs/models
+        "gemini-2.0-flash",                         #expensive
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-2.0-flash-thinking-experimental",   #expensive
     ]
     cfg.expected_length = 200
     cfg.expected_facts = [

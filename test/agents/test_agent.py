@@ -11,8 +11,8 @@ class TestAIAgent(unittest.TestCase):
 
     def setUp(self):
         config = AIAgentConfig()
-        config.ai_api_key="test_api_key"
-        config.ai_organization_id="test_org_id"
+        config.openai_api_key="test_api_key"
+        config.openai_organization_id="test_org_id"
         self.agent = AIAgent(config)
         self.agent.model_name = "test_model_name"
 

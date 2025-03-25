@@ -18,17 +18,23 @@ logger = logging.getLogger(__name__)
 
 
 # app/agents/AIAgentConfig.py
+# FIXME: this class does not fit anymore, with AI-Agents from different vendors
 class AIAgentConfig:
     """Retrieves the configuration for the AI Agents"""
     def __init__(self):
-        self.ai_api_key = None
-        self.ai_organization_id = None
+        # Generic configuration
+        self.model_name = AIAgentConfig.get_model_name()
+        # Vendor specific configuration
+        self.openai_api_key = None
+        self.openai_organization_id = None
+        self.google_client_secret_file = None
 
     def load_from_environment(self):
         """loads the configuration from the environment variables"""
         logger.debug("Loading configuration from environment...")
-        self.ai_api_key = os.getenv('OPENAI_API_KEY', '')
-        self.ai_organization_id = os.getenv('OPENAI_ORGANIZATION_ID', '')
+        self.openai_api_key = os.getenv('OPENAI_API_KEY', '')
+        self.openai_organization_id = os.getenv('OPENAI_ORGANIZATION_ID', '')
+        self.google_client_secret_file = os.getenv('GOOGLE_CLIENT_SECRET_FILE', '')
         logger.debug(self)
 
     def load_from_jsonfile(self, filename):
@@ -37,8 +43,7 @@ class AIAgentConfig:
         logger.debug("Loading configuration from file: %s", filename)
         with open(filename, 'r', encoding='utf-8') as file:
             config = json.load(file)
-            self.ai_api_key = config['OPENAI_API_KEY']
-            self.ai_organization_id = config['OPENAI_ORGANIZATION_ID']
+            self.__dict__ = json.loads(config)
         logger.debug(self)
 
     def load_from_json(self, json_data : str):
@@ -46,16 +51,15 @@ class AIAgentConfig:
         # Load the configuration from the JSON string
         logger.debug("Loading configuration from JSON string")
         config = json.loads(json_data)
-        self.ai_api_key = config['OPENAI_API_KEY']
-        self.ai_organization_id = config['OPENAI_ORGANIZATION_ID']
+        self.__dict__ = json.loads(config)
         logger.debug(self)
 
     # convert to str
     def __str__(self):
         return "AIAgentConfig: " + \
-            f"OPENAI_API_KEY={self.ai_api_key[:4]}...{self.ai_api_key[-4:]}, " + \
-            f"OPENAI_ORGANIZATION_ID={self.ai_organization_id[:4]}"+\
-            f"...{self.ai_organization_id[-4:]}"
+            f"OPENAI_API_KEY={self.openai_api_key[:4]}...{self.openai_api_key[-4:]}, " + \
+            f"OPENAI_ORGANIZATION_ID={self.openai_organization_id[:4]}"+\
+            f"...{self.openai_organization_id[-4:]}"
 
 
     # ------------------------------------------------------

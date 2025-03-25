@@ -9,7 +9,10 @@
         "gpt-4-turbo",
         "gpt-3.5-turbo",
         "o3-mini",
-        "o1-mini"
+        "o1-mini",
+        "gemini-2.0-flash-lite",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash"
     ],
     "ai_temperature_values": null,
     "ai_top_p_values": null,

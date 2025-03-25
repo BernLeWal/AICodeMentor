@@ -34,8 +34,8 @@ class AIAgentOpenAIInstruct(AIAgent):
         logger.info("Creating AIAgentOpenAI with %s", config)
 
         self.client = OpenAI(
-            api_key=config.ai_api_key,
-            organization= config.ai_organization_id
+            api_key=config.openai_api_key,
+            organization= config.openai_organization_id
         )
 
 
@@ -91,6 +91,7 @@ class AIAgentOpenAIInstruct(AIAgent):
 if __name__ == "__main__":
     main_config = AIAgentConfig()
     main_config.load_from_environment()
+    main_config.model_name = "o1-mini"
 
     main_agent = AIAgentOpenAIInstruct(main_config)
 

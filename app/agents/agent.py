@@ -25,7 +25,7 @@ class AIAgent:
         self.config : AIAgentConfig = config
 
         # common LLM configs
-        self.model_name:str = AIAgentConfig.get_model_name() # LLM model used
+        self.model_name:str = config.model_name # LLM model used
         self.temperature = AIAgentConfig.get_temperature() # output randomness
         self.top_p = AIAgentConfig.get_top_p() # nucleus sampling
         self.frequency_penalty = AIAgentConfig.get_frequency_penalty()

@@ -10,6 +10,7 @@ from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
 from app.agents.agent_openai_gpt import AIAgentOpenAIGpt
 from app.agents.agent_openai_instruct import AIAgentOpenAIInstruct
+from app.agents.agent_google_gemini import AIAgentGoogleGemini
 
 
 # Setup logging framework
@@ -46,6 +47,9 @@ class AIAgentFactory:
             return AIAgentOpenAIInstruct(config)
         elif model_name.startswith("o1-") or model_name.startswith("o3-"):
             return AIAgentOpenAIInstruct(config)
+        # Google Gemini API Models:
+        elif model_name.startswith("gemini-"):
+            return AIAgentGoogleGemini(config)
 
         raise ValueError(f"Unsupported model name: {model_name}")
 
