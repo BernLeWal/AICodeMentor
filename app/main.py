@@ -6,19 +6,14 @@ automatically analyse, feedback and grade source-code project submissions using 
 import logging
 import sys
 import os
-import datetime
 import argparse
 from dotenv import load_dotenv
 
 from app.version import __version__, __app_name__, __app_description__
-from app.agents.agent_factory import AIAgentFactory
 from app.agents.agent_config import AIAgentConfig
-from app.workflow.workflow_reader import WorkflowReader
 from app.workflow.batch_config import BatchConfig
-from app.workflow.interpreter import WorkflowInterpreter
 from app.workflow.workflow import Workflow
-from app.workflow.context import Context
-from app.commands.shell_executor import ShellCommandExecutor
+from app.workflow.workflow_runner import WorkflowRunner
 
 # Setup logging framework
 load_dotenv()
@@ -34,41 +29,6 @@ logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
                         #logging.StreamHandler(sys.stdout)  # Optional: to also log to console
                     ])
 logger = logging.getLogger(__name__)
-
-
-def run(workflow_file, key_values) -> tuple[Workflow.Status, str]:
-    """Run the AI CodeMentor application
-    :param workflow_file: Path to the workflow file in Markdown format
-    :return: Exit code
-    """
-    main_workflow = WorkflowReader().load_from_mdfile(workflow_file, ".")
-    print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath}) "+\
-          f"using AI-model {AIAgentConfig.get_model_name()} ")
-    if key_values:
-        print("with parameters:")
-        for kv in key_values:
-            key, value = kv.split("=")
-            print(f"  - {key}={value}\n")
-            main_workflow.params[key] = value
-
-    main_interpreter = WorkflowInterpreter(main_workflow)
-
-    ## run the workflow
-    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
-    return main_interpreter.run(main_context)
-
-
-def run_workflow(workflow_file: str, key_values: dict) -> tuple[Workflow.Status, str, float]:
-    """Runs a workflow and returns the results and status code
-    :param workflow_file: Path to the workflow file in Markdown format
-    :return: (status, result)
-    """
-    start_time = datetime.datetime.now()
-    (status, result) = run(workflow_file, key_values)
-    elapsed_time = datetime.datetime.now() - start_time
-
-    return (status, result, elapsed_time.total_seconds())
-
 
 
 def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
@@ -94,9 +54,10 @@ def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
                             os.environ['AI_PRESENCE_PENALTY'] = str(p_penalty)
 
                             # Run the workflow
-                            results = run_workflow(workflow_file, cfg.key_values)
+                            workflow_runner = WorkflowRunner(workflow_file, cfg.key_values)
+                            results = workflow_runner.run()
 
-                            cfg.score_workflow(workflow_file,
+                            cfg.score_workflow(workflow_runner,
                                         model_name, temp, top_p, f_penalty, p_penalty,
                                         results)
 
@@ -106,7 +67,7 @@ def run_batch(cfg: BatchConfig):
     """Runs a batch of workflows and collects benchmarking data"""
     if cfg.setup_workflow_file is not None:
         logger.info("Setting up the environment...")
-        run_workflow(cfg.setup_workflow_file, cfg.key_values)
+        WorkflowRunner(cfg.setup_workflow_file, cfg.key_values).run()
 
     if cfg.workflow_files is None:
         logger.error("No workflow files given!")
@@ -120,7 +81,7 @@ def run_batch(cfg: BatchConfig):
 
     if cfg.cleanup_workflow_file is not None:
         logger.info("Cleaning up the environment...")
-        run_workflow(cfg.cleanup_workflow_file, cfg.key_values)
+        WorkflowRunner(cfg.cleanup_workflow_file, cfg.key_values).run()
 
 
 
@@ -134,8 +95,8 @@ if __name__ == "__main__":
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
     # Scenario 2: batch execution
-    #sys.argv.append("--batch")
-    #sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
+    sys.argv.append("--batch")
+    sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
 
     parser = argparse.ArgumentParser(
         description=f"{__app_name__} - {__app_description__}"
@@ -151,11 +112,11 @@ if __name__ == "__main__":
         action='store_true',
         help="Write the log-output also to the console"
     )
-    parser.add_argument(
-        '--server', '-s',
-        action='store_true',
-        help="Run the application as a server"
-    )
+    #parser.add_argument(
+    #    '--server', '-s',
+    #    action='store_true',
+    #    help="Run the application as a server"
+    #)
     parser.add_argument(
         '--batch', '-b',
         action='store_true',
@@ -177,20 +138,21 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    if args.verbose or args.server:
+    if args.verbose: #or args.server:
         logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-    if args.server:
-        #from app.server import run_server
-        #run_server()
-        sys.exit(1) # not implemented yet
+    #if args.server:
+    #    from app.server import run_server
+    #    run_server()
+    #    sys.exit(1) # not implemented yet
+
     if args.batch:
         batch_cfg = BatchConfig.from_json_file(args.workflow_file)
         batch_cfg.key_values = args.key_values
         run_batch(batch_cfg)
         sys.exit(0)
     # else normal workflow execution
-    (main_status, main_result) = run(args.workflow_file, args.key_values)
+    (main_status, main_result) = WorkflowRunner(args.workflow_file, args.key_values).run()
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)

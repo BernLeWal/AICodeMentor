@@ -3,11 +3,12 @@
 Configuration for the AI CodeMentor Batch-Processing Engine
 """
 import os
-import datetime
 import json
 
+from app.agents.agent import AIAgent
 from app.workflow.workflow import Workflow
 from app.workflow.workflow_writer import WorkflowWriter
+from app.workflow.workflow_runner import WorkflowRunner
 
 class BatchConfig:
     """Configuration for the AI CodeMentor Batch-Processing Engine"""
@@ -46,7 +47,8 @@ class BatchConfig:
             os.makedirs(directory)
         directory = os.path.abspath(directory)
         if (self.csv_file is None) and (file_path is not None):
-            csv_file_name = os.path.basename(file_path).replace(".wf.md","").replace(".cfg.json","") + ".csv"
+            csv_file_name = os.path.basename(file_path).replace(".wf.md","").replace(".cfg.json","")
+            csv_file_name += ".csv"
             self.csv_file = os.path.join(directory, csv_file_name)
 
         if not os.path.exists(self.csv_file):
@@ -54,7 +56,11 @@ class BatchConfig:
                 f.write("sourcefile;"+\
                         "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
                         "run_timestamp;run_duration_sec;" +\
-                        "result_status;result_length_score;result_facts_score\n")
+                        "result_status;result_hash;result_length;"+\
+                        "total_duration_sec;total_iterations;"+\
+                        "total_prompt_tokens;total_completion_tokens;total_tokens;"+\
+                        "total_prompt_chars;total_completion_chars;total_chars;"+\
+                        "score_result_length;score_result_facts\n")
         return self.csv_file
 
 
@@ -94,27 +100,37 @@ class BatchConfig:
         return content_items_score
 
 
-    def score_workflow(self, workflow_file:str,
+    def score_workflow(self, workflow_runner:WorkflowRunner,
                     cfg_model:str, cfg_temp, cfg_top_p, cfg_f_penalty, cfg_p_penalty,
-                    results:tuple[Workflow.Status, str, float]):
+                    results:tuple[Workflow.Status, str]):
         """Scores the workflow results and writes to a CSV file"""
         with open(self.csv_file, "a", encoding="utf-8") as f:
             #workflow_file_basename = os.path.basename(workflow_file)
-            f.write(f"{workflow_file};")
+            f.write(f"{workflow_runner.workflow_file};")
 
             # Data of configuration
             f.write(f"{cfg_model};{cfg_temp};{cfg_top_p};{cfg_f_penalty};{cfg_p_penalty};")
 
             # Data of workflow run
-            result_status, result_content, duration_sec = results
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"{timestamp};{duration_sec};")
+            result_status, result_content  = results
+            timestamp = workflow_runner.start_time.strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"{timestamp};{workflow_runner.duration_sec};")
 
             # Data of results
             content_length_score = self.score_result_length(result_content)
             content_items_score = self.score_result_facts(result_content)
 
-            f.write(f"{result_status};{content_length_score};{content_items_score}\n")
+            f.write(f"{result_status};{hash(result_content)};{len(result_content)};")
+            agent = workflow_runner.get_agent()
+            if agent is not None:
+                f.write(f"{agent.total_duration_sec};{agent.total_iterations};")
+                f.write(f"{agent.total_prompt_tokens};{agent.total_completion_tokens};"+\
+                        f"{agent.total_tokens};")
+                f.write(f"{agent.total_prompt_chars};{agent.total_completion_chars};"+\
+                        f"{agent.total_chars};")
+                f.write(f"{content_length_score};{content_items_score}\n")
+            else:
+                f.write(";;;;;;;")
             f.flush()
 
 
@@ -144,3 +160,29 @@ class BatchConfig:
             bc = BatchConfig.from_json(f.read())
             bc.open_csv_file(json_file_path)
             return bc
+
+if __name__ == "__main__":
+    # Create a template for the batch-configuration
+    cfg = BatchConfig()
+
+    cfg.workflow_files = "<your_workflow_file.wf.md>"
+    cfg.ai_model_names = [
+        ## Platform OpenAI GPT Chat Models
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-4",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo",
+
+        ## Platform OpenAI Reasoning Models
+        "o3-mini",
+        "o1-mini",
+        "o1",
+    ]
+    cfg.expected_length = 200
+    cfg.expected_facts = [
+        "SearchText1",
+        "SearchText2",
+        ["SearchText3a or", "SearchText3b"],
+        ]
+    cfg.save_to_json_file("template.cfg.json")

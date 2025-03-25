@@ -43,7 +43,7 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ### Future Enhancements
 - Integrate local running AI agents (using Huggingface)
-- Integrate **reasoning AI agents** (o1-mini, o3-mini-high, etc.); **create agent** instead of "Prompt: System"; upgrade Completions-API to use role "developer" (see docs)
+- **create agent** instead of "Prompt: System"
 - Fix **COTH mixup** with reasoning AI-Agents
 - Implement **PLaG** technique (see [docs/literature/PLaG.md](./docs/literature/PLaG.md)) as a sample - should fit perfectly to CodeMentor
 - Enhance AI agent feedback loops for **self-improvement**: Adapt temperature Setting: start with 0, increase on IMPROVE path

@@ -36,6 +36,17 @@ class AIAgent:
         # further processing configs
         self.max_prompt_length = int(os.getenv('AI_MAX_PROMPT_LENGTH', '2000'))
 
+        # usage telemetry
+        self.total_duration_sec = 0.0
+        self.total_iterations = 0
+
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+        self.total_tokens = 0
+
+        self.total_prompt_chars = 0
+        self.total_completion_chars = 0
+        self.total_chars = 0
 
         self.messages : list = []
         self.last_result : str = None
@@ -45,13 +56,25 @@ class AIAgent:
         logger.debug("System prompt received: %s", prompt)
         self.messages.append( Prompt(Prompt.SYSTEM, prompt) )
         self.last_result = None
+
+        # record telemetry
+        self.total_iterations = 0
+        self.total_prompt_chars += len(prompt)
+        self.total_chars += len(prompt)
         return prompt
 
     def ask(self, prompt: str) -> str:
         """Store the user prompt"""
         logger.debug("User prompt received: %s", prompt)
         self.messages.append( Prompt(Prompt.USER, prompt) )
+
+        # record telemetry
+        self.total_iterations = len(self.messages)
+        self.total_prompt_chars += len(prompt)
+        self.total_chars += len(prompt)
+
         # self.last_result has to be set by the implementation
+        # token usage telemetry has to be set by the implementation
         return prompt
 
     def advice(self, question: str, answer: str):
@@ -59,16 +82,24 @@ class AIAgent:
         logger.debug("Advice interaction - Question: %s, Answer: %s", question, answer)
         if not question is None:
             self.messages.append( Prompt(Prompt.USER, question) )
+            self.total_prompt_chars += len(question)
+            self.total_chars += len(question)
         if not answer is None:
             self.messages.append( Prompt(Prompt.ASSISTANT, answer) )
+            self.total_completion_chars += len(answer)
+            self.total_chars += len(answer)
         self.last_result = answer
+        self.total_iterations = len(self.messages)
 
     def answer(self, answer: str):
         """Store the answer of the AIAgent"""
         logger.debug("AIAgent's Answer: %s", answer)
         if not answer is None:
             self.messages.append( Prompt(Prompt.ASSISTANT, answer) )
+            self.total_completion_chars += len(answer)
+            self.total_chars += len(answer)
         self.last_result = answer
+        self.total_iterations = len(self.messages)
 
 
 if __name__ == "__main__":

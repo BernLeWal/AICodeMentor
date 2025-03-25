@@ -4,6 +4,7 @@ The AI-Agent implementation using the Platform OpenAI GPT models (gpt-)
 """
 import logging
 import os
+import time
 from dotenv import load_dotenv
 from openai import OpenAI
 from app.util.string_utils import trunc_middle
@@ -54,6 +55,7 @@ class AIAgentOpenAIGpt(AIAgent):
 
         messages = [msg.to_dict() for msg in self.messages]
 
+        start_time = time.perf_counter()
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model=self.model_name,
@@ -64,12 +66,21 @@ class AIAgentOpenAIGpt(AIAgent):
             max_tokens=self.max_output_tokens,
             stop=self.stop_sequences
         )
-
+        self.total_duration_sec += time.perf_counter() - start_time
 
         self.last_result = ""
         for choice in chat_completion.choices:
             self.last_result += choice.message.content + "\n"
         self.messages.append( Prompt(Prompt.ASSISTANT, self.last_result) )
+        # record telemetry
+        self.total_iterations = len(self.messages)
+        self.total_completion_chars += len(self.last_result)
+        self.total_chars += len(self.last_result)
+        usage = chat_completion.usage
+        self.total_prompt_tokens = usage.prompt_tokens
+        self.total_completion_tokens = usage.completion_tokens
+        self.total_tokens = usage.total_tokens
+
         logger.debug("OpenAI returned: %s", self.last_result)
         return self.last_result
 
