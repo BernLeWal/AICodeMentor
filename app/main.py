@@ -57,10 +57,7 @@ def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
                             workflow_runner = WorkflowRunner(workflow_file, cfg.key_values)
                             results = workflow_runner.run()
 
-                            cfg.score_workflow(workflow_runner,
-                                        model_name, temp, top_p, f_penalty, p_penalty,
-                                        results)
-
+                            cfg.score_workflow(workflow_runner,results)
 
 
 def run_batch(cfg: BatchConfig):

@@ -15,6 +15,8 @@ class BatchConfig:
         # SetUp
         self.setup_workflow_file = None # if given, the workflow file to setup the environment
         self.csv_file = None
+        self.results_dir = None
+        self.counter = 1
 
         # Workflows to run
         self.workflow_files = None
@@ -50,16 +52,24 @@ class BatchConfig:
             csv_file_name += ".csv"
             self.csv_file = os.path.join(directory, csv_file_name)
 
+            self.results_dir = os.path.join(directory, csv_file_name.replace(".csv","_results"))
+            if not os.path.exists(self.results_dir):
+                os.makedirs(self.results_dir)
+
         if not os.path.exists(self.csv_file):
             with open(self.csv_file, "w", encoding="utf-8") as f:
-                f.write("sourcefile;"+\
+                f.write("nr;sourcefile;"+\
                         "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
                         "run_timestamp;run_duration_sec;" +\
-                        "result_status;result_hash;result_length;"+\
+                        "result_status;result_file;result_length;"+\
                         "total_duration_sec;total_iterations;"+\
                         "total_prompt_tokens;total_completion_tokens;total_tokens;"+\
                         "total_prompt_chars;total_completion_chars;total_chars;"+\
                         "score_result_length;score_result_facts\n")
+        else:
+            with open(self.csv_file, "r", encoding="utf-8") as f:
+                self.counter = len(f.readlines())
+
         return self.csv_file
 
 
@@ -100,38 +110,59 @@ class BatchConfig:
 
 
     def score_workflow(self, workflow_runner:WorkflowRunner,
-                    cfg_model:str, cfg_temp, cfg_top_p, cfg_f_penalty, cfg_p_penalty,
                     results:tuple[Workflow.Status, str]):
         """Scores the workflow results and writes to a CSV file"""
         with open(self.csv_file, "a", encoding="utf-8") as f:
-            #workflow_file_basename = os.path.basename(workflow_file)
-            f.write(f"{workflow_runner.workflow_file};")
+            f.write(f"{self.counter};"+\
+                    f"{workflow_runner.workflow_file};")
 
             # Data of configuration
-            f.write(f"{cfg_model};{cfg_temp};{cfg_top_p};{cfg_f_penalty};{cfg_p_penalty};")
+            agent = workflow_runner.get_agent()
+            if agent is not None:
+                f.write(f"{agent.model_name};"+\
+                        f"{agent.temperature};"+\
+                        f"{agent.top_p};"+\
+                        f"{agent.frequency_penalty};"+\
+                        f"{agent.presence_penalty};")
+            else:
+                f.write(";;;;;")
 
             # Data of workflow run
             result_status, result_content  = results
             timestamp = workflow_runner.start_time.strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"{timestamp};{workflow_runner.duration_sec};")
+            f.write(f"{timestamp};"+\
+                    f"{workflow_runner.duration_sec};")
 
             # Data of results
-            content_length_score = self.score_result_length(result_content)
-            content_items_score = self.score_result_facts(result_content)
+            f.write(f"{result_status};")
+            result_file_name = os.path.join(self.results_dir,
+                                            f"{self.counter}__{agent.model_name}.md")
+            with open(result_file_name, "w", encoding="utf-8") as rf:
+                rf.write(result_content)
+            f.write(f"{os.path.basename(result_file_name)};"+\
+                    f"{len(result_content)};")
 
-            f.write(f"{result_status};{hash(result_content)};{len(result_content)};")
-            agent = workflow_runner.get_agent()
             if agent is not None:
-                f.write(f"{agent.total_duration_sec};{agent.total_iterations};")
+                f.write(f"{agent.total_duration_sec};"+\
+                        f"{agent.total_iterations};")
                 f.write(f"{agent.total_prompt_tokens if agent.total_prompt_tokens is not None else ""};"+\
                         f"{agent.total_completion_tokens if agent.total_completion_tokens is not None else ""};"+\
                         f"{agent.total_tokens if agent.total_tokens is not None else ""};")
-                f.write(f"{agent.total_prompt_chars};{agent.total_completion_chars};"+\
+                f.write(f"{agent.total_prompt_chars};"+\
+                        f"{agent.total_completion_chars};"+\
                         f"{agent.total_chars};")
-                f.write(f"{content_length_score};{content_items_score}\n")
             else:
-                f.write(";;;;;;;")
+                f.write(";;;;;;;;")
+
+            # Scoring
+            content_length_score = self.score_result_length(result_content)
+            f.write(f"{content_length_score};")
+            content_items_score = self.score_result_facts(result_content)
+            f.write(f"{content_items_score};")
+
+            f.write("\n")
             f.flush()
+            self.counter += 1
 
 
     def save_to_json_file(self, json_file_path : str):
