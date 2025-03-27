@@ -103,10 +103,7 @@ class AIAgent:
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig()
-    main_config.load_from_environment()
-
-    main_agent = AIAgent(main_config)
+    main_agent = AIAgent(AIAgentConfig())
 
     print("System Prompt:")
     main_agent.system("You are a helpful assistant")

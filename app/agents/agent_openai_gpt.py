@@ -86,10 +86,7 @@ class AIAgentOpenAIGpt(AIAgent):
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig()
-    main_config.load_from_environment()
-    main_config.model_name = "gpt-4o-mini"
-
+    main_config = AIAgentConfig("gpt-4o-mini")
     main_agent = AIAgentOpenAIGpt(main_config)
 
     main_agent.system("You are a helpful assistant")

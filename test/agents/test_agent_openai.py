@@ -10,7 +10,6 @@ class TestAIAgentOpenAI(unittest.TestCase):
     """UnitTests for AIAgentOpenAI"""
     def setUp(self):
         config = AIAgentConfig()
-        config.load_from_environment()
         self.agent = AIAgentOpenAIGpt(config)
 
 

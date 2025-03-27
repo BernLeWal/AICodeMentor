@@ -26,7 +26,7 @@ class WorkflowRunner:
         self.context:Context = None
 
 
-    def run(self) -> tuple[Workflow.Status, str]:
+    def run(self, config:AIAgentConfig) -> tuple[Workflow.Status, str]:
         """
         Run the AI CodeMentor Workflow
         """
@@ -44,7 +44,9 @@ class WorkflowRunner:
         main_interpreter = WorkflowInterpreter(main_workflow)
 
         ## run the workflow
-        self.context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
+        self.context = Context(main_workflow,
+                               AIAgentFactory.create_agent(config),
+                               ShellCommandExecutor())
         results = main_interpreter.run(self.context)
         self.duration_sec = (datetime.datetime.now() - self.start_time).total_seconds()
         return results

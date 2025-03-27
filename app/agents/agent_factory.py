@@ -29,16 +29,13 @@ class AIAgentFactory:
     """
 
     @staticmethod
-    def create_agent(model_name:str = None) -> AIAgent:
+    def create_agent(config:AIAgentConfig = None) -> AIAgent:
         """
         Creates an AI-Agent instance of type AIAgentOpenAI
         """
-        if model_name is None:
-            model_name = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
-        logger.debug("Creating agent for model: %s", model_name)
-
-        config = AIAgentConfig(model_name)
-        config.load_from_environment()
+        if config is None:
+            config = AIAgentConfig(config)
+        model_name = config.model_name
 
         # Platform OpenAI GPT Chat Models:
         if model_name.startswith("gpt-"):
@@ -59,7 +56,8 @@ class AIAgentFactory:
 
 
 if __name__ == "__main__":
-    main_agent = AIAgentFactory.create_agent("claude-3-5-haiku-latest")
+    main_config = AIAgentConfig("claude-3-5-haiku-latest")
+    main_agent = AIAgentFactory.create_agent(main_config)
     print(f"Type of agent is {type(main_agent)}")
     system = PromptFactory.load("prep-agent.system.prompt.md")[0].content
     main_agent.system(system)

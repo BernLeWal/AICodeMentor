@@ -4,7 +4,6 @@ UnitTests for ActivityInterpreter
 """
 
 import unittest
-from app.agents.agent_config import AIAgentConfig
 from app.agents.prompt import Prompt
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
@@ -74,8 +73,6 @@ class TestActivityInterpreter(unittest.TestCase):
             Prompt(Prompt.USER, "Just echo the following string:A user prompt")
         context = Context( workflow )
         interpreter = ActivityInterpreter(context )
-        config = AIAgentConfig()
-        config.load_from_environment()
 
         activity1 = Activity(Activity.Kind.PROMPT, "PROMPT_SYSTEM", "System")
         activity1.accept(interpreter)

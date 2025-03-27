@@ -120,10 +120,7 @@ class AIAgentGoogleGemini(AIAgent):
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig()
-    main_config.load_from_environment()
-    main_config.model_name = "gemini-2.0-flash-lite"
-
+    main_config = AIAgentConfig("gemini-2.0-flash-lite")
     main_agent = AIAgentGoogleGemini(main_config)
 
     main_agent.system("You are a helpful assistant")

@@ -54,8 +54,9 @@ def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
                             os.environ['AI_PRESENCE_PENALTY'] = str(p_penalty)
 
                             # Run the workflow
+                            agent_config = AIAgentConfig(model_name)
                             workflow_runner = WorkflowRunner(workflow_file, cfg.key_values)
-                            results = workflow_runner.run()
+                            results = workflow_runner.run(agent_config)
 
                             cfg.score_workflow(workflow_runner,results)
 
@@ -64,7 +65,7 @@ def run_batch(cfg: BatchConfig):
     """Runs a batch of workflows and collects benchmarking data"""
     if cfg.setup_workflow_file is not None:
         logger.info("Setting up the environment...")
-        WorkflowRunner(cfg.setup_workflow_file, cfg.key_values).run()
+        WorkflowRunner(cfg.setup_workflow_file, cfg.key_values).run(AIAgentConfig())
 
     if cfg.workflow_files is None:
         logger.error("No workflow files given!")
@@ -79,7 +80,7 @@ def run_batch(cfg: BatchConfig):
     if cfg.cleanup_workflow_file is not None:
         logger.info("Cleaning up the environment...")
         load_dotenv()   # reload the environment variables
-        WorkflowRunner(cfg.cleanup_workflow_file, cfg.key_values).run()
+        WorkflowRunner(cfg.cleanup_workflow_file, cfg.key_values).run(AIAgentConfig())
 
 
 
@@ -150,7 +151,8 @@ if __name__ == "__main__":
         run_batch(batch_cfg)
         sys.exit(0)
     # else normal workflow execution
-    (main_status, main_result) = WorkflowRunner(args.workflow_file, args.key_values).run()
+    runner = WorkflowRunner(args.workflow_file, args.key_values)
+    (main_status, main_result) = runner.run(AIAgentConfig())
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
         sys.exit(0)

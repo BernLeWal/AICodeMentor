@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 # app/agents/AIAgentConfig.py
-# FIXME: this class does not fit anymore, with AI-Agents from different vendors
 class AIAgentConfig:
     """Retrieves the configuration for the AI Agents"""
     def __init__(self, model_name:str = None):
@@ -33,6 +32,9 @@ class AIAgentConfig:
         self.google_client_secret_file = None
         self.anthropic_api_key = None
 
+        self.load_from_environment()
+
+
     def load_from_environment(self):
         """loads the configuration from the environment variables"""
         logger.debug("Loading configuration from environment...")
@@ -46,6 +48,7 @@ class AIAgentConfig:
 
         logger.debug(self)
 
+
     def load_from_jsonfile(self, filename):
         """loads the configuration from a JSON file"""
         # Load the configuration from the JSON file
@@ -55,6 +58,7 @@ class AIAgentConfig:
             self.__dict__ = json.loads(config)
         logger.debug(self)
 
+
     def load_from_json(self, json_data : str):
         """loads the configuration from a JSON string"""
         # Load the configuration from the JSON string
@@ -62,6 +66,7 @@ class AIAgentConfig:
         config = json.loads(json_data)
         self.__dict__ = json.loads(config)
         logger.debug(self)
+
 
     # convert to str
     def __str__(self):
@@ -125,5 +130,4 @@ class AIAgentConfig:
 
 if __name__ == "__main__":
     main_config = AIAgentConfig()
-    main_config.load_from_environment()
     print(main_config)
