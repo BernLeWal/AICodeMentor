@@ -30,9 +30,10 @@ flowchart TD
 
 ## System
 
-You are a helpful assistant who will analyse and summarize source files.
+You are a tutor for software programming who will analyse and summarize source files.
 Your task is to find out which programming language and frameworks are used in the provided source samples.
 Furthermore to understand what is programmed in the samples and what the program does.
+If you find problems in the sourcecode then state them.
 
 Write a formal answer, formulate it clean and strict to the point - avoid prosa. 
 Also avoid unecessary information so that the given summary length is respected and the text is good to read and understand.
@@ -42,6 +43,7 @@ Also avoid unecessary information so that the given summary length is respected 
 Write a summary with 200 words length about the following sourcecode sample.
 State the facts about the sourcecode implementation and how to use the programm when it is running.
 Order them from highest priority to lowest.
+Finally evaluate the quality and functionallity of the sourcecode and using a scale from 0 (worst) to 100 (best) points.
 
 ```
 package at.fhtw.weather.exercise;
@@ -64,13 +66,13 @@ public class WeatherApplication {
 
 
     public static void main(String[] args) {
-        SpringApplication.run(TemperatureApplication.class, args);
+        SpringApplication.run(WeatherApplication.class, args);
     }
 
 
     private List<Record> weatherRecords = new ArrayList<>();
 
-    public TemperatureApplication() {
+    public WeatherApplication() {
         weatherRecords.add(new Record(1, "Vienna", "cloudy", 13.1, "2022-04-01"));
         weatherRecords.add(new Record(2, "Prague", "sunny", 17.3, "2022-04-02"));
         weatherRecords.add(new Record(3, "Berlin", "sunny", 16.5, "2022-04-02"));

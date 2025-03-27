@@ -84,7 +84,7 @@ Version history see [app/version.py](./app/version.py)
 
 ### Prerequisites
 - Install **Docker**: [Get Docker](https://www.docker.com/products/docker-desktop)
-- You need an **[Platform OpenAI](https://platform.openai.com/)** account, for the API_KEY to be configured in the .env file
+- You need to create an account and credentials on the cloud AI vendor of your choice (e.g. OpenAI, Google or Anthropic): see [docs/setup.md](docs/setup.md)
 - Create an .env file in the docker/ directory, based on the [docker/.env.sample](./docker/.env.sample) file.
 
 ### Running AI Code Mentor

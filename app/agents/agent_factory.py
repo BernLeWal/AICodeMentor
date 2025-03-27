@@ -11,6 +11,7 @@ from app.agents.agent import AIAgent
 from app.agents.agent_openai_gpt import AIAgentOpenAIGpt
 from app.agents.agent_openai_instruct import AIAgentOpenAIInstruct
 from app.agents.agent_google_gemini import AIAgentGoogleGemini
+from app.agents.agent_anthropic_claude import AIAgentAnthropicClaude
 
 
 # Setup logging framework
@@ -36,7 +37,7 @@ class AIAgentFactory:
             model_name = os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
         logger.debug("Creating agent for model: %s", model_name)
 
-        config = AIAgentConfig()
+        config = AIAgentConfig(model_name)
         config.load_from_environment()
 
         # Platform OpenAI GPT Chat Models:
@@ -50,12 +51,16 @@ class AIAgentFactory:
         # Google Gemini API Models:
         elif model_name.startswith("gemini-"):
             return AIAgentGoogleGemini(config)
+        # Anthropic Claude Models:
+        elif model_name.startswith("claude-"):
+            return AIAgentAnthropicClaude(config)
 
         raise ValueError(f"Unsupported model name: {model_name}")
 
 
 if __name__ == "__main__":
-    main_agent = AIAgentFactory.create_agent()
+    main_agent = AIAgentFactory.create_agent("claude-3-5-haiku-latest")
+    print(f"Type of agent is {type(main_agent)}")
     system = PromptFactory.load("prep-agent.system.prompt.md")[0].content
     main_agent.system(system)
     QUESTION = "Check if in the shell the git commands are installed correctly " +\

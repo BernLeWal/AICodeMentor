@@ -216,6 +216,14 @@ if __name__ == "__main__":
         "gemini-2.0-flash-lite",
         "gemini-1.5-flash",
         "gemini-2.0-flash-thinking-experimental",   #expensive
+
+        ## Anthropic Claude Models
+        "claude-3-7-sonnet-latest", #expensive
+        "claude-3-5-haiku-latest",
+        "claude-3-opus-latest", 
+        "claude-3-5-sonnet-latest", #expensive
+        "claude-3-haiku-20240307",
+        #"claude-code-2.1",    # does this work?
     ]
     cfg.expected_length = 200
     cfg.expected_facts = [

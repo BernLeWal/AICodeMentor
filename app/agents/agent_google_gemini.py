@@ -97,7 +97,7 @@ class AIAgentGoogleGemini(AIAgent):
             generation_config={
                 "temperature": self.temperature,
                 "top_p": self.top_p,
-                "top_k": 1,
+                "top_k": 1, # TODO - add top_k to config
                 "max_output_tokens": self.max_output_tokens,
                 "stop_sequences": self.stop_sequences,
             }

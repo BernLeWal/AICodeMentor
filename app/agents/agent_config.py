@@ -21,20 +21,29 @@ logger = logging.getLogger(__name__)
 # FIXME: this class does not fit anymore, with AI-Agents from different vendors
 class AIAgentConfig:
     """Retrieves the configuration for the AI Agents"""
-    def __init__(self):
+    def __init__(self, model_name:str = None):
         # Generic configuration
-        self.model_name = AIAgentConfig.get_model_name()
+        if model_name is None:
+            self.model_name = AIAgentConfig.get_model_name()
+        else:
+            self.model_name = model_name
         # Vendor specific configuration
         self.openai_api_key = None
         self.openai_organization_id = None
         self.google_client_secret_file = None
+        self.anthropic_api_key = None
 
     def load_from_environment(self):
         """loads the configuration from the environment variables"""
         logger.debug("Loading configuration from environment...")
+        # OpenAI:
         self.openai_api_key = os.getenv('OPENAI_API_KEY', '')
         self.openai_organization_id = os.getenv('OPENAI_ORGANIZATION_ID', '')
+        # Google Cloud:
         self.google_client_secret_file = os.getenv('GOOGLE_CLIENT_SECRET_FILE', '')
+        # Anthropic:
+        self.anthropic_api_key = os.getenv('ANTHROPIC_API_KEY', '')
+
         logger.debug(self)
 
     def load_from_jsonfile(self, filename):
