@@ -42,8 +42,8 @@ if __name__ == "__main__":
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
     # Scenario 2: batch execution
-    sys.argv.append("--batch")
-    sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
+    #sys.argv.append("--batch")
+    #sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
 
     parser = argparse.ArgumentParser(
         description=f"{__app_name__} - {__app_description__}"
