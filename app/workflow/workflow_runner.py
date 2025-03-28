@@ -6,8 +6,8 @@ WorkflowRunner class to run the AI CodeMentor Workflow
 import datetime
 import os
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_reader import WorkflowReader
-from app.workflow.workflow_writer import WorkflowWriter
+from app.workflow.reader import WorkflowReader
+from app.workflow.writer import WorkflowWriter
 from app.workflow.interpreter import WorkflowInterpreter
 from app.workflow.context import Context
 from app.workflow.batch_config import BatchConfig

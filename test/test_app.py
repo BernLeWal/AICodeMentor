@@ -6,7 +6,7 @@ import unittest
 from app.agents.agent_factory import AIAgentFactory
 from app.commands.shell_executor import ShellCommandExecutor
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_reader import WorkflowReader
+from app.workflow.reader import WorkflowReader
 from app.workflow.context import Context
 from app.workflow.interpreter import WorkflowInterpreter
 

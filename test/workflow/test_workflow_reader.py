@@ -6,7 +6,7 @@ UnitTests for Workflow
 # --- test/workflow/test_workflow.py ---
 import unittest
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_reader import WorkflowReader
+from app.workflow.reader import WorkflowReader
 
 class TestWorkflow(unittest.TestCase):
     """UnitTests for Workflow"""

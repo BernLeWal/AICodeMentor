@@ -14,7 +14,7 @@ from app.commands.parser import Parser
 from app.workflow.activity import Activity, ActivityVisitor
 from app.workflow.workflow import Workflow
 from app.workflow.context import Context
-from app.workflow.workflow_writer import WorkflowWriter
+from app.workflow.writer import WorkflowWriter
 from app.workflow.history import History, HistoryRecord
 from app.workflow.operation import OperationInterpreter
 

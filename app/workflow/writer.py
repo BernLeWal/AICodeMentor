@@ -12,7 +12,7 @@ from app.workflow.activity_writer import ActivityWriter
 from app.workflow.history import History
 from app.workflow.workflow import Workflow
 from app.workflow.context import Context
-from app.workflow.workflow_reader import WorkflowReader
+from app.workflow.reader import WorkflowReader
 
 
 load_dotenv()

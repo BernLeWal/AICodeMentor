@@ -6,8 +6,8 @@ UnitTests for WorkflowWriter
 import unittest
 import os
 from app.workflow.history import History
-from app.workflow.workflow_writer import WorkflowWriter
-from app.workflow.workflow_reader import WorkflowReader
+from app.workflow.writer import WorkflowWriter
+from app.workflow.reader import WorkflowReader
 
 class TestWorkflowWriter(unittest.TestCase):
     """UnitTests for WorkflowWriter"""

@@ -12,8 +12,8 @@ from app.util.string_utils import trunc_right, escape_linefeed, trunc_middle
 from app.agents.agent_factory import AIAgentFactory
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
-from app.workflow.workflow_reader import WorkflowReader
-from app.workflow.workflow_writer import WorkflowWriter
+from app.workflow.reader import WorkflowReader
+from app.workflow.writer import WorkflowWriter
 from app.workflow.context import Context
 from app.workflow.history import History, HistoryRecord
 from app.workflow.activity_interpreter import ActivityInterpreter
