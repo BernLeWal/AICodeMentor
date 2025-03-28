@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from app.version import __version__, __app_name__, __app_description__
 from app.agents.agent_config import AIAgentConfig
 from app.workflow.batch_config import BatchConfig
+from app.workflow.batch_runner import BatchRunner
 from app.workflow.workflow import Workflow
 from app.workflow.workflow_runner import WorkflowRunner
 
@@ -31,59 +32,6 @@ logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
 logger = logging.getLogger(__name__)
 
 
-def run_batch_workflow(cfg: BatchConfig, workflow_file: str):
-    """Runs a workflow and collects benchmarking data"""
-    # Add the benchmark results to a CSV file
-    cfg.open_csv_file(workflow_file)
-
-    for _ in range(cfg.repeats):
-        for model_name in cfg.ai_model_names or [AIAgentConfig.get_model_name()]:
-            logger.info("- Running benchmark for model: %s", model_name)
-            os.environ['AI_MODEL_NAME'] = model_name
-
-            for temp in cfg.ai_temperature_values or [AIAgentConfig.get_temperature()]:
-                os.environ['AI_TEMPERATURE'] = str(temp)
-
-                for top_p in cfg.ai_top_p_values or [AIAgentConfig.get_top_p()]:
-                    os.environ['AI_TOP_P'] = str(top_p)
-
-                    for f_penalty in cfg.ai_f_penalty_values or [AIAgentConfig.get_frequency_penalty()]:
-                        os.environ['AI_FREQUENCY_PENALTY'] = str(f_penalty)
-
-                        for p_penalty in cfg.ai_p_penalty_values or [AIAgentConfig.get_presence_penalty()]:
-                            os.environ['AI_PRESENCE_PENALTY'] = str(p_penalty)
-
-                            # Run the workflow
-                            agent_config = AIAgentConfig(model_name)
-                            workflow_runner = WorkflowRunner(workflow_file, cfg.key_values)
-                            results = workflow_runner.run(agent_config)
-
-                            cfg.score_workflow(workflow_runner,results)
-
-
-def run_batch(cfg: BatchConfig):
-    """Runs a batch of workflows and collects benchmarking data"""
-    if cfg.setup_workflow_file is not None:
-        logger.info("Setting up the environment...")
-        WorkflowRunner(cfg.setup_workflow_file, cfg.key_values).run(AIAgentConfig())
-
-    if cfg.workflow_files is None:
-        logger.error("No workflow files given!")
-        return
-    # if workflow_files is a list of string then process all files each
-    if isinstance(cfg.workflow_files, list):
-        for workflow_file in cfg.workflow_files:
-            run_batch_workflow(cfg, workflow_file)
-    else:
-        run_batch_workflow(cfg, cfg.workflow_files)
-
-    if cfg.cleanup_workflow_file is not None:
-        logger.info("Cleaning up the environment...")
-        load_dotenv()   # reload the environment variables
-        WorkflowRunner(cfg.cleanup_workflow_file, cfg.key_values).run(AIAgentConfig())
-
-
-
 if __name__ == "__main__":
     # For debugging, uncomment and set the following lines:
     #sys.argv.append("--help")
@@ -94,8 +42,8 @@ if __name__ == "__main__":
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
 
     # Scenario 2: batch execution
-    #sys.argv.append("--batch")
-    #sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
+    sys.argv.append("--batch")
+    sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
 
     parser = argparse.ArgumentParser(
         description=f"{__app_name__} - {__app_description__}"
@@ -148,7 +96,7 @@ if __name__ == "__main__":
     if args.batch:
         batch_cfg = BatchConfig.from_json_file(args.workflow_file)
         batch_cfg.key_values = args.key_values
-        run_batch(batch_cfg)
+        BatchRunner(batch_cfg).run()
         sys.exit(0)
     # else normal workflow execution
     runner = WorkflowRunner(args.workflow_file, args.key_values)

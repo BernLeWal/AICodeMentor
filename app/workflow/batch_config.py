@@ -2,21 +2,15 @@
 """
 Configuration for the AI CodeMentor Batch-Processing Engine
 """
-import os
 import json
 
-from app.workflow.workflow import Workflow
-from app.workflow.workflow_writer import WorkflowWriter
-from app.workflow.workflow_runner import WorkflowRunner
 
 class BatchConfig:
     """Configuration for the AI CodeMentor Batch-Processing Engine"""
     def __init__(self):
+        self.config_file = None
         # SetUp
         self.setup_workflow_file = None # if given, the workflow file to setup the environment
-        self.csv_file = None
-        self.results_dir = None
-        self.counter = 1
 
         # Workflows to run
         self.workflow_files = None
@@ -38,39 +32,33 @@ class BatchConfig:
         self.cleanup_workflow_file = None # if given, the workflow file to cleanup the environment
 
 
-    def open_csv_file(self, file_path: str = None) -> str:
-        """Creates or appends to a CSV file for benchmarking results
-        :param workflow_file: Path to the workflow file in Markdown format
-        :return: Path to the CSV file
-        """
-        directory = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        directory = os.path.abspath(directory)
-        if (self.csv_file is None) and (file_path is not None):
-            csv_file_name = os.path.basename(file_path).replace(".wf.md","").replace(".cfg.json","")
-            csv_file_name += ".csv"
-            self.csv_file = os.path.join(directory, csv_file_name)
+    def save_to_json_file(self, json_file_path : str):
+        """Saves the configuration to a JSON file"""
+        with open(json_file_path, "w", encoding="utf-8") as f:
+            f.write(self.to_json())
 
-            self.results_dir = os.path.join(directory, csv_file_name.replace(".csv","_results"))
-            if not os.path.exists(self.results_dir):
-                os.makedirs(self.results_dir)
 
-        if not os.path.exists(self.csv_file):
-            with open(self.csv_file, "w", encoding="utf-8") as f:
-                f.write("nr;sourcefile;"+\
-                        "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
-                        "run_timestamp;run_duration_sec;" +\
-                        "result_status;result_file;result_length;"+\
-                        "total_duration_sec;total_iterations;"+\
-                        "total_prompt_tokens;total_completion_tokens;total_tokens;"+\
-                        "total_prompt_chars;total_completion_chars;total_chars;"+\
-                        "score_result_length;score_result_facts\n")
-        else:
-            with open(self.csv_file, "r", encoding="utf-8") as f:
-                self.counter = len(f.readlines())
+    def to_json(self) -> str:
+        """Converts the configuration to a JSON string"""
+        return json.dumps(self.__dict__, indent=4)
 
-        return self.csv_file
+
+    @staticmethod
+    def from_json(json_str : str):
+        """Converts a JSON string to a BatchConfig object"""
+        bc = BatchConfig()
+        bc.__dict__ = json.loads(json_str)
+        bc.config_file = None
+        return bc
+
+
+    @staticmethod
+    def from_json_file(json_file_path : str):
+        """Converts a JSON file to a BatchConfig object"""
+        with open(json_file_path, "r", encoding="utf-8") as f:
+            bc = BatchConfig.from_json(f.read())
+            bc.config_file = json_file_path
+            return bc
 
 
     def score_result_length(self, result: str):
@@ -108,89 +96,6 @@ class BatchConfig:
                 content_items_score += fact_score
         return content_items_score
 
-
-    def score_workflow(self, workflow_runner:WorkflowRunner,
-                    results:tuple[Workflow.Status, str]):
-        """Scores the workflow results and writes to a CSV file"""
-        with open(self.csv_file, "a", encoding="utf-8") as f:
-            f.write(f"{self.counter};"+\
-                    f"{workflow_runner.workflow_file};")
-
-            # Data of configuration
-            agent = workflow_runner.get_agent()
-            if agent is not None:
-                f.write(f"{agent.model_name};"+\
-                        f"{agent.temperature};"+\
-                        f"{agent.top_p};"+\
-                        f"{agent.frequency_penalty};"+\
-                        f"{agent.presence_penalty};")
-            else:
-                f.write(";;;;;")
-
-            # Data of workflow run
-            result_status, result_content  = results
-            timestamp = workflow_runner.start_time.strftime("%Y-%m-%d %H:%M:%S")
-            f.write(f"{timestamp};"+\
-                    f"{workflow_runner.duration_sec};")
-
-            # Data of results
-            f.write(f"{result_status};")
-            result_file_name = os.path.join(self.results_dir,
-                                            f"{self.counter}__{agent.model_name}.md")
-            with open(result_file_name, "w", encoding="utf-8") as rf:
-                rf.write(result_content)
-            f.write(f"{os.path.basename(result_file_name)};"+\
-                    f"{len(result_content)};")
-
-            if agent is not None:
-                f.write(f"{agent.total_duration_sec};"+\
-                        f"{agent.total_iterations};")
-                f.write(f"{agent.total_prompt_tokens if agent.total_prompt_tokens is not None else ""};"+\
-                        f"{agent.total_completion_tokens if agent.total_completion_tokens is not None else ""};"+\
-                        f"{agent.total_tokens if agent.total_tokens is not None else ""};")
-                f.write(f"{agent.total_prompt_chars};"+\
-                        f"{agent.total_completion_chars};"+\
-                        f"{agent.total_chars};")
-            else:
-                f.write(";;;;;;;;")
-
-            # Scoring
-            content_length_score = self.score_result_length(result_content)
-            f.write(f"{content_length_score};")
-            content_items_score = self.score_result_facts(result_content)
-            f.write(f"{content_items_score};")
-
-            f.write("\n")
-            f.flush()
-            self.counter += 1
-
-
-    def save_to_json_file(self, json_file_path : str):
-        """Saves the configuration to a JSON file"""
-        with open(json_file_path, "w", encoding="utf-8") as f:
-            f.write(self.to_json())
-
-
-    def to_json(self) -> str:
-        """Converts the configuration to a JSON string"""
-        return json.dumps(self.__dict__, indent=4)
-
-
-    @staticmethod
-    def from_json(json_str : str):
-        """Converts a JSON string to a BatchConfig object"""
-        bc = BatchConfig()
-        bc.__dict__ = json.loads(json_str)
-        return bc
-
-
-    @staticmethod
-    def from_json_file(json_file_path : str):
-        """Converts a JSON file to a BatchConfig object"""
-        with open(json_file_path, "r", encoding="utf-8") as f:
-            bc = BatchConfig.from_json(f.read())
-            bc.open_csv_file(json_file_path)
-            return bc
 
 if __name__ == "__main__":
     # Create a template for the batch-configuration
