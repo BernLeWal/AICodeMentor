@@ -45,7 +45,7 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 - Added **batch-processing**, e.g. to run benchmarks
 - AI-Agent configuration **parameters** support, e.g temperature, n_top, f_penalty,..
 - AI-Agent **telemetry** recording, e.g. tokens used, duration, iterations
-- added **Google Gemini** (as AI-Agent) support
+- added **Google Gemini** and **Anthropic Claude**  (as AI-Agents) support
 
 Version history see [app/version.py](./app/version.py)
 
