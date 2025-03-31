@@ -44,6 +44,7 @@ if __name__ == "__main__":
     # Scenario 2: batch execution
     #sys.argv.append("--batch")
     #sys.argv.append("workflows/benchmarks/summarize-sourcefile.cfg.json")
+    #sys.argv.append("workflows/source-eval/sam-rest.cfg.json")
 
     parser = argparse.ArgumentParser(
         description=f"{__app_name__} - {__app_description__}"
@@ -95,11 +96,11 @@ if __name__ == "__main__":
 
     if args.batch:
         batch_cfg = BatchConfig.from_json_file(args.workflow_file)
-        batch_cfg.key_values = args.key_values
         BatchRunner(batch_cfg).run()
         sys.exit(0)
     # else normal workflow execution
-    runner = WorkflowRunner(args.workflow_file, args.key_values)
+    key_values_dict = {kv.split('=')[0]: kv.split('=')[1] for kv in args.key_values} if args.key_values else None
+    runner = WorkflowRunner(args.workflow_file, key_values_dict)
     (main_status, main_result) = runner.run(AIAgentConfig())
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")

@@ -25,9 +25,9 @@ class BatchRunner:
         self.cfg = cfg
 
 
-    def run_workflow(self, workflow_file:str, agent_config:AIAgentConfig):
+    def run_workflow(self, workflow_file:str, key_values:dict, agent_config:AIAgentConfig):
         """Runs a workflow and collects benchmarking data"""
-        workflow_runner = WorkflowRunner(workflow_file, self.cfg.key_values)
+        workflow_runner = WorkflowRunner(workflow_file, key_values)
 
         # Run the workflow
         results = workflow_runner.run(agent_config)
@@ -56,15 +56,25 @@ class BatchRunner:
                             for p_penalty in self.cfg.ai_p_penalty_values or [AIAgentConfig.get_presence_penalty()]:
                                 os.environ['AI_PRESENCE_PENALTY'] = str(p_penalty)
 
-                                agent_config = AIAgentConfig(model_name)
-                                self.run_workflow(workflow_file, agent_config)
+                                ac = AIAgentConfig(model_name)
+                                if isinstance(self.cfg.key_values, list):
+                                    for key_values in self.cfg.key_values:
+                                        self.run_workflow(workflow_file, key_values, ac)
+                                else:
+                                    self.run_workflow(workflow_file, self.cfg.key_values, ac)
 
 
     def run(self):
         """Runs a batch of workflows and collects benchmarking data"""
+        main_key_values = {}
+        if isinstance(self.cfg.key_values, list) and len(self.cfg.key_values) > 0:
+            main_key_values = self.cfg.key_values[0]
+        else:
+            main_key_values = self.cfg.key_values
+
         if self.cfg.setup_workflow_file is not None:
             logger.info("Setting up the environment...")
-            WorkflowRunner(self.cfg.setup_workflow_file, self.cfg.key_values).run(AIAgentConfig())
+            WorkflowRunner(self.cfg.setup_workflow_file, main_key_values).run(AIAgentConfig())
 
         if self.cfg.workflow_files is None:
             logger.error("No workflow files given!")
@@ -79,4 +89,4 @@ class BatchRunner:
         if self.cfg.cleanup_workflow_file is not None:
             logger.info("Cleaning up the environment...")
             load_dotenv()   # reload the environment variables
-            WorkflowRunner(self.cfg.cleanup_workflow_file, self.cfg.key_values).run(AIAgentConfig())
+            WorkflowRunner(self.cfg.cleanup_workflow_file, main_key_values).run(AIAgentConfig())

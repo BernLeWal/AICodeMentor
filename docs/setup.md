@@ -84,3 +84,23 @@ The Anthropic Claude Integration is used on all model-names starting with:
 ### Links
 - For a list of Anthropic models see: https://docs.anthropic.com/en/docs/about-claude/models/all-models
 - To manage your costs, see: https://console.anthropic.com/settings/cost
+
+## Model Comparison
+
+### Context Window
+
+The Context Window is the amount of previous tokens
+which are considered for the current answer.
+The model will "forget" the content and answers which
+are outside the context window.
+
+| Model       | Context Window (Tokens) | A4 pages (approx.) | 
+|-------------|---------|------------|
+| gpt-3       |    2048 | ~  3 pages | 
+| gpt-3.5     |    4096 | ~  6 pages |
+| gpt-4       |    8192 | ~ 12 pages |
+| gpt-4o      |  128000 | ~183 pages |
+| claude-2    |  100000 | ~143 pages |
+| claude-3    |  200000 | ~286 pages |
+| gemini      |   32768 | ~ 47 pages |
+| gemini-1.5  | 1000000 |~1429 pages |

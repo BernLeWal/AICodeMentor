@@ -20,7 +20,7 @@ class WorkflowRunner:
     """
     WorkflowRunner class to run the AI CodeMentor Workflow
     """
-    def __init__(self, workflow_file, key_values):
+    def __init__(self, workflow_file, key_values:dict):
         self.workflow_file = workflow_file
         self.key_values = key_values
 
@@ -46,8 +46,7 @@ class WorkflowRunner:
             f"using AI-model {AIAgentConfig.get_model_name()} ")
         if self.key_values:
             print("with parameters:")
-            for kv in self.key_values:
-                key, value = kv.split("=")
+            for key,value in self.key_values.items():
                 print(f"  - {key}={value}\n")
                 main_workflow.params[key] = value
 
@@ -89,7 +88,7 @@ class WorkflowRunner:
 
         if not os.path.exists(self.csv_file):
             with open(self.csv_file, "w", encoding="utf-8") as f:
-                f.write("nr;sourcefile;"+\
+                f.write("nr;sourcefile;label;"+\
                         "cfg_model;cfg_temperature;cfg_top_p;cfg_f_penalty;cfg_p_penalty;"+\
                         "run_timestamp;run_duration_sec;" +\
                         "result_status;result_file;result_length;"+\
@@ -113,6 +112,8 @@ class WorkflowRunner:
         with open(self.csv_file, "a", encoding="utf-8") as f:
             f.write(f"{self.counter};"+\
                     f"{self.workflow_file};")
+            label = self.context.get_value("LABEL")
+            f.write(f"{label if label is not None else ''};")
 
             # Data of configuration
             agent = self.get_agent()
@@ -133,11 +134,26 @@ class WorkflowRunner:
 
             # Data of results
             f.write(f"{result_status};")
-            result_file_name = os.path.join(self.results_dir,
-                                            f"{self.counter}__{agent.model_name}.md")
-            with open(result_file_name, "w", encoding="utf-8") as rf:
+
+            result_file_name = f"{self.counter}"
+            if label is not None:
+                result_file_name += f"_{label}"
+            if cfg.ai_model_names is not None:
+                result_file_name += f"_{agent.model_name}"
+            if cfg.ai_temperature_values is not None:
+                result_file_name += f"_{agent.temperature}"
+            if cfg.ai_top_p_values is not None:
+                result_file_name += f"_{agent.top_p}"
+            if cfg.ai_f_penalty_values is not None:
+                result_file_name += f"_{agent.frequency_penalty}"
+            if cfg.ai_p_penalty_values is not None:
+                result_file_name += f"_{agent.presence_penalty}"
+            result_file_name += ".md"
+            result_file_path = os.path.join(self.results_dir, result_file_name)
+            with open(result_file_path, "w", encoding="utf-8") as rf:
                 rf.write(result_content)
-            f.write(f"{os.path.basename(result_file_name)};"+\
+
+            f.write(f"{os.path.basename(result_file_path)};"+\
                     f"{len(result_content)};")
 
             if agent is not None:
@@ -161,3 +177,47 @@ class WorkflowRunner:
             f.write("\n")
             f.flush()
             self.counter += 1
+
+
+    def write_stats_to_jsonfile(self, results:tuple[Workflow.Status, str]):
+        """Scores the workflow results and writes to a JSON file"""
+        json_file = self.workflow_file.replace(".wf.md", ".stats.json")
+        with open(json_file, "w", encoding="utf-8") as f:
+            f.write("{\n")
+
+            # Data of configuration
+            agent = self.get_agent()
+            if agent is not None:
+                f.write("\t\"config\": {\n" +\
+                        f"\t\t\"model_name\":\"{agent.model_name}\",\n"+\
+                        f"\t\t\"temperature\":\"{agent.temperature}\",\n"+\
+                        f"\t\t\"top_p\":\"{agent.top_p}\",\n"+\
+                        f"\t\t\"frequency_penalty\":\"{agent.frequency_penalty}\",\n"+\
+                        f"\t\t\"presence_penalty\":\"{agent.presence_penalty}\",\n"+\
+                        "\t},\n")
+
+            # Data of workflow run
+            result_status, result_content  = results
+            timestamp = self.start_time.strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"\"start_time\": \"{timestamp}\",\n"+\
+                    f"\"duration_sec\": \"{self.duration_sec}\",\n"+\
+                    f"\"result_status\": \"{result_status}\",\n"+\
+                    f"\"result_length\": \"{len(result_content)}\",\n")
+
+            # AI-Agent Statistics
+            if agent is not None:
+                f.write("\t\"statistics\": {\n")
+                f.write(f"\t\t\"total_duration_sec\":\"{agent.total_duration_sec}\",\n"+\
+                        f"\t\t\"total_iterations\":\"{agent.total_iterations}\",\n")
+                f.write("\t\t\"total_prompt_tokens\":"+\
+                        f"\"{agent.total_prompt_tokens if agent.total_prompt_tokens is not None else ""}\",\n"+\
+                        "\t\t\"total_completion_tokens\":"+\
+                        f"\"{agent.total_completion_tokens if agent.total_completion_tokens is not None else ""}\",\n"+\
+                        "\t\t\"total_tokens\":"+\
+                        f"\"{agent.total_tokens if agent.total_tokens is not None else ""}\",\n")
+                f.write(f"\t\t\"total_prompt_chars\":\"{agent.total_prompt_chars}\",\n"+\
+                        f"\t\t\"total_completion_chars\":\"{agent.total_completion_chars}\",\n"+\
+                        f"\t\t\"total_chars\":\"{agent.total_chars}\",\n")
+                f.write("\t},\n")
+
+            f.write("}\n")

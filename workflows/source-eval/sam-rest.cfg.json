@@ -1,0 +1,20 @@
+{
+    "setup_workflow_file": null,
+    "csv_file": null,
+    "workflow_files": "workflows/source-eval/sam-rest.wf.md",
+    "key_values": [
+        { "PROJECT_DIR": "~/REST", "LABEL": "Sample1" }
+    ],
+    "repeats": 1,
+    "ai_model_names": null,
+    "ai_temperature_values": null,
+    "ai_top_p_values": null,
+    "ai_f_penalty_values": null,
+    "ai_p_penalty_values": null,
+    "expected_length": null,
+    "expected_facts": [
+        "Total Score",
+        "Summary"
+    ],
+    "cleanup_workflow_file": null
+}
