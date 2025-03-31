@@ -25,3 +25,8 @@ The course is organized in sprints every two weeks and this is the workflow impl
     .\run_codementor.ps1 workflows/source-eval/paperless-sprint1.wf.md REPO_URL=https://github.com/BernLeWal/SpringAIDemos.git
     ```
 
+# Sample Scenario: SAM Practice 1 Exercise RESTful Service
+
+This sample sennario is taken from a real course, where the students have to build a car-sharing application consisting of multiple components using Java and Spring Boot.
+
+
