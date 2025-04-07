@@ -50,7 +50,7 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 Version history see [app/version.py](./app/version.py)
 
 ### Comming Enhancements
-- Integrate local running AI agents (using Huggingface)
+- add separate statistics object for workflow runner
 - **create agent** instead of "Prompt: System"
 - Enhance AI agent feedback loops for **self-improvement**: Adapt temperature Setting: start with 0, increase on IMPROVE path
 - Workflow Validation
