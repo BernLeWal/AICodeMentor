@@ -60,7 +60,7 @@ class AIAgentFactory:
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("claude-3-5-haiku-latest")
+    main_config = AIAgentConfig("codellama/CodeLlama-7b-Instruct-hf")
     main_agent = AIAgentFactory.create_agent(main_config)
     print(f"Type of agent is {type(main_agent)}")
     system = PromptFactory.load("prep-agent.system.prompt.md")[0].content

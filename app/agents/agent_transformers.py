@@ -17,12 +17,12 @@ from app.agents.prompt import Prompt
 
 
 load_dotenv()
-log_level = os.getenv('LOGLEVEL', 'INFO').upper()
 
 # Setup logging framework
 if not logging.getLogger().hasHandlers():
-    logging.basicConfig(level=log_level,
-                        format=os.getenv('LOGFORMAT', 'pretty'))
+    default_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level='DEBUG', #os.getenv('LOGLEVEL', 'INFO').upper(),
+                        format=os.getenv('LOGFORMAT', default_format))
 logger = logging.getLogger(__name__)
 hf_logging.set_verbosity_error()  # Silence model loading logs
 
@@ -38,7 +38,7 @@ class AIAgentTransformers(AIAgent):
         super().__init__(config)
         logger.info("Creating AIAgentTransformers with %s", config)
 
-        self.model_name = config.model_name or "codellama/CodeLlama-13b-hf"
+        self.model_name = config.model_name or "codellama/CodeLlama-7b-Instruct-hf"
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         logger.info("Loading model '%s' on device: %s", self.model_name, self.device)
@@ -49,25 +49,8 @@ class AIAgentTransformers(AIAgent):
             torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
             trust_remote_code=True  # needed for some community models
         )
-
-        # chat_template support
-        if not getattr(self.tokenizer, "chat_template", None):
-            # Manually set chat_template if not defined
-            logger.warning("Tokenizer has no chat_template; setting Code Llama-compatible template manually.")
-            self.tokenizer.chat_template = """{% for message in messages %}
-        {{ '<|system|>' if message['role'] == 'system' else '<|user|>' if message['role'] == 'user' else '<|assistant|>' }}
-        {{ message['content'].strip() }}
-        {% endfor %} <|assistant|>
-        """
+        self.pipeline = TextGenerationPipeline(model=self.model,tokenizer=self.tokenizer)
         self.supports_chat_template = hasattr(self.tokenizer, "apply_chat_template") and callable(self.tokenizer.apply_chat_template)
-
-        if self.device == "cuda":
-            self.pipeline = TextGenerationPipeline(
-                model=self.model,
-                tokenizer=self.tokenizer,
-                device=0)
-        else:
-            self.pipeline = TextGenerationPipeline(model=self.model,tokenizer=self.tokenizer)
 
 
     def system(self, prompt: str) -> str:
@@ -84,22 +67,43 @@ class AIAgentTransformers(AIAgent):
             logger.warning("Prompt is too long, so truncated in the middle:\n%s", prompt)
         super().ask(prompt)
 
-        full_prompt = self._build_prompt()
 
-        start_time = time.perf_counter()
-        output = self.pipeline(
+        # Build the prompt
+        if self.supports_chat_template:
+            # Use chat template if available
+            try:
+                tokenized_chat = self.tokenizer.apply_chat_template(self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
+                full_prompt = self.tokenizer.decode(tokenized_chat[0])
+                logger.debug("Full tokenized prompt: %s", full_prompt)
+            except Exception as e:
+                logger.warning("Error tokenizing chat: %s", e)
+                # Fallback to basic formatting
+                self.supports_chat_template = False
+        
+        if not self.supports_chat_template:
+            full_prompt = self._build_prompt()
+
+        start_time = time.perf_counter()        
+        sequences = self.pipeline(
             full_prompt,
-            max_new_tokens=self.max_output_tokens,
+            do_sample=True,
+            top_k=10,
             temperature=self.temperature,
             top_p=self.top_p,
-            do_sample=True,
+            num_return_sequences=1,
             eos_token_id=self.tokenizer.eos_token_id,
-            pad_token_id=self.tokenizer.pad_token_id,
+            max_length=self.max_output_tokens,
+            #max_new_tokens=self.max_output_tokens,
+            #pad_token_id=self.tokenizer.pad_token_id,
         )
         self.total_duration_sec += time.perf_counter() - start_time
 
         # Extract only newly generated text
-        self.last_result = output[0]["generated_text"][len(full_prompt):]
+        output = ""
+        for seq in sequences:
+            output += f"{seq['generated_text']}\n"
+        print(f"Result: {output}")
+        self.last_result = output[len(full_prompt):].strip()
         self.messages.append(Prompt(Prompt.ASSISTANT, self.last_result))
 
         self.total_iterations = len(self.messages)
@@ -109,35 +113,20 @@ class AIAgentTransformers(AIAgent):
         logger.debug("Transformers model returned: %s", self.last_result)
         return self.last_result
 
+
     def _build_prompt(self) -> str:
         """Builds a prompt compatible with either a chat template or plain formatting"""
-        if self.supports_chat_template:
-            chat = []
-            for msg in self.messages:
-                if msg.role == Prompt.SYSTEM:
-                    chat.append({"role": "system", "content": msg.content})
-                elif msg.role == Prompt.USER:
-                    chat.append({"role": "user", "content": msg.content})
-                elif msg.role == Prompt.ASSISTANT:
-                    chat.append({"role": "assistant", "content": msg.content})
-            # Add latest user prompt as the final message (for interactive prompt completion)
-            chat.append({"role": "user", "content": self.messages[-1].content})
-            rendered = self.tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
-            logger.debug("Chat template formatted prompt:\n%s", rendered)
-            return rendered
-        else:
-            # Basic formatting fallback
-            formatted = ""
-            for msg in self.messages:
-                if msg.role == Prompt.SYSTEM:
-                    formatted += f"<|system|>\n{msg.content}\n"
-                elif msg.role == Prompt.USER:
-                    formatted += f"<|user|>\n{msg.content}\n"
-                elif msg.role == Prompt.ASSISTANT:
-                    formatted += f"<|assistant|>\n{msg.content}\n"
-            formatted += "<|user|>\n" + self.messages[-1].content + "\n<|assistant|>\n"
-            logger.debug("Plain prompt formatting fallback:\n%s", formatted)
-            return formatted
+        # Basic formatting fallback
+        formatted = ""
+        for msg in self.messages:
+            if msg.role == Prompt.SYSTEM:
+                formatted += f"<s><<SYS>>\n{msg.content}\n<</SYS>>\n\n"
+            elif msg.role == Prompt.USER:
+                formatted += f"{msg.content}\n\n<</INPUT>>\n\n"
+            elif msg.role == Prompt.ASSISTANT:
+                formatted += f"{msg.content}\n\n<</OUTPUT>>\n\n"
+        logger.debug("Formatted Prompt:\n%s", formatted)
+        return formatted
 
 
 
@@ -173,7 +162,7 @@ class AIAgentTransformers(AIAgent):
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("codellama/CodeLlama-7b-hf")
+    main_config = AIAgentConfig("codellama/CodeLlama-7b-Instruct-hf")
     main_agent = AIAgentTransformers(main_config)
 
     main_agent.system("You are a helpful assistant for software engineering tasks.")

@@ -129,6 +129,9 @@ if __name__ == "__main__":
         "claude-3-5-sonnet-latest", #expensive
         "claude-3-haiku-20240307",
         #"claude-code-2.1",    # does this work?
+
+        ## Huggingface Models
+        "codellama/CodeLlama-7b-Instruct-hf",   #and all other CodeLlama models
     ]
     cfg.expected_length = 200
     cfg.expected_facts = [
