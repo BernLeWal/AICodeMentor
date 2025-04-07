@@ -85,6 +85,35 @@ The Anthropic Claude Integration is used on all model-names starting with:
 - For a list of Anthropic models see: https://docs.anthropic.com/en/docs/about-claude/models/all-models
 - To manage your costs, see: https://console.anthropic.com/settings/cost
 
+## HuggingFace Transformers
+
+### Setup
+The models from HuggingFace are executed on the local machine. Ensure that you have a GPU available (with CPU-only execution lasts too long)
+* see Setup Guide [setup_cuda.md](setup_cuda.md)
+
+To make it work in Phython the following packages have to be installed, this is
+(already) fulfilled when using [requirements.txt](../requirements.txt):
+```pip install transformers accelerate ```
+
+### Models
+a complete list see: https://huggingface.co/models?language=code
+The AIAgentFactory will detect via HuggingFace-API if the model name is existing before the AIAgentTransformers is created.
+
+The following models havve been tried successfully:
+- codellama/CodeLlama-7b-Instruct-hf
+- codellama/CodeLlama-7b-hf
+- codellama/CodeLlama-13b-hf
+
+### Links
+- Huggingface official website: https://huggingface.co/
+
+- https://medium.com/aimonks/code-llama-quick-start-guide-and-prompt-engineering-eb1de8758399
+- https://huggingface.co/docs/transformers/chat_templating
+- https://huggingface.co/codellama/CodeLlama-13b-hf?ref=maginative.com
+- https://docs.vultr.com/how-to-use-code-llama-large-language-model-on-vultr-cloud-gpu
+
+---
+
 ## Model Comparison
 
 ### Context Window
