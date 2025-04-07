@@ -12,6 +12,7 @@ from app.agents.agent_openai_gpt import AIAgentOpenAIGpt
 from app.agents.agent_openai_instruct import AIAgentOpenAIInstruct
 from app.agents.agent_google_gemini import AIAgentGoogleGemini
 from app.agents.agent_anthropic_claude import AIAgentAnthropicClaude
+from app.agents.agent_transformers import AIAgentTransformers
 
 
 # Setup logging framework
@@ -51,12 +52,15 @@ class AIAgentFactory:
         # Anthropic Claude Models:
         elif model_name.startswith("claude-"):
             return AIAgentAnthropicClaude(config)
+        # Code Llama Models:
+        elif AIAgentTransformers.is_model_supported(model_name):
+            return AIAgentTransformers(config)
 
         raise ValueError(f"Unsupported model name: {model_name}")
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("claude-3-5-haiku-latest")
+    main_config = AIAgentConfig("codellama/CodeLlama-7b-Instruct-hf")
     main_agent = AIAgentFactory.create_agent(main_config)
     print(f"Type of agent is {type(main_agent)}")
     system = PromptFactory.load("prep-agent.system.prompt.md")[0].content

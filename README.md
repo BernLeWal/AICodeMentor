@@ -41,7 +41,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.1.5
+🚀Latest News in version: 0.1.6
+- Added local running AI-Agents support (Huggingface Transformers LLMs) 
 - Added **batch-processing**, e.g. to run benchmarks
 - AI-Agent configuration **parameters** support, e.g temperature, n_top, f_penalty,..
 - AI-Agent **telemetry** recording, e.g. tokens used, duration, iterations
@@ -85,6 +86,7 @@ Version history see [app/version.py](./app/version.py)
 ### Prerequisites
 - Install **Docker**: [Get Docker](https://www.docker.com/products/docker-desktop)
 - You need to create an account and credentials on the cloud AI vendor of your choice (e.g. OpenAI, Google or Anthropic): see [docs/setup.md](docs/setup.md)
+- If you want to run the local AI-agents on your CUDA environment, see [docs/setup_cuda.md](docs/setup_cuda.md)
 - Create an .env file in the docker/ directory, based on the [docker/.env.sample](./docker/.env.sample) file.
 
 ### Running AI Code Mentor

@@ -26,6 +26,11 @@
             "program": "${workspaceFolder}/test/agents/test_agent_openai.py"
         },
         {
+            "name": "Python AIAgentTransformers",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/agents/agent_transformers.py"
+        },{
             "name": "PyUnit AIAgentFactory",
             "type": "debugpy",
             "request": "launch",
