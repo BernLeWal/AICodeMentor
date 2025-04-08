@@ -99,10 +99,19 @@ To make it work in Phython the following packages have to be installed, this is
 a complete list see: https://huggingface.co/models?language=code
 The AIAgentFactory will detect via HuggingFace-API if the model name is existing before the AIAgentTransformers is created.
 
-The following models havve been tried successfully:
-- codellama/CodeLlama-7b-Instruct-hf
-- codellama/CodeLlama-7b-hf
-- codellama/CodeLlama-13b-hf
+The following models have been tried successfully:
+- "codellama/CodeLlama-7b-Instruct-hf" (7B; see https://huggingface.co/codellama/CodeLlama-7b-Instruct-hf)
+- "codellama/CodeLlama-13b-Instruct-hf" (13B; see https://huggingface.co/codellama/CodeLlama-13b-Instruct-hf)
+- "codellama/CodeLlama-7b-hf" (7B; see https://huggingface.co/codellama/CodeLlama-7b-hf)
+- "codellama/CodeLlama-13b-hf" (13B; see https://huggingface.co/codellama/CodeLlama-13b-hf)
+- "Qwen/Qwen2.5-Coder-7B-Instruct" (7B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct)
+- "Qwen/Qwen2.5-Coder-14B-Instruct" (13B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct
+- "microsoft/Phi-4-mini-instruct" (4B, 128kT context; see https://huggingface.co/microsoft/Phi-4-mini-instruct)
+
+The following models have been tested, but don't match to the used chat template - don't use them so far:
+- "bigcode/starcoder2-7b" (7B; see https://huggingface.co/bigcode/starcoder2-7b)
+- "bigcode/starcoder2-3b" (3B; see https://huggingface.co/bigcode/starcoder2-3b)
+
 
 ### Links
 - Huggingface official website: https://huggingface.co/

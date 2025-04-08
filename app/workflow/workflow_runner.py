@@ -149,6 +149,7 @@ class WorkflowRunner:
             if cfg.ai_p_penalty_values is not None:
                 result_file_name += f"_{agent.presence_penalty}"
             result_file_name += ".md"
+            result_file_name = result_file_name.replace(" ","_").replace(":","_").replace("/","_")
             result_file_path = os.path.join(self.results_dir, result_file_name)
             with open(result_file_path, "w", encoding="utf-8") as rf:
                 rf.write(result_content)

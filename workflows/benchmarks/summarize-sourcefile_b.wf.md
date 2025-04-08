@@ -102,15 +102,10 @@ public class WeatherApplication {
     //update city weather/temperature data
     @PutMapping("/city/update/{id}")
     public void updateRecords(@RequestBody Record updatedRecord, @PathVariable("id") int id) {
-        String city = weatherRecords.get(id - 1).city();
-        String weather = weatherRecords.get(id - 1).weather();
-        double temperature = weatherRecords.get(id - 1).temperature();
-        String date = weatherRecords.get(id - 1).date();
-
-        city = updatedRecord.city();
-        weather = updatedRecord.weather();
-        temperature = updatedRecord.temperature();
-        date = updatedRecord.date();
+        String city = updatedRecord.city();
+        String weather = updatedRecord.weather();
+        double temperature = updatedRecord.temperature();
+        String date = updatedRecord.date();
 
         Record tempRec = new Record(id, city, weather, temperature, date);
         weatherRecords.set(id - 1, tempRec);
