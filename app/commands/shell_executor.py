@@ -22,7 +22,7 @@ load_dotenv()
 # Setup logging framework
 if not logging.getLogger().hasHandlers():
     logging.basicConfig(level=os.getenv('LOGLEVEL', 'DEBUG').upper(),
-                        format=os.getenv('LOGFORMAT', 'pretty'))
+                        format=os.getenv('LOGFORMAT', '%(message)s'))
 logger = logging.getLogger(__name__)
 
 

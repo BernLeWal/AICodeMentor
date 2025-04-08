@@ -19,7 +19,7 @@ from app.agents.agent_transformers import AIAgentTransformers
 if not logging.getLogger().hasHandlers():
     load_dotenv()
     logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                        format=os.getenv('LOGFORMAT', 'pretty'))
+                        format=os.getenv('LOGFORMAT', '%(message)s'))
 logger = logging.getLogger(__name__)
 
 

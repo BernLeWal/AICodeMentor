@@ -20,9 +20,8 @@ load_dotenv()
 
 # Setup logging framework
 if not logging.getLogger().hasHandlers():
-    default_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level='DEBUG', #os.getenv('LOGLEVEL', 'INFO').upper(),
-                        format=os.getenv('LOGFORMAT', default_format))
+                        format=os.getenv('LOGFORMAT', '%(message)s'))
 logger = logging.getLogger(__name__)
 hf_logging.set_verbosity_error()  # Silence model loading logs
 
@@ -50,7 +49,8 @@ class AIAgentTransformers(AIAgent):
             trust_remote_code=True  # needed for some community models
         )
         self.pipeline = TextGenerationPipeline(model=self.model,tokenizer=self.tokenizer)
-        self.supports_chat_template = hasattr(self.tokenizer, "apply_chat_template") and callable(self.tokenizer.apply_chat_template)
+        self.supports_chat_template = hasattr(self.tokenizer,
+            "apply_chat_template") and callable(self.tokenizer.apply_chat_template)
 
 
     def system(self, prompt: str) -> str:
@@ -72,18 +72,19 @@ class AIAgentTransformers(AIAgent):
         if self.supports_chat_template:
             # Use chat template if available
             try:
-                tokenized_chat = self.tokenizer.apply_chat_template(self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
+                tokenized_chat = self.tokenizer.apply_chat_template(
+                    self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
                 full_prompt = self.tokenizer.decode(tokenized_chat[0])
                 logger.debug("Full tokenized prompt: %s", full_prompt)
             except Exception as e:
                 logger.warning("Error tokenizing chat: %s", e)
                 # Fallback to basic formatting
                 self.supports_chat_template = False
-        
+
         if not self.supports_chat_template:
             full_prompt = self._build_prompt()
 
-        start_time = time.perf_counter()        
+        start_time = time.perf_counter()
         sequences = self.pipeline(
             full_prompt,
             do_sample=True,

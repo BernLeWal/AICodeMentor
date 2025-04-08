@@ -12,9 +12,8 @@ load_dotenv()
 
 # Setup logging framework
 if not logging.getLogger().hasHandlers():
-    default_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                        format=os.getenv('LOGFORMAT', default_format))
+                        format=os.getenv('LOGFORMAT', '%(message)s'))
 logger = logging.getLogger(__name__)
 
 

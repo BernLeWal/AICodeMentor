@@ -19,7 +19,7 @@ log_level = os.getenv('LOGLEVEL', 'INFO').upper()
 # Setup logging framework
 if not logging.getLogger().hasHandlers():
     logging.basicConfig(level=log_level,
-                        format=os.getenv('LOGFORMAT', 'pretty'))
+                        format=os.getenv('LOGFORMAT', '%(message)s'))
 logger = logging.getLogger(__name__)
 # set the loglevel for the OpenAI SDK
 logging.getLogger("openai").setLevel(log_level)

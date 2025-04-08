@@ -24,7 +24,7 @@ logfile_path = os.path.join(logfiles_dir, 'codementor.log')
 if logging.getLogger().hasHandlers():
     logging.getLogger().handlers.clear()    #remove existing default handlers
 logging.basicConfig(level=os.getenv('LOGLEVEL', 'INFO').upper(),
-                    format=os.getenv('LOGFORMAT', 'pretty'),
+                    format=os.getenv('LOGFORMAT', '%(message)s'),
                     handlers=[
                         logging.FileHandler(logfile_path),
                         #logging.StreamHandler(sys.stdout)  # Optional: to also log to console
