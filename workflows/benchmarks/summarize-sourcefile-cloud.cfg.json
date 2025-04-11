@@ -1,0 +1,90 @@
+{
+    "setup_workflow_file": null,
+    "csv_file": null,
+    "workflow_files": [
+        "workflows/benchmarks/summarize-sourcefile_a.wf.md",
+        "workflows/benchmarks/summarize-sourcefile_b.wf.md",
+
+        "workflows/benchmarks/summarize-sourcefile_d.wf.md",
+        "workflows/benchmarks/summarize-sourcefile_e.wf.md"
+    ],
+    "key_values": {},
+    "repeats": 1,
+    "ai_model_names": [
+        "gpt-4o-mini",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo",
+
+        "o3-mini",
+        "o1-mini",
+
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+              
+        "claude-3-5-haiku-latest",
+        "claude-3-opus-latest",
+        "claude-3-haiku-20240307"
+    ],
+    "ai_temperature_values": null,
+    "ai_top_p_values": null,
+    "ai_f_penalty_values": null,
+    "ai_p_penalty_values": null,
+    "expected_length": 200,
+    "expected_facts": [
+        "Java",
+        "Spring Boot",
+        [
+            "REST",
+            "RESTful"
+        ],
+        "web service",
+        [
+            "temperature",
+            "weather"
+        ],
+        "city",
+        [
+            "get weather",
+            "retrieve weather",
+            "Get Weather",
+            "Retrieve Weather"
+        ],
+        [
+            "add weather",
+            "Add Weather",
+            "adds weather",
+            "Adds Weather"
+        ],
+        [
+            "update weather",
+            "updates weather",
+            "Update Weather",
+            "Updates Weather"
+        ],
+        [
+            "/city/{id}",
+            "/city/add",
+            "/city/update/{id}"
+        ],
+        [
+            "GET",
+            "POST",
+            "PUT"
+        ],
+        [
+            "record",
+            "Record",
+            "records",
+            "data"
+        ],
+        [
+            "in-memory",
+            "in memory"
+        ],
+        [
+            "ArrayList",
+            "HashMap"
+        ]
+    ],
+    "cleanup_workflow_file": null
+}

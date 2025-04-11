@@ -5,11 +5,13 @@ The AI-Agent implementation using the CodeLLAMA model from Hugging Face Transfor
 import logging
 import time
 import os
+import gc
 from dotenv import load_dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextGenerationPipeline
 from transformers.utils import logging as hf_logging
 from huggingface_hub import HfApi
 import torch
+import psutil
 from app.util.string_utils import trunc_middle
 from app.agents.agent_config import AIAgentConfig
 from app.agents.agent import AIAgent
@@ -33,24 +35,22 @@ class AIAgentTransformers(AIAgent):
     for causal LLMs with automatic chat formatting support
     """
 
+    # Singleton instance of the model resources (shared across all agents)
+    _model_name = None
+    _model = None
+    _tokenizer = None
+    _pipeline = None
+    _device = None
+    _supports_chat_template = False
+
+
     def __init__(self, config):
         super().__init__(config)
         logger.info("Creating AIAgentTransformers with %s", config)
 
-        self.model_name = config.model_name or "codellama/CodeLlama-7b-Instruct-hf"
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model_name = self.load_model(config.model_name)
 
-        logger.info("Loading model '%s' on device: %s", self.model_name, self.device)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_name,
-            device_map="auto",
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            trust_remote_code=True  # needed for some community models
-        )
-        self.pipeline = TextGenerationPipeline(model=self.model,tokenizer=self.tokenizer)
-        self.supports_chat_template = hasattr(self.tokenizer,
-            "apply_chat_template") and callable(self.tokenizer.apply_chat_template)
+        self.messages = []
 
 
     def system(self, prompt: str) -> str:
@@ -69,32 +69,32 @@ class AIAgentTransformers(AIAgent):
 
 
         # Build the prompt
-        if self.supports_chat_template:
+        if AIAgentTransformers._supports_chat_template:
             # Use chat template if available
             try:
-                tokenized_chat = self.tokenizer.apply_chat_template(
+                tokenized_chat = AIAgentTransformers._tokenizer.apply_chat_template(
                     self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
-                full_prompt = self.tokenizer.decode(tokenized_chat[0])
+                full_prompt = AIAgentTransformers._tokenizer.decode(tokenized_chat[0])
                 logger.debug("Full tokenized prompt: %s", full_prompt)
             except Exception as e:
                 logger.warning("Error tokenizing chat: %s", e)
                 # Fallback to basic formatting
-                self.supports_chat_template = False
+                AIAgentTransformers._supports_chat_template = False
 
-        if not self.supports_chat_template:
+        if not AIAgentTransformers._supports_chat_template:
             full_prompt = self._build_prompt()
 
         start_time = time.perf_counter()
-        sequences = self.pipeline(
+        sequences = AIAgentTransformers._pipeline(
             full_prompt,
             do_sample=True,
             top_k=10,
             temperature=self.temperature,
             top_p=self.top_p,
             num_return_sequences=1,
-            eos_token_id=self.tokenizer.eos_token_id,
-            max_length=self.max_output_tokens,
-            #max_new_tokens=self.max_output_tokens,
+            eos_token_id=AIAgentTransformers._tokenizer.eos_token_id,
+            #max_length=self.max_output_tokens, # --> may lead to truncation
+            max_new_tokens=self.max_output_tokens,
             #pad_token_id=self.tokenizer.pad_token_id,
         )
         self.total_duration_sec += time.perf_counter() - start_time
@@ -112,6 +112,9 @@ class AIAgentTransformers(AIAgent):
         self.total_chars += len(self.last_result)
 
         logger.debug("Transformers model returned: %s", self.last_result)
+        logger.debug("Execution stats: duration_sec=%d, iterations=%d, completion_chars=%d, total_chars=%d",
+                    self.total_duration_sec, self.total_iterations,
+                    self.total_completion_chars, self.total_chars)
         return self.last_result
 
 
@@ -149,25 +152,111 @@ class AIAgentTransformers(AIAgent):
 
             # Step 2: Try to load tokenizer and model for causal LM
             if try_load:
-                AutoTokenizer.from_pretrained(model_name)
-                AutoModelForCausalLM.from_pretrained(
-                    model_name,
-                    device_map="auto",
-                    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-                    trust_remote_code=True  # needed for some community models
-                )
+                return True if AIAgentTransformers.load_model(model_name) is not None else False
 
             return True
         except Exception:
             return False
 
 
-if __name__ == "__main__":
-    main_config = AIAgentConfig("codellama/CodeLlama-7b-Instruct-hf")
-    main_agent = AIAgentTransformers(main_config)
+    @staticmethod
+    def load_model(model_name: str = None)->str:
+        if model_name is None:
+            model_name = "microsoft/Phi-4-mini-instruct"
+        if AIAgentTransformers._model_name == model_name:
+            logger.debug("Model already loaded: %s", model_name)
+            return AIAgentTransformers._model_name
+        if AIAgentTransformers._model is not None:
+            logger.info("Unload previously loaded model %s and releasing resources.",
+                        AIAgentTransformers._model_name)
+            AIAgentTransformers.unload_model()
 
-    main_agent.system("You are a helpful assistant for software engineering tasks.")
-    MAIN_PROMPT = "Write a function in Python that parses JSON into a dictionary."
-    print(f"User Prompt:\n{MAIN_PROMPT}")
-    result = main_agent.ask(MAIN_PROMPT)
-    print(f"\nOutput:\n{result}")
+        AIAgentTransformers._model_name = model_name
+        AIAgentTransformers._device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        AIAgentTransformers.log_memory_usage("Before loading")
+        logger.info("Loading model '%s' on device: %s",
+                    AIAgentTransformers._model_name,
+                    AIAgentTransformers._device)
+        AIAgentTransformers._tokenizer = AutoTokenizer.from_pretrained(model_name)
+        AIAgentTransformers._model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            device_map="auto",
+            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            trust_remote_code=True  # needed for some community models
+        )
+        AIAgentTransformers._pipeline = TextGenerationPipeline(
+            model=AIAgentTransformers._model,
+            tokenizer=AIAgentTransformers._tokenizer)
+        AIAgentTransformers._supports_chat_template = hasattr(AIAgentTransformers._tokenizer,
+            "apply_chat_template") and callable(AIAgentTransformers._tokenizer.apply_chat_template)
+        AIAgentTransformers.log_memory_usage("After loading")
+
+
+    @staticmethod
+    def unload_model():
+        """Release model, tokenizer and free up GPU/CPU memory"""
+        logger.debug("Cleaning up AIAgentTransformers resources")
+        AIAgentTransformers.log_memory_usage("Before cleanup")
+
+        # Explicitly delete objects
+        if AIAgentTransformers._model is not None:
+            del AIAgentTransformers._model
+        if AIAgentTransformers._tokenizer is not None:
+            del AIAgentTransformers._tokenizer
+        if AIAgentTransformers._pipeline is not None:
+            del AIAgentTransformers._pipeline
+
+        # If on CUDA: empty cache
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()  # optional: release inter-process cached memory
+
+        gc.collect()  
+
+        AIAgentTransformers.log_memory_usage("After cleanup")
+        logger.debug("Cleanup completed for AIAgentTransformers")
+
+
+    @staticmethod
+    def log_memory_usage(label: str):
+        """Logs memory usage of GPU and CPU"""
+        process = psutil.Process(os.getpid())
+        cpu_mem = process.memory_info().rss / (1024 * 1024)  # in MB
+        if torch.cuda.is_available():
+            gpu_mem = torch.cuda.memory_allocated() / (1024 * 1024)  # in MB
+            logger.info("%s - CPU Memory Usage: %.2f MB | GPU Memory Usage: %.2f MB", label, cpu_mem, gpu_mem)
+        else:
+            logger.info("%s - CPU Memory Usage: %.2f MB", label, cpu_mem)
+
+
+if __name__ == "__main__":
+    main_config = AIAgentConfig("deepseek-ai/deepseek-coder-7b-instruct-v1.5")
+
+    main_agent1 = AIAgentTransformers(main_config)
+    main_agent2 = AIAgentTransformers(main_config) # Will share the same model
+
+    system_prompt = "You are a helpful assistant for software engineering tasks."
+
+    try:
+        main_agent1.system(system_prompt)
+        prompt1 = "Explain polymorphism in OOP with a Python sample."
+        print(f"User Prompt 1:\n{prompt1}")
+        result = main_agent1.ask(prompt1)
+        print(f"\nOutput:\n{result}")
+
+        print("\n-----------------------------------------------------\n")
+
+        main_agent2.system(system_prompt)
+        prompt2 = "Explain what is a decorator with a Python sample."
+        print(f"User Prompt 2:\n{prompt2}")
+        result = main_agent2.ask(prompt2)
+        print(f"\nOutput:\n{result}")
+    finally:
+        main_agent1.cleanup()
+        main_agent2.cleanup()
+
+    del main_agent1 # will also call .cleanup()
+    del main_agent2
+
+    AIAgentTransformers.unload_model()

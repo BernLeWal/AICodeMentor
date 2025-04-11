@@ -105,8 +105,10 @@ The following models have been tried successfully:
 - "codellama/CodeLlama-7b-hf" (7B; see https://huggingface.co/codellama/CodeLlama-7b-hf)
 - "codellama/CodeLlama-13b-hf" (13B; see https://huggingface.co/codellama/CodeLlama-13b-hf)
 - "Qwen/Qwen2.5-Coder-7B-Instruct" (7B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct)
-- "Qwen/Qwen2.5-Coder-14B-Instruct" (13B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct
+- "Qwen/Qwen2.5-Coder-14B-Instruct" (14B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct)
 - "microsoft/Phi-4-mini-instruct" (4B, 128kT context; see https://huggingface.co/microsoft/Phi-4-mini-instruct)
+- "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B" (8B, reasoning-model; see https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B)
+- "deepseek-ai/deepseek-coder-7b-instruct-v1.5" (7B; see https://huggingface.co/deepseek-ai/deepseek-coder-7b-instruct-v1.5)
 
 The following models have been tested, but don't match to the used chat template - don't use them so far:
 - "bigcode/starcoder2-7b" (7B; see https://huggingface.co/bigcode/starcoder2-7b)

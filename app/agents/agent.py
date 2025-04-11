@@ -4,6 +4,7 @@ The base class for all AI Agent implementations
 """
 import logging
 import os
+import gc
 from dotenv import load_dotenv
 from app.agents.agent_config import AIAgentConfig
 from app.agents.prompt import Prompt
@@ -50,6 +51,26 @@ class AIAgent:
 
         self.messages : list = []
         self.last_result : str = None
+
+
+    def __del__(self):
+        """Destructor calls cleanup to ensure resource release"""
+        logger.info("Destructor called for AIAgentTransformers")
+        try:
+            self.cleanup()
+        except Exception as e:
+            logger.warning("Cleanup in __del__() failed: %s", e)
+
+
+    def cleanup(self):
+        """Cleanup function to release ressources"""
+        self.messages.clear()
+
+        # Force garbage collection
+        gc.collect()
+
+        logger.debug("Cleanup completed for AIAgent")
+
 
     def system(self, prompt: str) -> str:
         """Store the system prompt"""

@@ -85,7 +85,7 @@ public class WeatherApplication {
         List<Record> temp = new ArrayList<>();
         Record requestRec = weatherRecords.get(id);
         temp.add(requestRec);
-        return temp;
+        return temp
     }
 
     //add city weather/temperature data
@@ -105,5 +105,5 @@ public class WeatherApplication {
         String date = weatherRecords.get(id - 1).date();
 
         Record tempRec = new Record(id, city, weather, temperature, date);
-        weatherRecords.set(id - 1, tempRec);
+        weatherRecords.set(id - 1, tempRec)
 ```
