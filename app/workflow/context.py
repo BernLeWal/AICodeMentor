@@ -67,9 +67,17 @@ class Context:
                 return ""   # variable found, but result is empty
             return self.result
 
+        # Check for prefixed variables:
+        if name.startswith("file:"):
+            return self._value_from_file(name)
+
         # Find in variables:
         if name in self.variables:
-            return self.variables[name]
+            value = self.variables[name]
+            # Check for prefixed (indirect) values:
+            if value.startswith("file:"):
+                return self._value_from_file(value)
+            return value
 
         # Find in prompts:
         if name in self.workflow.prompts:
@@ -110,5 +118,36 @@ class Context:
             self.result = value
             return
 
+        # Check for prefixed variables:
+        if name.startswith("file:"):
+            return self._value_to_file(name, value)
+
         # Set in variables:
         self.variables[name] = value
+
+
+    def _value_from_file(self, value: str) -> str:
+        if value.startswith("file:"):
+            file_name = value[5:]
+            logger.debug("File variable: %s", file_name)
+            directory = os.path.dirname(self.workflow.filepath)
+            if len(directory) == 0:
+                directory = str(self.workflow.directory)
+            abs_file_path = os.path.join(directory, file_name)
+            logger.debug("Read content from abs path: %s", abs_file_path)
+            with open(abs_file_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        return value
+
+
+    def _value_to_file(self, name: str, value: str) -> None:
+        if name.startswith("file:"):
+            file_name = name[5:]
+            logger.debug("File variable: %s", file_name)
+            directory = os.path.dirname(self.workflow.filepath)
+            if len(directory) == 0:
+                directory = str(self.workflow.directory)
+            abs_file_path = os.path.join(directory, file_name)
+            logger.debug("Write content to abs path: %s", abs_file_path)
+            with open(abs_file_path, 'w', encoding='utf-8') as f:
+                f.write(value)

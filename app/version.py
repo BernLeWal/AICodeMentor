@@ -7,6 +7,7 @@ __app_description__ = "Automatically analyse, feedback and grade " +\
     "source-code project submissions using AI agents"
 
 ## History
+# 0.1.7 - read variable contents from file, support file variables
 # 0.1.6 - Added local LLM support(Huggingface Transformers),e.g. codellama/CodeLlama-7b-Instruct-hf
 # 0.1.5 - Added batch-processing, AI-Agent params & telemetry, Google Gemini, Anthropic Claude
 # ...
