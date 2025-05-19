@@ -11,8 +11,8 @@ bin\run_codementor.ps1 workflows/tutorial/lesson1.wf.md
 ```
 on Linux:
 ```shell
-bin\build_codementor.ps1
-bin\run_codementor.ps1 workflows/tutorial/lesson1.wf.md
+bin/build_codementor.sh
+bin/run_codementor.sh workflows/tutorial/lesson1.wf.md
 ```
 
 
