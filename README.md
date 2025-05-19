@@ -59,6 +59,8 @@ Version history see [app/version.py](./app/version.py)
 - Develop a **collaboration model** for AI agents.
 
 ### Future Ideas
+- Realize MCQ based on www.github.com/chaoshu1201/lo-mcq-gen , contact Shu for contrib
+- LLMs to add: Perplexity AI, SanaAI, Ms Copilot
 - Implement **PLaG** technique (see [docs/literature/PLaG.md](./docs/literature/PLaG.md)) as a sample - should fit perfectly to CodeMentor
 - Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
 - CodeRunner Integration? (as docker-container)
