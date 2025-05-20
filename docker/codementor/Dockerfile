@@ -14,12 +14,14 @@ COPY requirements.txt /home/mentor
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app /home/mentor/app
+COPY workflows /home/mentor/workflows
 
 # Copy the .env file (optional, but you can override it with docker run or volumes)
 #COPY .env /home/mentor/.env
 
 # Change ownership of the app directory to the "mentor" user
 RUN chown -R mentor:mentor /home/mentor/app
+RUN chown -R mentor:mentor /home/mentor/workflows
 
 RUN mkdir -p /home/mentor/output && chown mentor:mentor /home/mentor/output
 RUN mkdir -p /home/mentor/log && chown mentor:mentor /home/mentor/log

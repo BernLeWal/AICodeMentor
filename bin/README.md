@@ -25,35 +25,11 @@ The application runs in a docker-container, so the docker-image has to be built 
 Attention: Run the following command from the **project root directory**!
 
 To build the codementor:
-```shell
-docker build -t codementor -f docker/codementor/Dockerfile .
-```
-
-To build the codementor-java:
-```shell
-docker build -t codementor-java -f docker/codementor-java/Dockerfile .
-```
+- On Linux: ```bin/build_codementor.sh```
+- On Windows: ```bin/build_codementor.ps1```
 
 ### Run the application
 
 Run the AI CodeMentor using the prepared shell scripts:
 - On Linux: ```bin/run_codementor.sh [options] <workflow-file.md> [<key=value> ...]```
 - On Windows: ```bin/run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]```
-
-### Publish the image an the hub.docker.com registry
-
-When you want to use a specific tag instead of ":latest", the use the following commands, e.g. for tag "0.1.6":
-
-Remarks: replace <yourusername> with you own registry username.
-
-```shell
-docker tag codementor codementor:0.1.6
-docker tag codementor:0.1.6 <yourusername>/codementor:0.1.6
-```
-
-Then push your image into the registry
-
-```shell
-docker login
-docker tag codementor:0.1.6 <yourusername>/codementor:0.1.6
-```

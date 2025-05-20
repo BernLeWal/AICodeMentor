@@ -2,7 +2,7 @@
 
 AI Code Mentor is a **runtime environment** designed for building applications with **integrated autonomous AI agents**. These applications are defined as **workflows**, written in Markdown files (`.wf.md`), which are interpreted and executed by the Code Mentor system.
 
-The AI agents (multiple instances are supported) generate and execute commands (e.g., Bash shell commands) directly, feeding the output back to the AI for analysis and iteration. This allows AI agents to **self-improve their tasks** when necessary. Currently, OpenAI's platform is integrated, with plans to add alternative AI models in the future.
+The AI agents (multiple instances are supported) generate and execute commands (e.g., Bash shell commands) directly, feeding the output back to the AI for analysis and iteration. This allows AI agents to **self-improve their tasks** when necessary. Currently integrated are various cloud-platform tools, like OpenAI, Google Gemini, Anthropic Claude (with OpenAI's platform as default setting) and Huggingface Transformer based LLMs which can be executed self-hosted. 
 
 ## Features & Benefits
 
@@ -92,6 +92,13 @@ Version history see [app/version.py](./app/version.py)
 - Create an .env file in the docker/ directory, based on the [docker/.env.sample](./docker/.env.sample) file.
 
 ### Running AI Code Mentor
+
+**Run Docker Image:**  
+  The most easy way is to run it out of the box using the prepared Docker Image from Docker-Hub, see [docker/README.md](docker/README.md)
+  ```sh
+  docker run --rm -e OPENAI_API_KEY=<sk-yourkeyhere> codepunx/codementor [options] <workflow-file.md> [<key=value> ...]
+  ```
+  Remarks: This will use the default settings with OpenAI Platform as AI-agent.
 
 **Linux:**
   ```sh
