@@ -1,0 +1,106 @@
+# initialize the token
+@SERVER_TOKEN = {{$dotenv SERVER_TOKEN}}
+
+
+### Get list of all files and directories
+GET http://localhost:5000/api/files/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Get list of all files and directories in the subdirectory
+GET http://localhost:5000/api/files/tutorial/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Get list of all files and directories in the sub/subdirectory
+GET http://localhost:5000/api/files/prompt-eval/prompts/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+###
+
+### Get a specific file
+GET http://localhost:5000/api/files/coth.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+### Get a specific file of a subdirectory
+GET http://localhost:5000/api/files/tutorial/lesson1.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+### Get a specific file of a sub/subdirectory
+GET http://localhost:5000/api/files/prompt-eval/prompts/prompt_eval_best_practices.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+###
+
+### Upload a new file to root directory
+POST http://localhost:5000/api/files/samplefile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+Content-Type: application/octet-stream
+
+< ./samplefile.wf.md
+
+
+### Create a new subdirectory
+POST http://localhost:5000/api/files/testdir/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Upload a file to a subdirectory
+POST http://localhost:5000/api/files/testdir/samplefile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+Content-Type: application/octet-stream
+
+< ./samplefile.wf.md
+
+
+###
+
+### List contents of a subdirectory
+GET http://localhost:5000/api/files/testdir/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+### Get a specific file
+GET http://localhost:5000/api/files/testdir/samplefile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+###
+
+### Replace an existing file
+PUT http://localhost:5000/api/files/testdir/samplefile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+Content-Type: application/octet-stream
+
+< ./samplefile_updated.wf.md
+
+
+###
+
+### Delete a file
+DELETE http://localhost:5000/api/files/testdir/samplefile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Delete a subdirectory
+DELETE http://localhost:5000/api/files/testdir/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Delete a file
+DELETE http://localhost:5000/api/files/samplefile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+
+###
+
+### Unauthorized request (missing token)
+GET http://localhost:5000/api/files
+
+###
+
+### Invalid file request (not found)
+GET http://localhost:5000/api/files/nonexistentfile.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+

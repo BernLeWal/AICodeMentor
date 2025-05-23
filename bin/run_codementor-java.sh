@@ -18,4 +18,5 @@ docker run --rm \
     -v "$(pwd)/workflows:/home/mentor/workflows" \
     -v "$(pwd)/output:/home/mentor/output" \
     -v "$(pwd)/log:/home/mentor/log" \
+    -p 5000:5000 \
     $IMAGE_NAME "$@"

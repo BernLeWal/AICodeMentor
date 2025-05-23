@@ -41,12 +41,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.1.6
-- Added local running AI-Agents support (Huggingface Transformers LLMs) 
-- Added **batch-processing**, e.g. to run benchmarks
-- AI-Agent configuration **parameters** support, e.g temperature, n_top, f_penalty,..
-- AI-Agent **telemetry** recording, e.g. tokens used, duration, iterations
-- added **Google Gemini** and **Anthropic Claude**  (as AI-Agents) support
+🚀Latest News in version: 0.2.0
+- Added RESTful API (see [api/openapi.yaml](app/api/openapi.yaml) ) and server mode (--server CLI param)
 
 Version history see [app/version.py](./app/version.py)
 
@@ -62,7 +58,6 @@ Version history see [app/version.py](./app/version.py)
 - Realize MCQ based on www.github.com/chaoshu1201/lo-mcq-gen , contact Shu for contrib
 - LLMs to add: Perplexity AI, SanaAI, Ms Copilot
 - Implement **PLaG** technique (see [docs/literature/PLaG.md](./docs/literature/PLaG.md)) as a sample - should fit perfectly to CodeMentor
-- Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
 - CodeRunner Integration? (as docker-container)
 
 ---
@@ -167,6 +162,8 @@ See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating 
 ---
 
 ## Development
+
+see [CONTRIBUTION.md](CONTRIBUTION.md)
 
 ### Setup
 
