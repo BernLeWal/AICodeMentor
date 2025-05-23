@@ -67,3 +67,28 @@ This is just the beginning of my **Hands-On AI Agents** series. In the next arti
 
 💬 **What’s your experience with AI agents? Have you experimented with executing system commands using AI? Let’s discuss in the comments!**  
 
+---
+<!-- 2025-05-20 Linkedin -->
+
+![](blogpost2-docker.png)
+
+🚀 **AI Code Mentor "ready-to-run" as a Docker Image**
+
+AI Code Mentor is now available as a prebuilt **Docker image**!
+This container provides a ready-to-run **runtime environment for autonomous AI workflows**, where AI agents execute and may also refine tasks through shell commands and Markdown-defined logic.
+
+✅ Zero-setup: just pull and run  
+✅ Markdown-based workflow definitions  
+✅ Multi-agent support  
+✅ Autonomous command execution with self-reflection  
+✅ Integration of various AI platforms (e.g. OpenAI, Gemini, Claude,..)  
+
+🛠 Try it on Docker Hub:  
+🔗 https://hub.docker.com/r/codepunx/codementor
+
+📚 Full source & docs:  
+🔗 https://github.com/BernLeWal/AICodeMentor
+
+Whether you're building educational assistants, DevOps agents, or experimental AI automation, this platform is a great starting point.
+
+#AI #GenerativeAI #OpenSource #Docker #AIAgent #DeveloperTools #PromptEngineering #CodeMentor #AIWorkflows
