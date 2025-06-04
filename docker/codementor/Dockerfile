@@ -25,15 +25,20 @@ RUN chown -R mentor:mentor /home/mentor/workflows
 
 RUN mkdir -p /home/mentor/output && chown mentor:mentor /home/mentor/output
 RUN mkdir -p /home/mentor/log && chown mentor:mentor /home/mentor/log
-RUN touch /home/mentor/log/codementor.log
 
 
 # Switch to the "mentor" user
 USER mentor
 
+RUN touch /home/mentor/log/codementor.log
+
 ENV PYTHONPATH=/home/mentor
+ENV WORKFLOWS_DIR=/home/mentor/workflows
+
 
 RUN echo "-s" > .curlrc
+
+EXPOSE 5000
 
 # Set the default entry point
 ENTRYPOINT ["python", "app/main.py"]

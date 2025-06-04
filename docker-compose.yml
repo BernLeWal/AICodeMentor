@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   codementor:
     build:
@@ -6,28 +5,32 @@ services:
       context: .
     image: codementor
     container_name: codementor
+    env_file:
+      - docker/.env
     environment:
-      # Load environment variables from the local .env file
-      - ENV_FILE=.env
-    volumes:
-      - ./workflows:/home/mentor/workflows
-      - ./output:/home/mentor/output
-      - ./log:/home/mentor/log
-    entrypoint: ["python", "main.py"]
-    restart: never
+      - SHELLBOX_HOST=shellbox  # connect to the shellbox service
+      - SHELLBOX_PORT=2222
+    ports:
+      - "5000:5000"
+    entrypoint: ["python", "app/main.py", "--server"]
+    restart: unless-stopped
 
-  codementor-java:
+  shellbox:
     build:
-      dockerfile: docker/codementor-java/Dockerfile
+      dockerfile: docker/shellbox/Dockerfile
       context: .
-    image: codementor-java
-    container_name: codementor
-    environment:
-      # Load environment variables from the local .env file
-      - ENV_FILE=.env
-    volumes:
-      - ./workflows:/home/mentor/workflows
-      - ./output:/home/mentor/output
-      - ./log:/home/mentor/log
-    entrypoint: ["python", "main.py"]
-    restart: never
+    image: shellbox
+    container_name: shellbox
+    ports:
+      - "2222:22"
+    restart: unless-stopped
+
+  shellbox-java:
+    build:
+      dockerfile: docker/shellbox-java/Dockerfile
+      context: .
+    image: shellbox-java
+    container_name: shellbox-java
+    ports:
+      - "2223:22"
+    restart: unless-stopped
