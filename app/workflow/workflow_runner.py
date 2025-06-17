@@ -55,7 +55,7 @@ class WorkflowRunner:
         ## run the workflow
         self.context = Context(main_workflow,
                                AIAgentFactory.create_agent(config),
-                               ShellCommandExecutor())
+                               None)
         results = main_interpreter.run(self.context)
         self.duration_sec = (datetime.datetime.now() - self.start_time).total_seconds()
         return results

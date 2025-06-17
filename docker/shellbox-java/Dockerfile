@@ -48,7 +48,7 @@ RUN echo "-s" > .curlrc
 
 EXPOSE 22
 
-CMD ["/usr/sbin/sshd", "-D"]
+CMD ["/usr/sbin/sshd", "-D", "-e", "-o", "LogLevel=VERBOSE"]
 
 # Set the entry point to keep the container alive
 #CMD ["tail", "-f", "/dev/null"]

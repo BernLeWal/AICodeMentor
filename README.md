@@ -47,14 +47,21 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 Version history see [app/version.py](./app/version.py)
 
 ### Comming Enhancements
+- execute commands in **shellbox**, an external docker-container connected via ssh
+- **layered context** to better support variables and configs, e.g. change LLM-model within workflows
+- **separate no-cude/with-code** support to make codementor more lightweight
+- support for deployment on **k8s/Open Shift**
+- **Python** command support
+- all outputs transferred to log directory
+- extend REST-API to also retrieve log data
+
+### Future Ideas
 - add separate statistics object for workflow runner
 - **create agent** instead of "Prompt: System"
 - Enhance AI agent feedback loops for **self-improvement**: Adapt temperature Setting: start with 0, increase on IMPROVE path
 - Workflow Validation
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
 - Develop a **collaboration model** for AI agents.
-
-### Future Ideas
 - Realize MCQ based on www.github.com/chaoshu1201/lo-mcq-gen , contact Shu for contrib
 - LLMs to add: Perplexity AI, SanaAI, Ms Copilot
 - Implement **PLaG** technique (see [docs/literature/PLaG.md](./docs/literature/PLaG.md)) as a sample - should fit perfectly to CodeMentor
