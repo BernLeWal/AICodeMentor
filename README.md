@@ -41,7 +41,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.2.1
+🚀Latest News in version: 0.2.2
+- Workflow history and logs can be retrieved via REST API
 - Introduced **Shellbox** - a docker container dedicated to run shell commands, connected via SSH
 - Added RESTful API (see [api/openapi.yaml](app/api/openapi.yaml) ) and server mode (--server CLI param)
 
@@ -161,8 +162,7 @@ See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating 
 │   ├── codementor              # - CodeMentor can execute BASH (and Python) commands
 │   └── codementor-java         # - CodeMentor can execute BASH commands and has a Java21+Maven environment
 ├── docs                        # Documentation
-├── log                         # AI CodeMentor will output the application logs into that directory
-├── output                      # AI CodeMentor will output the trace-files here, for detailed investigations
+├── log                         # AI CodeMentor will output the application logs and history into that directory
 ├── test                        # Unit-Tests for the Python application
 └── workflows                   # Contains the workflow files, which AI CodeMentor will execute
 ```

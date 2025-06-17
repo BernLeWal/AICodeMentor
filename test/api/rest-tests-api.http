@@ -10,3 +10,5 @@ GET http://localhost:5000/openapi.yaml
 GET http://localhost:5000/docs
 
 
+### Login
+GET http://localhost:5000/auth?token=<SERVER_TOKEN>

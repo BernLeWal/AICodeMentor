@@ -1,0 +1,48 @@
+# initialize the token
+@SERVER_TOKEN = {{$dotenv SERVER_TOKEN}}
+
+
+### Get list of all files and directories
+GET http://localhost:5000/api/log/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Get list of all files and directories in the subdirectory
+GET http://localhost:5000/api/log/20250617_114750/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+###
+
+### Get a specific file
+GET http://localhost:5000/api/log/codementor.log
+Authorization: Bearer {{SERVER_TOKEN}}
+
+### Get a specific file of a subdirectory
+GET http://localhost:5000/api/log/20250617_114750/01_lesson2.wfh.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+###
+
+### Delete a file
+DELETE http://localhost:5000/api/log/20250617_114750/01_lesson2.wfh.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+### Delete a subdirectory
+DELETE http://localhost:5000/api/log/20250617_114750/
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+###
+
+### Unauthorized request (missing token)
+GET http://localhost:5000/api/log
+
+###
+
+### Invalid file request (not found)
+GET http://localhost:5000/api/log/nonexistentfile.wfh.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
