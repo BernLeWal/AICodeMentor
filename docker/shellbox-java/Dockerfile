@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install required packages
 RUN apt-get update && \
     apt-get install -y openssh-server sudo && \
-    apt-get install -y curl git wget procps lsb-release jq lynx
+    apt-get install -y curl git wget procps lsb-release jq lynx iputils-ping iproute2
 
 # Install OpenJDK 21 - see https://www.tecmint.com/install-java-on-debian-12/
 RUN wget https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.deb && \

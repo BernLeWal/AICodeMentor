@@ -263,6 +263,7 @@ async function loadFiles(path=''){
     const resp=await fetch(apiUrl(path));
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const data=await resp.json();
+    data.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
     render(data);
     filter();
     updateBreadcrumbs();

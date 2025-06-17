@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install required packages
 RUN apt-get update && \
     apt-get install -y openssh-server sudo && \
-    apt-get install -y curl git wget procps lsb-release jq lynx
+    apt-get install -y curl git wget procps lsb-release jq lynx iputils-ping iproute2
 
 #RUN mkdir /var/run/sshd
 RUN useradd -m -s /bin/bash mentor && \

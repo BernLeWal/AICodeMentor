@@ -1,9 +1,6 @@
 services:
   codementor:
-    build:
-      dockerfile: docker/codementor/Dockerfile
-      context: .
-    image: codementor
+    image: codepunx/codementor:latest
     container_name: codementor
     env_file:
       - docker/.env
@@ -18,10 +15,7 @@ services:
       - codementor-network
 
   shellbox:
-    build:
-      dockerfile: docker/shellbox-java/Dockerfile # or docker/shellbox/Dockerfile
-      context: .
-    image: shellbox-java                          # or shellbox
+    image: codepunx/shellbox-java:latest         # or shellbox
     container_name: shellbox
     ports:
       - "2222:22"

@@ -12,16 +12,18 @@ WORKDIR /home/mentor
 
 COPY requirements.txt /home/mentor
 RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-cuda.txt /home/mentor
+RUN pip install --no-cache-dir -r requirements-cuda.txt
 
 COPY app /home/mentor/app
 COPY workflows /home/mentor/workflows
 
-COPY docker/shellbox/ssh_keys /home/mentor/.ssh
+COPY docker/shellbox/ssh_keys/* /home/mentor/.ssh/*
 # Ensure the .ssh directory has the correct permissions
 RUN chown -R mentor:mentor /home/mentor/.ssh
 RUN chmod 700 /home/mentor/.ssh && \
     chmod 600 /home/mentor/.ssh/*
-
+    
 # Copy the .env file (optional, but you can override it with docker run or volumes)
 #COPY .env /home/mentor/.env
 

@@ -1,7 +1,6 @@
 # AI CodeMentor Docker Image
 
-This image contains the base tools for AI CodeMentor supporting cloud-based LLMs.
-Remarks: Use codementor-cuda image for running LLMs on your local machine.
+This image contains the base tools for AI CodeMentor supporting Huggingface-Transformers with Nvidia CUDA library for running LLMs locally.
 
 ## Pre-Requisites
 
@@ -11,13 +10,13 @@ Remarks: Use codementor-cuda image for running LLMs on your local machine.
 
 From the project root directory run the following command:
 ```shell
-docker build -t codementor -f docker/codementor/Dockerfile .
+docker build -t codementor-cuda -f docker/codementor-cuda/Dockerfile .
 ```
 
 ## Run the Docker Container
 
 ```shell
-docker run --name codementor --env-file docker/.env -p 5000:5000 codementor --server
+docker run --name codementor-cuda --env-file docker/.env -p 5000:5000 codementor-cuda --server
 ```
 
 CodeMentor will then run as server, so workflows can be executed and managed through the REST-API
