@@ -20,7 +20,9 @@ class AICodeMentorServer:
     and registers API routes.
     """
     def __init__(self):
-        self.app = Flask(__name__)
+        self.app = Flask(__name__,
+            template_folder="web/templates",
+            static_folder="web/static")
         self.configure_logging()
         self.register_routes()
         self.register_swagger_ui()

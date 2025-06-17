@@ -9,6 +9,7 @@ from app.api.files import register_file_routes
 from app.api.workflow import register_workflow_routes
 from app.api.log import register_log_routes
 from app.api.auth import authorize, register_auth_routes
+from app.api.frontend import register_frontend_routes
 
 def health_check():
     """
@@ -41,6 +42,7 @@ class ApiRouter:
 
         # Register auth blueprint (adds /auth route)
         register_auth_routes(self.app)
+        register_frontend_routes(self.app)
 
         # Standard utility routes
         self.app.add_url_rule("/health", "health_check", health_check)

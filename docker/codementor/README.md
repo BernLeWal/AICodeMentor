@@ -26,14 +26,12 @@ CodeMentor will then run as server, so workflows can be executed and managed thr
 Entry Points:
 * OpenAI Specification of the REST interface: [http://localhost:5000/openapi.yaml](http://localhost:5000/openapi.yaml)
 * SwaggerUI: [http://localhost:5000/docs](http://localhost:5000/docs)
-* You may use the browser as REST-Client, therefore login before using the API:
-    Usage (once per browser session):  
-        [http://localhost:5000/auth?token=<SERVER_TOKEN>](http://localhost:5000/auth?token=<SERVER_TOKEN>)
-
-    - The SERVER_TOKEN is defined in your [.env](../../.env) file
-
-    - On success a **Secure, HttpOnly, SameSite=Strict** cookie named ``auth_token`` is
-    returned so that subsequent requests through the browser will be authenticated.
+* You may use the browser as REST-Client:
+    - **Login** before using the API (once per browser session): http://localhost:5000/auth?token=<SERVER_TOKEN>  
+        The SERVER_TOKEN is defined in your [.env](../../.env) file
+        On success a **Secure, HttpOnly, SameSite=Strict** cookie named ``auth_token`` is returned so that subsequent requests through the browser will be authenticated.
+    - **Workfile Explorer**: http://localhost:5000/files
+    - **History Explorer**: http://localhost:5000/history
 
 * There are REST-Requests prepared for testing, see:
     - [test/api/rest-tests-api.http](../../test/api/rest-tests-api.http)
