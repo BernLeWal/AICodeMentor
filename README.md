@@ -41,7 +41,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.2.0
+🚀Latest News in version: 0.2.1
+- Introduced **Shellbox** - a docker container dedicated to run shell commands, connected via SSH
 - Added RESTful API (see [api/openapi.yaml](app/api/openapi.yaml) ) and server mode (--server CLI param)
 
 Version history see [app/version.py](./app/version.py)

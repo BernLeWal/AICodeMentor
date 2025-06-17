@@ -23,7 +23,6 @@ COPY workflows /home/mentor/workflows
 RUN chown -R mentor:mentor /home/mentor/app
 RUN chown -R mentor:mentor /home/mentor/workflows
 
-RUN mkdir -p /home/mentor/output && chown mentor:mentor /home/mentor/output
 RUN mkdir -p /home/mentor/log && chown mentor:mentor /home/mentor/log
 
 

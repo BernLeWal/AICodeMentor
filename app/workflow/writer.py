@@ -41,7 +41,6 @@ class WorkflowWriter:
     """Writes Workflow instances to file"""
 
     WORKFLOWS_DIR = os.getenv('WORKFLOWS_DIR', './workflows')
-    OUTPUT_DIR = os.getenv('OUTPUT_DIR', './output')
     LOGFILES_DIR = os.getenv('LOGFILES_DIR', './log')
 
     def __init__(self, workflow : Workflow):
@@ -64,7 +63,7 @@ class WorkflowWriter:
         filepath : str = None, directory = None, overwrite = True):
         """Saves Workflow execution with history to a file"""
         if directory is None:
-            directory = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+            directory = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
         if not os.path.exists(directory):
             os.makedirs(directory)
         if filepath is None:
@@ -169,7 +168,7 @@ if __name__ == '__main__':
     main_workflow = WorkflowReader().load_from_mdfile(MAIN_FILENAME)
 
     main_writer = WorkflowWriter(main_workflow)
-    history_dir = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+    history_dir = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
     main_writer.save_definition(
         filepath = os.path.basename(MAIN_FILENAME),
         directory = history_dir

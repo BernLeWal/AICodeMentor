@@ -44,7 +44,7 @@ class WorkflowInterpreter:
         self.max_activity_hits = 3
 
         history_max_length = int(os.getenv('AI_MAX_PROMPT_LENGTH', '2000'))
-        history_dir : str = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+        history_dir : str = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
         if self.parent_interpreter is not None:
             parent = self.parent_interpreter
             while parent.parent_interpreter is not None:

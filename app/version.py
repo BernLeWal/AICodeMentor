@@ -7,6 +7,7 @@ __app_description__ = "Automatically analyse, feedback and grade " +\
     "source-code project submissions using AI agents"
 
 ## History
+# 0.2.2 - History is now saved in LOG directory, retrievable via RESTful API
 # 0.2.1 - Added SSH command executor
 # 0.2.0 - Added RESTful API and server mode
 # 0.1.7 - read variable contents from file, support file variables

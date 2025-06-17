@@ -18,7 +18,7 @@ from app.workflow.workflow_runner import WorkflowRunner
 
 # Setup logging framework
 load_dotenv()
-logfiles_dir = os.getenv('LOGFILES_DIR', './logs')
+logfiles_dir = os.getenv('LOGFILES_DIR', './log')
 os.makedirs(logfiles_dir, exist_ok=True)
 logfile_path = os.path.join(logfiles_dir, 'codementor.log')
 

@@ -8,6 +8,5 @@ __pycache__/
 ### Project ###
 .env
 secrets/
-output/
 log/
 tmp/
