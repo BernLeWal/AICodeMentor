@@ -56,14 +56,17 @@ def login():
 
     resp = make_response(jsonify({"status": "logged‑in"}))
 
-    # In dev we may not use HTTPS; ``secure`` is therefore conditional.
+    # decide on secure flag *after* proxy
+    proto_hdr = request.headers.get("X-Forwarded-Proto", request.scheme)
     resp.set_cookie(
         "auth_token",
         _SERVER_TOKEN,
         httponly=True,
         samesite="Strict",
-        secure=request.scheme == "https",  # only mark Secure on HTTPS
+        secure=(proto_hdr == "https"),
+        path="/"
     )
+
     return resp
 
 

@@ -24,6 +24,10 @@ services:
     restart: unless-stopped
     networks:
       - codementor-network
+    volumes:
+      - codementor-data:/home/mentor/workflows
+      - codementor-log:/var/log/mentor
+
 
   shellbox:
     build:
@@ -36,7 +40,19 @@ services:
     restart: unless-stopped
     networks:
       - codementor-network
+    volumes:
+      - shellbox-data:/home/mentor      
+
 
 networks:
   codementor-network:
     driver: bridge
+
+
+volumes:
+  codementor-data:
+    driver: local
+  codementor-log:
+    driver: local
+  shellbox-data:
+    driver: local

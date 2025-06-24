@@ -10,6 +10,7 @@ import sys
 from dotenv import load_dotenv
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
+from werkzeug.middleware.proxy_fix import ProxyFix
 from app.api.routing import ApiRouter
 
 
@@ -23,6 +24,11 @@ class AICodeMentorServer:
         self.app = Flask(__name__,
             template_folder="web/templates",
             static_folder="web/static")
+        # 1️⃣ accept https scheme forwarded by reverse proxy
+        self.app.wsgi_app = ProxyFix(self.app.wsgi_app, x_proto=1, x_host=1)
+        # 2️⃣ disable strict slash redirects globally
+        self.app.url_map.strict_slashes = False
+
         self.configure_logging()
         self.register_routes()
         self.register_swagger_ui()

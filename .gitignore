@@ -10,3 +10,8 @@ __pycache__/
 secrets/
 log/
 tmp/
+
+### Intermeidate files ###
+k8s/
+docker-compose-k8s.yml
+okd/
