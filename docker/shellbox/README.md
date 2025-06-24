@@ -5,7 +5,7 @@ for using as remote command executor
 
 Execute this **once on your host machine** to generate a key pair and prepare the 'authorized_keys' file:
 
-Run the following commands from the current directory (./docker/shellbox):
+Run the following commands from the `/secrets/ssh_keys` directory (./secrets/ssh_keys):
 ```bash
 cd ssh_keys
 
@@ -35,7 +35,7 @@ docker run -d -p 2222:22 --name shellbox shellbox
 
 Test the container login using from the project root directory:
 ```bash
-ssh -i docker/shellbox/ssh_keys/ssh_mentor_key -p 2222 mentor@localhost
+ssh -i secrets/ssh_keys/ssh_mentor_key -p 2222 mentor@localhost
 ```
 If it logs in without a password, the configuration is correct.
 

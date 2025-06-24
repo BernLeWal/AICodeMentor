@@ -16,7 +16,7 @@ RUN useradd -m -s /bin/bash mentor && \
     chown mentor:mentor /home/mentor/.ssh
 
 # Add public key (will be mounted via volume or during build)
-COPY docker/shellbox/ssh_keys/authorized_keys /home/mentor/.ssh/authorized_keys
+COPY secrets/ssh_keys/authorized_keys /home/mentor/.ssh/authorized_keys
 RUN chmod 600 /home/mentor/.ssh/authorized_keys && \
     chown mentor:mentor /home/mentor/.ssh/authorized_keys
 

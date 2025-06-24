@@ -42,7 +42,7 @@ class SSHCommandExecutor(CommandExecutor):
         self._stderr_queue = Queue()
 
         self.ssh_host = os.getenv("SHELLBOX_HOST")
-        self.ssh_user = os.getenv("SHELLBOX_USER")
+        self.ssh_user = os.getenv("SHELLBOX_USER", "mentor")
         self.ssh_password = os.getenv("SHELLBOX_PASSWORD", None)
         self.ssh_keyfile = os.getenv("SHELLBOX_SSH_KEYFILE", None)
 
@@ -64,7 +64,7 @@ class SSHCommandExecutor(CommandExecutor):
                 self.client.connect(
                     hostname=self.ssh_host,
                     port=self.SHELLBOX_PORT,
-                    username="mentor",
+                    username=self.ssh_user,
                     pkey=pkey,
                     allow_agent=False,
                     look_for_keys=False)

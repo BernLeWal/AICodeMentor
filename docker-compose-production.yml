@@ -5,8 +5,16 @@ services:
     env_file:
       - docker/.env
     environment:
+      - AI_MODEL_NAME=gpt-4o-mini
+      #- AI_MAX_OUTPUT_TOKENS=1024
+      #- AI_MAX_PROMPT_LENGTH=2000    
       - SHELLBOX_HOST=shellbox
       - SHELLBOX_PORT=22
+      - SHELLBOX_USER=mentor
+      - COMMAND_TIMEOUT=120
+      - COMMAND_INACTIVITY_TIMEOUT=60
+      #- LOGLEVEL=INFO
+      - LOGFORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
     ports:
       - "5000:5000"
     entrypoint: ["python", "app/main.py", "--server"]
@@ -17,8 +25,6 @@ services:
   shellbox:
     image: codepunx/shellbox-java:latest         # or shellbox
     container_name: shellbox
-    ports:
-      - "2222:22"
     restart: unless-stopped
     networks:
       - codementor-network

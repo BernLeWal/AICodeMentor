@@ -39,7 +39,7 @@ docker run -d -p 2223:22 --name shellbox-java shellbox-java
 
 Test the container login using from the project root directory:
 ```bash
-ssh -i docker/shellbox-java/ssh_keys/ssh_mentor_key -p 2223 mentor@localhost
+ssh -i secrets/ssh_keys/ssh_mentor_key -p 2223 mentor@localhost
 ```
 If it logs in without a password, the configuration is correct.
 

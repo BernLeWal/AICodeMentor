@@ -41,7 +41,7 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.2.3
+🚀Latest News in version: 0.2.4
 - **Simple web UI** to run and manage workflows and history, docs see [docker/codementor/README.md](docker/codementor/README.md)
 - Workflow history and logs can be retrieved via REST API
 - Introduced **Shellbox** - a docker container dedicated to run shell commands, connected via SSH
@@ -51,7 +51,6 @@ Version history see [app/version.py](./app/version.py)
 
 ### Comming Enhancements
 - **layered context** to better support variables and configs, e.g. change LLM-model within workflows
-- **separate no-cuda/with-cuda** support to make codementor more lightweight
 - support for deployment on **k8s/Open Shift**
 - **Python** command support
 

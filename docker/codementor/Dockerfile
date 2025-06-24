@@ -8,40 +8,41 @@ RUN pip install --upgrade pip
 # AIMentor will run as a non-root user
 RUN useradd -ms /bin/bash mentor
 
-WORKDIR /home/mentor
+# (Python) application installation into /opt/mentor
+RUN mkdir -p /opt/mentor
+WORKDIR /opt/mentor
 
-COPY requirements.txt /home/mentor
+COPY requirements.txt /opt/mentor
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app /home/mentor/app
-COPY workflows /home/mentor/workflows
+COPY app /opt/mentor/app
+RUN chown -R mentor:mentor /opt/mentor/app
+ENV PYTHONPATH=/opt/mentor
 
-COPY docker/shellbox/ssh_keys /home/mentor/.ssh
+# Working directory for the workflows
+COPY workflows /home/mentor/workflows
+RUN chown -R mentor:mentor /home/mentor/workflows
+ENV WORKFLOWS_DIR=/home/mentor/workflows
+
+# Logging 
+RUN mkdir -p /var/log/mentor
+RUN touch /var/log/mentor/codementor.log
+RUN chown -R mentor:mentor /var/log/mentor
+ENV LOGFILES_DIR=/var/log/mentor
+
+# SSH keys required for shellbox
+COPY secrets/ssh_keys /home/mentor/.ssh
 # Ensure the .ssh directory has the correct permissions
 RUN chown -R mentor:mentor /home/mentor/.ssh
 RUN chmod 700 /home/mentor/.ssh && \
     chmod 600 /home/mentor/.ssh/*
-
-# Copy the .env file (optional, but you can override it with docker run or volumes)
-#COPY .env /home/mentor/.env
-
-# Change ownership of the app directory to the "mentor" user
-RUN chown -R mentor:mentor /home/mentor/app
-RUN chown -R mentor:mentor /home/mentor/workflows
-
-RUN mkdir -p /home/mentor/log && chown mentor:mentor /home/mentor/log
+ENV SHELLBOX_SSH_KEYFILE=/home/mentor/.ssh/ssh_mentor_key
+ENV SHELL=/bin/bash
 
 
 # Switch to the "mentor" user
 USER mentor
-
-RUN touch /home/mentor/log/codementor.log
-
-ENV PYTHONPATH=/home/mentor
-ENV WORKFLOWS_DIR=/home/mentor/workflows
-
-
-RUN echo "-s" > .curlrc
+RUN echo "-s" > /home/mentor/.curlrc
 
 EXPOSE 5000
 

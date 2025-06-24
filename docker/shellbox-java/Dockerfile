@@ -27,13 +27,13 @@ RUN useradd -m -s /bin/bash mentor && \
 WORKDIR /home/mentor
 
 ## Prepare the Maven local repository caches (may speed up the build later on)
-COPY docker/shellbox-java/pom.xml /home/mentor/pom.xml
-RUN mvn dependency:go-offline
-RUN rm /home/mentor/pom.xml
+#COPY docker/shellbox-java/pom.xml /home/mentor/pom.xml
+#RUN mvn dependency:go-offline
+#RUN rm /home/mentor/pom.xml
 
 
 # Add public key (will be mounted via volume or during build)
-COPY docker/shellbox-java/ssh_keys/authorized_keys /home/mentor/.ssh/authorized_keys
+COPY secrets/ssh_keys/authorized_keys /home/mentor/.ssh/authorized_keys
 RUN chmod 600 /home/mentor/.ssh/authorized_keys && \
     chown mentor:mentor /home/mentor/.ssh/authorized_keys
 

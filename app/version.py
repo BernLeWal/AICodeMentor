@@ -1,5 +1,5 @@
 """Version information for the app package."""
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 __version_description__ = "Minimum Viable Product (MVP) version"
 
 __app_name__ = "AI CodeMentor"
@@ -7,6 +7,7 @@ __app_description__ = "Automatically analyse, feedback and grade " +\
     "source-code project submissions using AI agents"
 
 ## History
+# 0.2.4 - Restructured Docker containers
 # 0.2.3 - Added a simple web UI for the RESTful API
 # 0.2.2 - History is now saved in LOG directory, retrievable via RESTful API /api/log/
 # 0.2.1 - Added SSH command executor
