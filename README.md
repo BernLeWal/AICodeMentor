@@ -2,7 +2,7 @@
 
 AI Code Mentor is a **runtime environment** designed for building applications with **integrated autonomous AI agents**. These applications are defined as **workflows**, written in Markdown files (`.wf.md`), which are interpreted and executed by the Code Mentor system.
 
-The AI agents (multiple instances are supported) generate and execute commands (e.g., Bash shell commands) directly, feeding the output back to the AI for analysis and iteration. This allows AI agents to **self-improve their tasks** when necessary. Currently, OpenAI's platform is integrated, with plans to add alternative AI models in the future.
+The AI agents (multiple instances are supported) generate and execute commands (e.g., Bash shell commands) directly, feeding the output back to the AI for analysis and iteration. This allows AI agents to **self-improve their tasks** when necessary. Currently integrated are various cloud-platform tools, like OpenAI, Google Gemini, Anthropic Claude (with OpenAI's platform as default setting) and Huggingface Transformer based LLMs which can be executed self-hosted. 
 
 ## Features & Benefits
 
@@ -41,26 +41,29 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.1.6
-- Added local running AI-Agents support (Huggingface Transformers LLMs) 
-- Added **batch-processing**, e.g. to run benchmarks
-- AI-Agent configuration **parameters** support, e.g temperature, n_top, f_penalty,..
-- AI-Agent **telemetry** recording, e.g. tokens used, duration, iterations
-- added **Google Gemini** and **Anthropic Claude**  (as AI-Agents) support
+🚀Latest News in version: 0.2.4
+- **Simple web UI** to run and manage workflows and history, docs see [docker/codementor/README.md](docker/codementor/README.md)
+- Workflow history and logs can be retrieved via REST API
+- Introduced **Shellbox** - a docker container dedicated to run shell commands, connected via SSH
+- Added RESTful API (see [api/openapi.yaml](app/api/openapi.yaml) ) and server mode (--server CLI param)
 
 Version history see [app/version.py](./app/version.py)
 
 ### Comming Enhancements
+- **layered context** to better support variables and configs, e.g. change LLM-model within workflows
+- support for deployment on **k8s/Open Shift**
+- **Python** command support
+
+### Future Ideas
 - add separate statistics object for workflow runner
 - **create agent** instead of "Prompt: System"
 - Enhance AI agent feedback loops for **self-improvement**: Adapt temperature Setting: start with 0, increase on IMPROVE path
 - Workflow Validation
 - Implement command execution **whitelists/blacklists** and a reputation mechanism for security.
 - Develop a **collaboration model** for AI agents.
-
-### Future Ideas
+- Realize MCQ based on www.github.com/chaoshu1201/lo-mcq-gen , contact Shu for contrib
+- LLMs to add: Perplexity AI, SanaAI, Ms Copilot
 - Implement **PLaG** technique (see [docs/literature/PLaG.md](./docs/literature/PLaG.md)) as a sample - should fit perfectly to CodeMentor
-- Introduce a **server mode with a REST API** (eliminating volume mount dependencies).
 - CodeRunner Integration? (as docker-container)
 
 ---
@@ -90,6 +93,13 @@ Version history see [app/version.py](./app/version.py)
 - Create an .env file in the docker/ directory, based on the [docker/.env.sample](./docker/.env.sample) file.
 
 ### Running AI Code Mentor
+
+**Run Docker Image:**  
+  The most easy way is to run it out of the box using the prepared Docker Image from Docker-Hub, see [docker/README.md](docker/README.md)
+  ```sh
+  docker run --rm -e OPENAI_API_KEY=<sk-yourkeyhere> codepunx/codementor [options] <workflow-file.md> [<key=value> ...]
+  ```
+  Remarks: This will use the default settings with OpenAI Platform as AI-agent.
 
 **Linux:**
   ```sh
@@ -149,8 +159,7 @@ See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating 
 │   ├── codementor              # - CodeMentor can execute BASH (and Python) commands
 │   └── codementor-java         # - CodeMentor can execute BASH commands and has a Java21+Maven environment
 ├── docs                        # Documentation
-├── log                         # AI CodeMentor will output the application logs into that directory
-├── output                      # AI CodeMentor will output the trace-files here, for detailed investigations
+├── log                         # AI CodeMentor will output the application logs and history into that directory
 ├── test                        # Unit-Tests for the Python application
 └── workflows                   # Contains the workflow files, which AI CodeMentor will execute
 ```
@@ -158,6 +167,8 @@ See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating 
 ---
 
 ## Development
+
+see [CONTRIBUTION.md](CONTRIBUTION.md)
 
 ### Setup
 

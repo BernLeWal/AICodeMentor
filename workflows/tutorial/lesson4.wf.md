@@ -10,7 +10,7 @@ bin\run_codementor.ps1 workflows/tutorial/lesson4.wf.md
 ```
 on Linux:
 ```shell
-bin\run_codementor.ps1 workflows/tutorial/lesson4.wf.md
+bin/run_codementor.sh workflows/tutorial/lesson4.wf.md
 ```
 
 

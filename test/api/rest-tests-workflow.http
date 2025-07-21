@@ -1,0 +1,46 @@
+# initialize the token
+@SERVER_TOKEN = {{$dotenv SERVER_TOKEN}}
+
+
+###
+
+### Execute a workflow 
+GET http://localhost:5000/api/workflow/tutorial/lesson1.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+### Execute a workflow with query parameters
+GET http://localhost:5000/api/workflow/prompt-eval/prompt-eval.wf.md?USER_PROMPT=Ich%20habe%20eine%20Aufgabe%20in%20Java.%20Bitte%20helfen%20Sie%20mir%20bei%20den%20Fragen,%20die%20ich%20zur%20Übung%20stellen%20werde,%20oder%20den%20Fehlern,%20die%20mir%20dabei%20begegnen%20werden.%20Aufgabe%20ist Message-Queuing
+Authorization: Bearer {{SERVER_TOKEN}}
+
+
+###
+
+### Execute a workflow with JSON payload
+POST http://localhost:5000/api/workflow/prompt-eval/prompt-eval.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+Content-Type: application/json
+
+{ 
+  "USER_PROMPT": "You are a helpful AI assistant in the area of education to support lecturers in creating course evaluation systems."
+}
+
+
+### Execute a workflow with JSON payload
+POST http://localhost:5000/api/workflow/prompt-eval/prompt-eval.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+Content-Type: application/json
+
+{
+  "USER_PROMPT": "You are a helpful AI assistant in the area of education to support lecturers in creating course evaluation systems.\n When generating output, then it should be more formal. There should always be a very short summary of the content information at the very beginning, followed by a very long detailed answer related to the content. \nAnswers should also be more formal. Only if there is too little information should questions be asked, otherwise a solution should be found independently to the best of your knowledge. The more complex solutions should always be implemented, even if they take more time. \nYour task is to evaluate generative AI prompts which are written by students regarding the best practices for high quality generative-AI tool output.\n Put together a short list of characteristica, which can be used when evaluating the students inputs.\n If later the lecturer finds the suggested characteristica in a prompt, the lecturer wants to tag it with that name. At the end a numberic score should be calculated in an easy way, e.g. to just count the number of tags used. \nBuild for an evaluation scheme for that purpose."
+}
+
+
+###
+
+### Execute workflow with invalid JSON
+POST http://localhost:5000/api/workflow/tutorial/lesson1.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+Content-Type: application/json
+
+{ invalid_json }
+

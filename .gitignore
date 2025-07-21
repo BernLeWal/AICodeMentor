@@ -8,6 +8,10 @@ __pycache__/
 ### Project ###
 .env
 secrets/
-output/
 log/
 tmp/
+
+### Intermeidate files ###
+k8s/
+docker-compose-k8s.yml
+okd/

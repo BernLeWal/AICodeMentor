@@ -25,14 +25,8 @@ The application runs in a docker-container, so the docker-image has to be built 
 Attention: Run the following command from the **project root directory**!
 
 To build the codementor:
-```shell
-docker build -t codementor -f docker/codementor/Dockerfile .
-```
-
-To build the codementor-java:
-```shell
-docker build -t codementor-java -f docker/codementor-java/Dockerfile .
-```
+- On Linux: ```bin/build_codementor.sh```
+- On Windows: ```bin/build_codementor.ps1```
 
 ### Run the application
 

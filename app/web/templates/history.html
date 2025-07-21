@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AICodeMentor • History Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { padding-bottom: 5rem; }
+    .fa-folder       { color:#f6b73c }
+    .fa-file-alt     { color:#6c757d }
+    .list-group-item { cursor:pointer; transition:background-color .2s }
+    .list-group-item:hover { background:#f8f9fa }
+    .breadcrumb-item+.breadcrumb-item::before { content:'>' }
+  </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <span class="navbar-brand"><i class="fa-solid fa-code-branch me-2"></i>AICodeMentor – History Explorer</span>
+    <button id="refresh-btn" class="btn btn-outline-light"><i class="fa fa-arrows-rotate me-1"></i>Refresh</button>
+  </div>
+</nav>
+
+<main class="container">
+  <nav aria-label="breadcrumb">
+    <ol id="breadcrumbs" class="breadcrumb bg-white shadow-sm p-2 mb-3"></ol>
+  </nav>
+
+  <div class="row g-3 align-items-end mb-3">
+    <div class="col-md-4">
+      <div class="input-group shadow-sm">
+        <span class="input-group-text"><i class="fa fa-search"></i></span>
+        <input id="search-input" class="form-control" placeholder="Filter items…">
+      </div>
+    </div>
+  </div>
+
+  <div id="alert-box" class="alert alert-danger d-none"></div>
+
+  <ul id="file-list" class="list-group shadow-sm"></ul>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const listEl = document.getElementById('file-list');
+const alertEl= document.getElementById('alert-box');
+const searchEl=document.getElementById('search-input');
+const bcEl   = document.getElementById('breadcrumbs');
+document.getElementById('refresh-btn').addEventListener('click',()=>loadFiles(currentPath));
+searchEl.addEventListener('input', filter);
+
+let currentPath = '';
+
+function apiUrl(path){
+  return path ? `/api/log/${encodePath(path)}/` : '/api/log';
+}
+function encodePath(path){
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+function showError(msg){ alertEl.textContent=msg; alertEl.classList.remove('d-none'); }
+function clearError(){ alertEl.classList.add('d-none'); }
+
+function createRow(item){
+  const li=document.createElement('li');
+  li.className='list-group-item d-flex justify-content-between align-items-center';
+  li.dataset.type=item.type;
+  li.dataset.path=item.path;
+  li.innerHTML=`<div class="d-flex align-items-center gap-2">
+      <i class="fa ${item.type==='directory'?'fa-folder':'fa-file-alt'} fa-lg"></i>
+      <span class="item-name">${item.name}</span>
+    </div>
+    <div class="btn-group btn-group-sm" role="group">
+      <button class="btn ${item.type==='directory'?'btn-outline-primary':'btn-outline-secondary'}" data-action="open">
+        <i class="fa ${item.type==='directory'?'fa-folder-open':'fa-download'}"></i>
+      </button>
+      <button class="btn btn-outline-danger" data-action="delete"><i class="fa fa-trash"></i></button>
+    </div>`;
+  return li;
+}
+
+function render(items){
+  listEl.innerHTML='';
+  items.forEach(it=>listEl.appendChild(createRow(it)));
+}
+
+function filter(){
+  const term=searchEl.value.toLowerCase();
+  [...listEl.children].forEach(li=>{
+    li.classList.toggle('d-none', !li.querySelector('.item-name').textContent.toLowerCase().includes(term));
+  });
+}
+
+function updateBreadcrumbs(){
+  bcEl.innerHTML='';
+  const parts=currentPath?currentPath.split('/'):[];
+  const rootLi=document.createElement('li');
+  rootLi.className='breadcrumb-item';
+  rootLi.innerHTML='<a href="#">log</a>';
+  rootLi.addEventListener('click',()=>navigate(''));
+  bcEl.appendChild(rootLi);
+  let accum='';
+  parts.forEach((p,idx)=>{
+    accum+= (idx?'/':'')+p;
+    const li=document.createElement('li');
+    li.className='breadcrumb-item'+(idx===parts.length-1?' active':'');
+    if(idx===parts.length-1){ li.textContent=p; }
+    else{ li.innerHTML=`<a href="#">${p}</a>`; li.addEventListener('click',()=>navigate(accum)); }
+    bcEl.appendChild(li);
+  });
+}
+
+function navigate(path){ currentPath=path; loadFiles(path); }
+
+listEl.addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  const li=e.target.closest('li');
+  if(!li) return;
+  const type=li.dataset.type;
+  const path=li.dataset.path;
+
+  const action = btn ? btn.dataset.action : 'open';
+  if(action==='open'){  
+    if(type==='directory'){
+      navigate(path);
+    }else{ // file
+      window.location.href=`/api/log/${encodePath(path)}`;
+    }
+  }else if(action==='delete'){
+    const msg=`Delete ${type} \"${path}\"? This cannot be undone.`;
+    if(!confirm(msg)) return;
+    deleteItem(type,path);
+  }    
+});
+
+async function deleteItem(type,path){
+  clearError();
+  const endpoint=`/api/log/${encodePath(path)}${type==='directory'?'/':''}`;
+  try{
+    const resp=await fetch(endpoint,{method:'DELETE'});
+    if(!resp.ok) throw new Error('Delete failed: HTTP '+resp.status);
+    loadFiles(currentPath);
+  }catch(err){ showError(err.message); }
+}
+
+async function loadFiles(path=''){
+  clearError();
+  try{
+    const resp=await fetch(apiUrl(path));
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    data.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+    render(data);
+    filter();
+    updateBreadcrumbs();
+  }catch(err){ showError(err.message); }
+}
+
+// initial load
+loadFiles();
+</script>
+</body>
+</html>

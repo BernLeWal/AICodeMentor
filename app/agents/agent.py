@@ -55,7 +55,7 @@ class AIAgent:
 
     def __del__(self):
         """Destructor calls cleanup to ensure resource release"""
-        logger.info("Destructor called for AIAgentTransformers")
+        logger.info("Destructor called for AIAgent")
         try:
             self.cleanup()
         except Exception as e:

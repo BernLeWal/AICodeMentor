@@ -32,14 +32,14 @@ class ShellCommandExecutor(CommandExecutor):
     """
 
     SHELL = os.getenv('SHELL', '/bin/bash')
-    if os.getenv('SHELL_COMMAND_TIMEOUT', None) is None:
-        SHELL_COMMAND_TIMEOUT = 600
+    if os.getenv('COMMAND_TIMEOUT', None) is None:
+        COMMAND_TIMEOUT = 600
     else:
-        SHELL_COMMAND_TIMEOUT = int(os.getenv('SHELL_COMMAND_TIMEOUT', "600"))
-    if os.getenv('SHELL_INACTIVITY_TIMEOUT', None) is None:
-        SHELL_INACTIVITY_TIMEOUT = 120
+        COMMAND_TIMEOUT = int(os.getenv('COMMAND_TIMEOUT', "600"))
+    if os.getenv('COMMAND_INACTIVITY_TIMEOUT', None) is None:
+        COMMAND_INACTIVITY_TIMEOUT = 120
     else:
-        SHELL_INACTIVITY_TIMEOUT = int(os.getenv('SHELL_INACTIVITY_TIMEOUT', "120"))
+        COMMAND_INACTIVITY_TIMEOUT = int(os.getenv('COMMAND_INACTIVITY_TIMEOUT', "120"))
 
 
     def __init__(self):
@@ -129,8 +129,8 @@ class ShellCommandExecutor(CommandExecutor):
         Read combined stdout and stderr output.
         """
         if timeout is None:
-            command_timeout = self.SHELL_COMMAND_TIMEOUT
-            inactivity_timeout = self.SHELL_INACTIVITY_TIMEOUT
+            command_timeout = self.COMMAND_TIMEOUT
+            inactivity_timeout = self.COMMAND_INACTIVITY_TIMEOUT
         else:
             command_timeout = timeout
             inactivity_timeout = timeout

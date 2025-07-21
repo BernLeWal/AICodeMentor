@@ -55,7 +55,7 @@ class WorkflowRunner:
         ## run the workflow
         self.context = Context(main_workflow,
                                AIAgentFactory.create_agent(config),
-                               ShellCommandExecutor())
+                               None)
         results = main_interpreter.run(self.context)
         self.duration_sec = (datetime.datetime.now() - self.start_time).total_seconds()
         return results
@@ -73,7 +73,7 @@ class WorkflowRunner:
         :param workflow_file: Path to the workflow file in Markdown format
         :return: Path to the CSV file
         """
-        directory = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+        directory = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
         if not os.path.exists(directory):
             os.makedirs(directory)
         directory = os.path.abspath(directory)

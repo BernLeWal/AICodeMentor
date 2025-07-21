@@ -4,6 +4,7 @@ UnitTests for ActivityInterpreter
 """
 
 import unittest
+import os
 from app.agents.prompt import Prompt
 from app.workflow.activity import Activity
 from app.workflow.workflow import Workflow
@@ -38,6 +39,24 @@ class TestActivityInterpreter(unittest.TestCase):
         activity.accept(interpreter)
 
         self.assertEqual(context.get_value("foo"), "bar")
+
+
+    def test_set_to_file(self):
+        """Test SET activity with link to file"""
+        context = Context( Workflow("Test Workflow") )
+        context.workflow.directory = "."
+        interpreter = ActivityInterpreter(context)
+
+        activity = Activity(Activity.Kind.SET, "SET", "file:foo.txt='bar'")
+        activity.accept(interpreter)
+
+        # Check if the file was created
+        with open("foo.txt", "r") as f:
+            content = f.read().strip()
+        # delete file after test
+        os.remove("foo.txt")
+        self.assertEqual(content, "bar")
+
 
 
     def test_check_status(self):

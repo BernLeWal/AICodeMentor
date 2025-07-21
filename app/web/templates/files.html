@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AICodeMentor • File Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- GitHub‑like Markdown style -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+  <style>
+    body { padding-bottom: 6rem; }
+    .fa-folder       { color:#f6b73c }
+    .fa-file-alt     { color:#6c757d }
+    .list-group-item { cursor:pointer; transition:background-color .2s }
+    .list-group-item:hover { background:#f8f9fa }
+    .breadcrumb-item+.breadcrumb-item::before { content:'>' }
+    /* limit modal height */
+    .modal-body{ max-height:70vh; overflow:auto; }
+  </style>
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark mb-4">
+  <div class="container-fluid">
+    <span class="navbar-brand"><i class="fa-solid fa-code-branch me-2"></i>AICodeMentor – File Explorer</span>
+    <button id="refresh-btn" class="btn btn-outline-light"><i class="fa fa-arrows-rotate me-1"></i>Refresh</button>
+  </div>
+</nav>
+
+<main class="container">
+  <nav aria-label="breadcrumb">
+    <ol id="breadcrumbs" class="breadcrumb bg-white shadow-sm p-2 mb-3"></ol>
+  </nav>
+
+  <div class="row g-3 align-items-end mb-3">
+    <!-- Search -->
+    <div class="col-md-4">
+      <div class="input-group shadow-sm">
+        <span class="input-group-text"><i class="fa fa-search"></i></span>
+        <input id="search-input" class="form-control" placeholder="Filter items…">
+      </div>
+    </div>
+    <!-- Create directory -->
+    <div class="col-md-3 col-sm-6">
+      <div class="input-group shadow-sm">
+        <input id="newdir-input" class="form-control" placeholder="New directory name">
+        <button id="create-dir-btn" class="btn btn-outline-success"><i class="fa fa-folder-plus"></i> Create</button>
+      </div>
+    </div>
+    <!-- Upload file -->
+    <div class="col-md-5 col-sm-6 text-md-end">
+      <div class="input-group shadow-sm">
+        <input id="file-input" type="file" class="form-control">
+        <button id="upload-btn" class="btn btn-outline-primary"><i class="fa fa-upload"></i> Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="alert-box" class="alert alert-danger d-none"></div>
+  <div id="msg-box" class="alert alert-info d-none"></div>
+
+  <ul id="file-list" class="list-group shadow-sm"></ul>
+</main>
+
+<!-- Modal for workflow result -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Workflow Result</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <article id="resultContent" class="markdown-body"></article>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- marked.js for Markdown rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
+<script>
+const listEl = document.getElementById('file-list');
+const alertEl= document.getElementById('alert-box');
+const msgEl  = document.getElementById('msg-box');
+const searchEl=document.getElementById('search-input');
+const bcEl   = document.getElementById('breadcrumbs');
+const newDirInput=document.getElementById('newdir-input');
+const createBtn=document.getElementById('create-dir-btn');
+const fileInput=document.getElementById('file-input');
+const uploadBtn=document.getElementById('upload-btn');
+const resultModalEl=document.getElementById('resultModal');
+const resultModal = new bootstrap.Modal(resultModalEl);
+const resultContent=document.getElementById('resultContent');
+
+document.getElementById('refresh-btn').addEventListener('click',()=>loadFiles(currentPath));
+searchEl.addEventListener('input', filter);
+createBtn.addEventListener('click', createDirectory);
+uploadBtn.addEventListener('click', uploadFile);
+
+let currentPath = '';
+
+function apiUrl(path){
+  return path ? `/api/files/${encodePath(path)}/` : '/api/files';
+}
+function encodePath(path){
+  return path.split('/').map(encodeURIComponent).join('/');
+}
+function showError(msg){ alertEl.textContent=msg; alertEl.classList.remove('d-none'); }
+function clearError(){ alertEl.classList.add('d-none'); }
+function showMsg(msg,cls='info'){ msgEl.textContent=msg; msgEl.className=`alert alert-${cls}`; msgEl.classList.remove('d-none'); }
+function clearMsg(){ msgEl.classList.add('d-none'); }
+
+function createRow(item){
+  const li=document.createElement('li');
+  li.className='list-group-item d-flex justify-content-between align-items-center';
+  li.dataset.type=item.type;
+  li.dataset.path=item.path;
+  let buttons=`<button class="btn btn-outline-primary btn-sm" data-action="open"><i class="fa fa-folder-open"></i></button>`;
+  if(item.type==='file'){
+    buttons=`
+      <button class="btn btn-outline-secondary btn-sm" data-action="download"><i class="fa fa-download"></i></button>
+      <button class="btn btn-outline-success btn-sm" data-action="run"><i class="fa fa-play"></i></button>
+    `;
+  }
+  buttons+=` <button class="btn btn-outline-danger btn-sm" data-action="delete"><i class="fa fa-trash"></i></button>`;
+
+  li.innerHTML=`<div class="d-flex align-items-center gap-2">
+      <i class="fa ${item.type==='directory'?'fa-folder':'fa-file-alt'} fa-lg"></i>
+      <span class="item-name">${item.name}</span>
+    </div>
+    <div class="btn-group" role="group">${buttons}</div>`;
+  return li;
+}
+
+function render(items){
+  listEl.innerHTML='';
+  items.forEach(it=>listEl.appendChild(createRow(it)));
+}
+
+function filter(){
+  const term=searchEl.value.toLowerCase();
+  [...listEl.children].forEach(li=>{
+    li.classList.toggle('d-none', !li.querySelector('.item-name').textContent.toLowerCase().includes(term));
+  });
+}
+
+function updateBreadcrumbs(){
+  bcEl.innerHTML='';
+  const parts=currentPath?currentPath.split('/'):[];
+  const rootLi=document.createElement('li');
+  rootLi.className='breadcrumb-item';
+  rootLi.innerHTML='<a href="#">workflows</a>';
+  rootLi.addEventListener('click',()=>navigate(''));
+  bcEl.appendChild(rootLi);
+  let accum='';
+  parts.forEach((p,idx)=>{
+    accum+= (idx?'/':'')+p;
+    const li=document.createElement('li');
+    li.className='breadcrumb-item'+(idx===parts.length-1?' active':'');
+    if(idx===parts.length-1){ li.textContent=p; }
+    else{ li.innerHTML=`<a href="#">${p}</a>`; li.addEventListener('click',()=>navigate(accum)); }
+    bcEl.appendChild(li);
+  });
+}
+
+function navigate(path){ currentPath=path; loadFiles(path); }
+
+listEl.addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  const li=e.target.closest('li');
+  if(!li) return;
+  const type=li.dataset.type;
+  const path=li.dataset.path;
+  const action = btn ? btn.dataset.action : 'open';
+
+  switch(action){
+    case 'open':
+      if(type==='directory') navigate(path);
+      break;
+    case 'download':
+      window.location.href=`/api/files/${encodePath(path)}`;
+      break;
+    case 'run':
+      runWorkflow(path);
+      break;
+    case 'delete':
+      deleteWithPrompt(type,path);
+      break;
+  }
+});
+
+function deleteWithPrompt(type,path){
+  const msg=`Delete ${type} \"${path}\"? This cannot be undone.`;
+  if(!confirm(msg)) return;
+  deleteItem(type,path);
+}
+
+async function deleteItem(type,path){
+  clearError(); clearMsg();
+  const endpoint=`/api/files/${encodePath(path)}${type==='directory'?'/':''}`;
+  try{
+    const resp=await fetch(endpoint,{method:'DELETE'});
+    if(!resp.ok) throw new Error('Delete failed: HTTP '+resp.status);
+    loadFiles(currentPath);
+  }catch(err){ showError(err.message); }
+}
+
+async function runWorkflow(path){
+  clearError(); clearMsg();
+  const ok=confirm(`Run workflow \"${path}\"?\nThis may take a long time and you should not interrupt the processing by refreshing the browser.`);
+  if(!ok) return;
+  showMsg('Running workflow – please wait …','info');
+  try{
+    const resp=await fetch(`/api/workflow/${encodePath(path)}`);
+    if(!resp.ok) throw new Error('Run failed: HTTP '+resp.status+ '\n' + await resp.text());
+    const data=await resp.text();
+
+    // display result in modal (render markdown)
+    const markdown=marked.parse(data || '');
+    resultContent.innerHTML=markdown || `<pre>${data}</pre>`;
+    clearMsg();
+    resultModal.show();
+  }catch(err){ showError(err.message); clearMsg(); }
+}
+
+async function createDirectory(){
+  clearError(); clearMsg();
+  const name=newDirInput.value.trim();
+  if(!name){ showError('Directory name required'); return; }
+  const target=currentPath?currentPath+'/'+name:name;
+  try{
+    const resp=await fetch(`/api/files/${encodePath(target)}/`,{method:'POST'});
+    if(!resp.ok) throw new Error('Create failed: HTTP '+resp.status);
+    newDirInput.value='';
+    loadFiles(currentPath);
+  }catch(err){ showError(err.message); }
+}
+
+async function uploadFile(){
+  clearError();
+  const file=fileInput.files[0];
+  if(!file){ showError('Please choose a file first'); return; }
+  const targetPath=currentPath?currentPath+'/'+file.name:file.name;
+  try{
+    const resp=await fetch(`/api/files/${encodePath(targetPath)}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/octet-stream'},
+      body:file
+    });
+    if(!resp.ok) throw new Error('Upload failed: HTTP '+resp.status);
+    fileInput.value='';
+    loadFiles(currentPath);
+  }catch(err){ showError(err.message); }
+}
+
+async function loadFiles(path=''){
+  clearError();
+  try{
+    const resp=await fetch(apiUrl(path));
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    data.sort((a, b) => a.name.localeCompare(b.name, undefined, {sensitivity: 'base'}));
+    render(data);
+    filter();
+    updateBreadcrumbs();
+  }catch(err){ showError(err.message); }
+}
+
+// initial load
+loadFiles();
+</script>
+</body>
+</html>

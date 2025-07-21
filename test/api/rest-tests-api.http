@@ -1,0 +1,14 @@
+### Health Check
+GET http://localhost:5000/health
+
+
+### Retrieve the OpenAPI specification
+GET http://localhost:5000/openapi.yaml
+
+
+### Open the Swagger UI
+GET http://localhost:5000/docs
+
+
+### Login
+GET http://localhost:5000/auth?token=<SERVER_TOKEN>

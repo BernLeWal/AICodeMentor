@@ -50,7 +50,8 @@ class AIAgentOpenAIGpt(AIAgent):
         logger.debug("Ask AIAgentOpenAI: %s", prompt)
         if len(prompt) > self.max_prompt_length:
             prompt = trunc_middle(prompt, self.max_prompt_length)
-            logger.warning("Prompt is too long, so truncated in the middle:\n%s", prompt)
+            logger.warning("Prompt is longer than %d (AI_MAX_PROMPT_LENGTH), so truncated in the middle:\n%s",
+                           self.max_prompt_length, prompt)
         super().ask(prompt)
 
         messages = [msg.to_dict() for msg in self.messages]

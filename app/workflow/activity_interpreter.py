@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from app.util.string_utils import escape_linefeed, trunc_right, trunc_middle
 from app.agents.agent_factory import AIAgentFactory
 from app.agents.prompt import Prompt
+from app.commands.executor_factory import ExecutorFactory
 from app.commands.command import Command
 from app.commands.parser import Parser
 from app.workflow.activity import Activity, ActivityVisitor
@@ -212,13 +213,7 @@ class ActivityInterpreter(ActivityVisitor):
 
         command = activity.expression
         if self.context.command_executor is None:
-            logger.error("CommandExecutor is not set")
-            self.context.status = Workflow.Status.FAILED
-            self.context.result("FAILED  \nCommandExecutor is not set!")
-            self._save_history(activity, f"{Activity.Kind.EXECUTE.value}: {command}",
-                self.context.status, self.context.result)
-            self.activity_succeeded = False
-            return
+            self.context.command_executor = ExecutorFactory.create_executor()
 
         if command is not None and len(command) > 0:
             command = self._render_content(command)

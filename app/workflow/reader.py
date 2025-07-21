@@ -77,38 +77,47 @@ class WorkflowReader:
         line = ''
         while line is not None:
             line_strip = line.strip()
-            if line_strip.startswith('# '):
-                section = WorkflowReader._check_section(line_strip)
-                if section == WorkflowMdSection.NONE:
-                    self.workflow.name = line.replace('# ', '').strip()
-            elif section == WorkflowMdSection.NONE:
-                if len(line_strip)>0 and line_strip != '\n':
-                    self.workflow.description += line
-            elif section == WorkflowMdSection.WORKFLOW:
-                line = self._parse_section_workflow(line, content_iter)
-                continue
-            elif section == WorkflowMdSection.PROMPTS:
-                line = self._parse_section_prompts(line, content_iter)
-                continue
-
-            # fetch next line
             try:
-                line = next(content_iter)
-            except StopIteration:
-                break
+                if line_strip.startswith('# '):
+                    section = WorkflowReader._check_section(line_strip)
+                    if section == WorkflowMdSection.NONE:
+                        self.workflow.name = line.replace('# ', '').strip()
+                elif section == WorkflowMdSection.NONE:
+                    if len(line_strip)>0 and line_strip != '\n':
+                        self.workflow.description += line
+                elif section == WorkflowMdSection.WORKFLOW:
+                    line = self._parse_section_workflow(line, content_iter)
+                    continue
+                elif section == WorkflowMdSection.PROMPTS:
+                    line = self._parse_section_prompts(line, content_iter)
+                    continue
+
+                # fetch next line
+                try:
+                    line = next(content_iter)
+                except StopIteration:
+                    break
+            except Exception as e:
+                logger.error("Error while parsing workflow file '%s'm line '%s': %s",
+                             self.workflow.filepath, line_strip, str(e))
+                raise e
 
         # after the loop: set the start, on_success, and on_failed activities
-        if self.workflow.start is None:
-            self.workflow.start = self.workflow.activities[Activity.Kind.START.name]
-        if self.workflow.on_failed is None:
-            on_failed_name = f"{Activity.Kind.ON.name}_{Activity.Kind.FAILED.name}"
-            if on_failed_name in self.workflow.activities:
-                self.workflow.on_failed = self.workflow.activities[on_failed_name]
-        if self.workflow.on_success is None:
-            on_success_name = f"{Activity.Kind.ON.name}_{Activity.Kind.START.name}"
-            if on_success_name in self.workflow.activities:
-                self.workflow.on_success = self.workflow.activities[on_success_name]
-
+        try:
+            if self.workflow.start is None:
+                self.workflow.start = self.workflow.activities[Activity.Kind.START.name]
+            if self.workflow.on_failed is None:
+                on_failed_name = f"{Activity.Kind.ON.name}_{Activity.Kind.FAILED.name}"
+                if on_failed_name in self.workflow.activities:
+                    self.workflow.on_failed = self.workflow.activities[on_failed_name]
+            if self.workflow.on_success is None:
+                on_success_name = f"{Activity.Kind.ON.name}_{Activity.Kind.START.name}"
+                if on_success_name in self.workflow.activities:
+                    self.workflow.on_success = self.workflow.activities[on_success_name]
+        except Exception as e:
+            logger.error("Error while parsing workflow file '%s': %s",
+                         self.workflow.filepath, str(e))
+            raise e
 
     @staticmethod
     def _check_section(line_strip : str) -> WorkflowMdSection:
@@ -125,18 +134,23 @@ class WorkflowReader:
 
         while True:
             line_strip = line.strip()
-            if line_strip.startswith('# '): # next section --> end of workflow section
-                return line_strip
+            try:
+                if line_strip.startswith('# '): # next section --> end of workflow section
+                    return line_strip
 
-            if line_strip.startswith('```mermaid'):
-                in_mermaid = True
-            elif in_mermaid and line_strip.startswith('flowchart'):
-                in_flowchart = True
-            elif line_strip.startswith('```'):
-                in_mermaid = False
-                in_flowchart = False
-            elif len(line_strip) > 0 and in_mermaid and in_flowchart:
-                self._parse_flowchart_line(line_strip)
+                if line_strip.startswith('```mermaid'):
+                    in_mermaid = True
+                elif in_mermaid and line_strip.startswith('flowchart'):
+                    in_flowchart = True
+                elif line_strip.startswith('```'):
+                    in_mermaid = False
+                    in_flowchart = False
+                elif len(line_strip) > 0 and in_mermaid and in_flowchart:
+                    self._parse_flowchart_line(line_strip)
+            except Exception as e:
+                logger.error("Error while parsing workflow file '%s', line '%s': %s",
+                             self.workflow.filepath, line_strip, str(e))
+                raise e
 
             # fetch next
             try:
@@ -152,30 +166,35 @@ class WorkflowReader:
 
         while True:
             line_strip = line.strip()
-            if line_strip.startswith('# '): # next section --> end of workflow section
-                return line_strip
+            try:
+                if line_strip.startswith('# '): # next section --> end of workflow section
+                    return line_strip
 
-            if line_strip.startswith('## User'):
-                if len(current_content) > 0:
-                    self.workflow.prompts[current_key] = Prompt(current_role, current_content)
-                    current_content = ''
-                current_role = Prompt.USER
-                current_key = line_strip.replace('## ', '').strip()
-            elif line_strip.startswith('## Assistant'):
-                if len(current_content) > 0:
-                    self.workflow.prompts[current_key] = Prompt(current_role, current_content)
-                    current_content = ''
-                current_role = Prompt.ASSISTANT
-                current_key = line_strip.replace('## ', '').strip()
-            elif line_strip.startswith('## System'):
-                if len(current_content) > 0:
-                    self.workflow.prompts[current_key] = Prompt(current_role, current_content)
-                    current_content = ''
-                current_role = Prompt.SYSTEM
-                current_key = line_strip.replace('## ', '').strip()
-            else:
-                if current_role is not None:
-                    current_content += line
+                if line_strip.startswith('## User'):
+                    if len(current_content) > 0:
+                        self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                        current_content = ''
+                    current_role = Prompt.USER
+                    current_key = line_strip.replace('## ', '').strip()
+                elif line_strip.startswith('## Assistant'):
+                    if len(current_content) > 0:
+                        self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                        current_content = ''
+                    current_role = Prompt.ASSISTANT
+                    current_key = line_strip.replace('## ', '').strip()
+                elif line_strip.startswith('## System'):
+                    if len(current_content) > 0:
+                        self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                        current_content = ''
+                    current_role = Prompt.SYSTEM
+                    current_key = line_strip.replace('## ', '').strip()
+                else:
+                    if current_role is not None:
+                        current_content += line
+            except Exception as e:
+                logger.error("Error while parsing workflow file '%s', line '%s': %s",
+                             self.workflow.filepath, line_strip, str(e))
+                raise e
 
             # fetch next
             try:
@@ -185,7 +204,11 @@ class WorkflowReader:
 
         if len(current_content) > 0:
             if current_key is not None:
-                self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                try:
+                    self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                except Exception as e:
+                    logger.error("Error while adding prompt '%s': %s",
+                                 current_key, str(e))
         return None
 
 
@@ -196,17 +219,20 @@ class WorkflowReader:
 
         # Check if line contains a flow definition (activity -> activity)
         pos = line.find('-->')
-        if pos > 0:
-            left = line[:pos].strip()
-            self._parse_activity(left)
-            right = line[pos+3:].strip()
-            self._parse_activity(right)
+        try:
+            if pos > 0:
+                left = line[:pos].strip()
+                self._parse_activity(left)
+                right = line[pos+3:].strip()
+                self._parse_activity(right)
 
-            self._parse_flow(line, left, right)
-        else:
-            # Parse the activity
-            self._parse_activity(line)
-
+                self._parse_flow(line, left, right)
+            else:
+                # Parse the activity
+                self._parse_activity(line)
+        except Exception as e:
+            logger.error("Error while parsing flowchart line '%s': %s", line, str(e))
+            raise e
 
     def _parse_flow(self, line: str, left: str, right: str) -> None:
         attr = ''
@@ -260,7 +286,7 @@ class WorkflowReader:
             activity_name = line
         if activity_expr.startswith('{') and not activity_name.startswith('PARAMS'):
             activity_expr = ''  # ignore mermaid visualisation defs
-        if activity_expr.find(':') > 0:
+        if activity_expr.find(':') > 0 and not activity_expr.startswith('file:'):
             # ignore mermaid visualisation prefix
             activity_expr = activity_expr[activity_expr.find(':')+1:].strip()
         logger.debug("Activity-Parsed: '%s' => name=%s, expr=%s",

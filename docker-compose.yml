@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   codementor:
     build:
@@ -6,28 +5,54 @@ services:
       context: .
     image: codementor
     container_name: codementor
-    environment:
-      # Load environment variables from the local .env file
-      - ENV_FILE=.env
+    env_file:
+      - docker/.env
+    environment:      
+      - AI_MODEL_NAME=gpt-4o-mini
+      #- AI_MAX_OUTPUT_TOKENS=1024
+      #- AI_MAX_PROMPT_LENGTH=2000
+      - SHELLBOX_HOST=shellbox
+      - SHELLBOX_PORT=22
+      - SHELLBOX_USER=mentor
+      - COMMAND_TIMEOUT=120
+      - COMMAND_INACTIVITY_TIMEOUT=60
+      #- LOGLEVEL=INFO
+      - LOGFORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+    ports:
+      - "5000:5000"
+    entrypoint: ["python", "app/main.py", "--server"]
+    restart: unless-stopped
+    networks:
+      - codementor-network
     volumes:
-      - ./workflows:/home/mentor/workflows
-      - ./output:/home/mentor/output
-      - ./log:/home/mentor/log
-    entrypoint: ["python", "main.py"]
-    restart: never
+      - codementor-data:/home/mentor/workflows
+      - codementor-log:/var/log/mentor
 
-  codementor-java:
+
+  shellbox:
     build:
-      dockerfile: docker/codementor-java/Dockerfile
+      dockerfile: docker/shellbox-java/Dockerfile # or docker/shellbox/Dockerfile
       context: .
-    image: codementor-java
-    container_name: codementor
-    environment:
-      # Load environment variables from the local .env file
-      - ENV_FILE=.env
+    image: shellbox-java                          # or shellbox
+    container_name: shellbox
+    ports:
+      - "2222:22"
+    restart: unless-stopped
+    networks:
+      - codementor-network
     volumes:
-      - ./workflows:/home/mentor/workflows
-      - ./output:/home/mentor/output
-      - ./log:/home/mentor/log
-    entrypoint: ["python", "main.py"]
-    restart: never
+      - shellbox-data:/home/mentor      
+
+
+networks:
+  codementor-network:
+    driver: bridge
+
+
+volumes:
+  codementor-data:
+    driver: local
+  codementor-log:
+    driver: local
+  shellbox-data:
+    driver: local

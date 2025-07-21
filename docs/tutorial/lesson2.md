@@ -93,7 +93,7 @@ Python 3.12.8
 
 ## Tracing and Debugging the Workflow
 
-Each time AI CodeMentor executes a workflow, it records traces for every activity and its respective result in a **workflow history file** (`.wfh.md`). This file is stored in the [output/<timestamp>/](output/) directory.
+Each time AI CodeMentor executes a workflow, it records traces for every activity and its respective result in a **workflow history file** (`.wfh.md`). This file is stored in the [log/<timestamp>/](log/) directory.
 
 The format of `.wfh.md` is similar to `.wf.md`, but it includes an additional `# History` section where the status and results of all activities are logged.
 

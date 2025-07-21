@@ -13,7 +13,7 @@ class TestWorkflowWriter(unittest.TestCase):
     """UnitTests for WorkflowWriter"""
 
     MAIN_FILENAME = "sample-project-eval.wf.md"
-    OUTPUT_DIR = os.path.abspath(WorkflowWriter.OUTPUT_DIR)
+    LOGFILES_DIR = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
 
     def test_save_definition(self):
         """Test WorkflowWriter save_definition method"""
@@ -22,10 +22,10 @@ class TestWorkflowWriter(unittest.TestCase):
         main_writer = WorkflowWriter(main_workflow)
         main_writer.save_definition(
             filepath = os.path.basename(self.MAIN_FILENAME),
-            directory = self.OUTPUT_DIR
+            directory = self.LOGFILES_DIR
         )
 
-        abspath = os.path.join(self.OUTPUT_DIR, self.MAIN_FILENAME)
+        abspath = os.path.join(self.LOGFILES_DIR, self.MAIN_FILENAME)
         self.assertTrue( os.path.exists(abspath) )
         os.remove(abspath)
 
@@ -36,13 +36,13 @@ class TestWorkflowWriter(unittest.TestCase):
         main_writer = WorkflowWriter(main_workflow)
         main_writer.save_history(
             filepath = os.path.basename(self.MAIN_FILENAME).replace(".wf.md", ".wfh.md"),
-            directory = self.OUTPUT_DIR,
+            directory = self.LOGFILES_DIR,
             current_activity=main_workflow.start,
             context=None,
-            history=History(self.OUTPUT_DIR)
+            history=History(self.LOGFILES_DIR)
         )
 
-        abspath = os.path.join(self.OUTPUT_DIR, self.MAIN_FILENAME).replace(".wf.md", ".wfh.md")
+        abspath = os.path.join(self.LOGFILES_DIR, self.MAIN_FILENAME).replace(".wf.md", ".wfh.md")
         self.assertTrue( os.path.exists(abspath) )
         os.remove(abspath)
 
