@@ -106,6 +106,7 @@ The following models have been tried successfully:
 - "codellama/CodeLlama-13b-hf" (13B; see https://huggingface.co/codellama/CodeLlama-13b-hf)
 - "Qwen/Qwen2.5-Coder-7B-Instruct" (7B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct)
 - "Qwen/Qwen2.5-Coder-14B-Instruct" (14B, 128kT context; see https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct)
+- "Qwen/Qwen2.5-Coder-3B-Instruct"
 - "microsoft/Phi-4-mini-instruct" (4B, 128kT context; see https://huggingface.co/microsoft/Phi-4-mini-instruct)
 - "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B" (8B, reasoning-model; see https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B)
 - "deepseek-ai/deepseek-coder-7b-instruct-v1.5" (7B; see https://huggingface.co/deepseek-ai/deepseek-coder-7b-instruct-v1.5)
@@ -114,6 +115,9 @@ The following models have been tested, but don't match to the used chat template
 - "bigcode/starcoder2-7b" (7B; see https://huggingface.co/bigcode/starcoder2-7b)
 - "bigcode/starcoder2-3b" (3B; see https://huggingface.co/bigcode/starcoder2-3b)
 
+## TODO: Mistral
+
+https://huggingface.co/mistralai/Ministral-8B-Instruct-2410
 
 ### Links
 - Huggingface official website: https://huggingface.co/
