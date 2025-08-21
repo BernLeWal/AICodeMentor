@@ -2,20 +2,6 @@
 
 Used for benachmarking different AIAgents and Models.
 
-Try it out! From the project directory run:
-
-on Windows:
-```shell
-bin\build_codementor.ps1
-bin\run_codementor.ps1 workflows/benchmarks/summarize-sourcefile.wf.md
-```
-on Linux:
-```shell
-bin\build_codementor.ps1
-bin\run_codementor.ps1 workflows/benchmarks/summarize-sourcefile.wf.md
-```
-
-
 # Workflow
 
 ```mermaid

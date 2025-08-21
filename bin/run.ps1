@@ -1,1 +1,0 @@
-run_codementor-java.ps1

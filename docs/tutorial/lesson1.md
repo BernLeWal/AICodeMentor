@@ -35,17 +35,13 @@ The file consists of the following sections:
 
 ### Running the Sample
 
-You can now execute the workflow using the following commands:
+You can now execute the workflow using the AI-CodeMentor Web Frontend:
 
-#### Windows
-```shell
-bin\run_codementor.ps1 workflows/tutorial/lesson1.wf.md
-```
-
-#### Linux
-```shell
-bin/run_codementor.sh workflows/tutorial/lesson1.wf.md
-```
+- Ensure, that it is started, see [docker/codementor/README.md](../../docker/codementor/README.md)
+- **Login** into the AI-Codementor: http://localhost:5000/auth?token=<SERVER_TOKEN>
+- Use the **Workfile Explorer**: http://localhost:5000/files
+- Navigate to 'tutorial' subdirectory, 
+- click on [Play]-button right beside `lesson1.wf.md`
 
 #### Expected Output
 The system will process the workflow and return an AI-generated response. Example output:

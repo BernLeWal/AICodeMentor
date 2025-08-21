@@ -2,20 +2,6 @@
 
 AI CodeMentor Tutorial: Write your own Workflow - [Lesson 1](../../docs/tutorial/lesson1.md)
 
-Try it out! From the project directory run:
-
-on Windows:
-```shell
-bin\build_codementor.ps1
-bin\run_codementor.ps1 workflows/tutorial/lesson1.wf.md
-```
-on Linux:
-```shell
-bin/build_codementor.sh
-bin/run_codementor.sh workflows/tutorial/lesson1.wf.md
-```
-
-
 # Workflow
 
 ```mermaid

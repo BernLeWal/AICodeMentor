@@ -97,19 +97,23 @@ Version history see [app/version.py](./app/version.py)
 **Run Docker Image:**  
   The most easy way is to run it out of the box using the prepared Docker Image from Docker-Hub, see [docker/README.md](docker/README.md)
   ```sh
-  docker run --rm -e OPENAI_API_KEY=<sk-yourkeyhere> codepunx/codementor [options] <workflow-file.md> [<key=value> ...]
+  docker run --rm -e OPENAI_API_KEY=<sk-yourkeyhere> codepunx/codementor [options]
   ```
-  Remarks: This will use the default settings with OpenAI Platform as AI-agent.
-
-**Linux:**
+  or use the prepared docker-compose:
   ```sh
-  bin/run_codementor.sh [options] <workflow-file.md> [<key=value> ...]
+  docker compose up -d
   ```
-**Windows:**
-  ```powershell
-  bin\run_codementor.ps1 [options] <workflow-file.md> [<key=value> ...]
-  ```
-For more details, see [bin/README.md](bin/README.md).
+
+  Remarks: This will use the default settings with OpenAI Platform as AI-agent and run AICodeMentor as Server (http://localhost:5000)
+  - SwaggerUI: http://localhost:5000/docs
+
+  You may use the browser as REST-Client:
+  - Login before using the API (once per browser session): http://localhost:5000/auth?token=<SERVER_TOKEN>
+  - The SERVER_TOKEN is defined in your .env file On success a Secure, HttpOnly, SameSite=Strict cookie named auth_token is returned so that subsequent requests through the browser will be authenticated.
+  - Workfile Explorer: http://localhost:5000/files  
+    Select one of the .wf.md files and click on play to test the examples.
+  - History Explorer: http://localhost:5000/history
+
 
 ### Command-Line Options:
 | Option | Description |
@@ -117,24 +121,12 @@ For more details, see [bin/README.md](bin/README.md).
 |-h, --help | Show help message |
 |-v, --version | Display version info |
 |--verbose | Show log output in console |
+|--server | Run the REST server (default in docker) |
 
 ### Arguments:
 - ```<workflow-file.md>```: Markdown file defining the workflow (e.g., [workflows/check-toolchain.wf.md](workflows/check-toolchain.wf.md)).
 - ```[<key=value> ...]```: Optional key-value parameters passed to the workflow.
 
-### Example Execution
-Run the check-toolchain workflow with a specific REPO_URL:
-
-**Linux:**
-  ```sh
-  bin/run_codementor-java.sh workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
-  ```
-
-**Windows:**
-  ```powershell
-  PS > bin\run_codementor-java.ps1 workflows/check-toolchain.wf.md REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git
-  ```
-⚠️ **Note**: Path parameters must use forward slashes (```/```) since the application runs in a Linux-based environment.
 
 ### Logging
 - The console (```stdout```/```stderr```) is reserved for CLI output.
@@ -154,7 +146,6 @@ See the [docs/tutorial](./docs/tutorial/README.md) to get started with creating 
 .
 ├── app                         # The CodeMentor sources (Python)
 ├── artwork                     # Logos, etc.
-├── bin                         # Scripts to run (and build) the CodeMentor
 ├── docker                      # Docker-Environment in which the CodeMentor will run
 │   ├── codementor              # - CodeMentor can execute BASH (and Python) commands
 │   └── codementor-java         # - CodeMentor can execute BASH commands and has a Java21+Maven environment
