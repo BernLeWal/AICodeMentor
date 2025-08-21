@@ -167,3 +167,14 @@ Remarks: For OKD of FHTW
     ```shell
     oc delete -k okd
     ```
+
+### 7. Troubleshooting
+
+* PersistentVolumeClaims not found after re-deploy:
+    Sometimes it happens, that when re-deploying a new version that the persistent-volume-claims are not generated. In that case to it manually:
+
+    ```sh
+    oc apply -f okd/codementor-data-persistentvolumeclaim.yaml 
+    oc apply -f okd/codementor-log-persistentvolumeclaim.yaml 
+    ```
+    ... and then redeploy the codementor pod.

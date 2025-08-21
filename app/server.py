@@ -12,6 +12,7 @@ from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 from werkzeug.middleware.proxy_fix import ProxyFix
 from app.api.routing import ApiRouter
+from version import __version__
 
 
 class AICodeMentorServer:
@@ -72,6 +73,7 @@ class AICodeMentorServer:
         Run the Flask application.
         """
         logging.info("Starting AICodeMentor server on %s:%d", host,port)
+        logging.info("Version %s", __version__)
         self.app.run(host=host, port=port)
 
 

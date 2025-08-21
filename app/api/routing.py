@@ -68,6 +68,7 @@ class ApiRouter:
             "/auth",
             "/docs",
             "/docs/",
+            "/"
         ]
         if request.path in whitelisted or request.path.startswith("/docs/"):
             return None
