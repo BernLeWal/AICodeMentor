@@ -82,14 +82,14 @@ class AIAgentConfig:
         """
         Returns the model name of the AI-Agent instance
         """
-        return os.getenv('AI_MODEL_NAME', 'gpt-4o-mini')
+        return os.getenv('AI_MODEL_NAME', 'gpt-5-mini')
 
     @staticmethod
     def get_temperature() -> float:
         """
         Returns the temperature of the AI-Agent instance
         """
-        return float(os.getenv('AI_TEMPERATURE', '0.7'))
+        return float(os.getenv('AI_TEMPERATURE', '1.0'))
 
     @staticmethod
     def get_top_p() -> float:

@@ -64,7 +64,7 @@ class AIAgentOpenAIGpt(AIAgent):
             top_p=self.top_p,
             frequency_penalty=self.frequency_penalty,
             presence_penalty=self.presence_penalty,
-            max_tokens=self.max_output_tokens,
+            max_completion_tokens=self.max_output_tokens,
             stop=self.stop_sequences
         )
         self.total_duration_sec += time.perf_counter() - start_time
@@ -87,7 +87,7 @@ class AIAgentOpenAIGpt(AIAgent):
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("gpt-4o-mini")
+    main_config = AIAgentConfig("gpt-5-mini")
     main_agent = AIAgentOpenAIGpt(main_config)
 
     main_agent.system("You are a helpful assistant")

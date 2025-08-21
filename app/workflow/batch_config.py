@@ -104,6 +104,9 @@ if __name__ == "__main__":
     cfg.workflow_files = "<your_workflow_file.wf.md>"
     cfg.ai_model_names = [
         ## Platform OpenAI GPT Chat Models
+        "gpt-5",           #expensive
+        "gpt-5-mini",
+        "gpt-5-nano",
         "gpt-4o",           #expensive
         "gpt-4o-mini",
         "gpt-4",            #expensive

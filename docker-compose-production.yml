@@ -5,7 +5,7 @@ services:
     env_file:
       - docker/.env
     environment:
-      - AI_MODEL_NAME=gpt-4o-mini
+      - AI_MODEL_NAME=gpt-5-mini
       #- AI_MAX_OUTPUT_TOKENS=1024
       #- AI_MAX_PROMPT_LENGTH=2000    
       - SHELLBOX_HOST=shellbox
@@ -34,8 +34,7 @@ services:
     restart: always
     networks:
       - codementor-network
-    volumes:
-      - shellbox-data:/home/mentor
+
 
 
 networks:
@@ -47,5 +46,4 @@ volumes:
     driver: local
   codementor-log:
     driver: local
-  shellbox-data:
-    driver: local
+

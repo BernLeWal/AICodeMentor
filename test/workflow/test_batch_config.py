@@ -18,6 +18,9 @@ class TestBatchConfig(unittest.TestCase):
         cfg.workflow_files = "workflows/benchmarks/summarize-sourcefile.wf.md"
         cfg.ai_model_names = [
             ## Platform OpenAI GPT Chat Models
+            #"gpt-5",
+            "gpt-5-mini",
+            "gpt-5-nano",
             #"gpt-4o",
             "gpt-4o-mini",
             #"gpt-4",

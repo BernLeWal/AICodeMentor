@@ -19,6 +19,9 @@ To make it work in Python the following packages have to be installed, this is
 ### Models
 The OpenAI integration is used on all model-names starting with:
 - "gpt-": (using class AIAgentOpenAIGpt), e.g.:
+  - "gpt-5-nano",
+  - "gpt-5-mini",
+  - "gpt-5" (Attention: expensive),
   - "gpt-4o-mini",
   - "gpt-4o" (Attention: expensive),
   - "gpt-4-turbo",

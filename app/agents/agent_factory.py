@@ -61,7 +61,7 @@ class AIAgentFactory:
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("gpt-4o-mini") # use "codellama/CodeLlama-7b-Instruct-hf" to test the transformers agent
+    main_config = AIAgentConfig("gpt-5-mini") # use "codellama/CodeLlama-7b-Instruct-hf" to test the transformers agent
     main_agent = AIAgentFactory.create_agent(main_config)
     print(f"Type of agent is {type(main_agent)}")
     system = PromptFactory.load("prep-agent.system.prompt.md")[0].content

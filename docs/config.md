@@ -15,7 +15,7 @@ The following parameters can be set in the [.env](../.env) file.
 * **AI_TEMPERATURE**:  
     Controls the randomness of the output.  
 
-    - Value Range: `0.0` - `2.0`; Default Value: `0.7`
+    - Value Range: `0.0` - `2.0`; Default Value: `1.0`
     - Lower values (e.g., 0.0–0.3) make the model more deterministic and focused; it will produce the most likely completions.  
     Use temperature = 0.0 for factual QA or technical explanations.
     - Higher values (e.g., 0.8–1.2) increase creativity and variability in responses.  
