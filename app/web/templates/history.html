@@ -44,7 +44,24 @@
   <ul id="file-list" class="list-group shadow-sm"></ul>
 </main>
 
+<!-- Add modal for Markdown view -->
+<div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewModalTitle">View File</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <article id="viewContent" class="markdown-body"></article>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- marked.js for Markdown rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
 <script>
 const listEl = document.getElementById('file-list');
 const alertEl= document.getElementById('alert-box');
@@ -69,16 +86,32 @@ function createRow(item){
   li.className='list-group-item d-flex justify-content-between align-items-center';
   li.dataset.type=item.type;
   li.dataset.path=item.path;
-  li.innerHTML=`<div class="d-flex align-items-center gap-2">
+  const isMarkdown = item.name.endsWith('.md') || item.name.endsWith('.txt') || item.name.endsWith('.log') || item.name.endsWith('.json');
+  // Make filename clickable and trigger view for .md/.txt/.log/.json files
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'item-name';
+  nameSpan.textContent = item.name;
+  if(isMarkdown && item.type==='file'){
+    nameSpan.style.textDecoration = 'underline';
+    nameSpan.style.cursor = 'pointer';
+    nameSpan.addEventListener('click', function(e){
+      e.stopPropagation();
+      viewFile(item.path);
+    });
+  }
+  // Build buttons
+  let buttons = `
+    <button class="btn ${item.type==='directory'?'btn-outline-primary':'btn-outline-secondary'}" data-action="open">
+      <i class="fa ${item.type==='directory'?'fa-folder-open':'fa-download'}"></i>
+    </button>
+    ${isMarkdown && item.type==='file' ? `<button class='btn btn-outline-info' data-action='view'><i class='fa fa-eye'></i></button>` : ''}
+    <button class="btn btn-outline-danger" data-action="delete"><i class="fa fa-trash"></i></button>
+  `;
+  li.innerHTML = `<div class="d-flex align-items-center gap-2">
       <i class="fa ${item.type==='directory'?'fa-folder':'fa-file-alt'} fa-lg"></i>
-      <span class="item-name">${item.name}</span>
     </div>
-    <div class="btn-group btn-group-sm" role="group">
-      <button class="btn ${item.type==='directory'?'btn-outline-primary':'btn-outline-secondary'}" data-action="open">
-        <i class="fa ${item.type==='directory'?'fa-folder-open':'fa-download'}"></i>
-      </button>
-      <button class="btn btn-outline-danger" data-action="delete"><i class="fa fa-trash"></i></button>
-    </div>`;
+    <div class="btn-group btn-group-sm" role="group">${buttons}</div>`;
+  li.querySelector('.d-flex').appendChild(nameSpan);
   return li;
 }
 
@@ -121,19 +154,25 @@ listEl.addEventListener('click',e=>{
   if(!li) return;
   const type=li.dataset.type;
   const path=li.dataset.path;
-
+  const isMarkdown = li.querySelector('.item-name').textContent.endsWith('.md') || li.querySelector('.item-name').textContent.endsWith('.txt') || li.querySelector('.item-name').textContent.endsWith('.log') || li.querySelector('.item-name').textContent.endsWith('.json');
   const action = btn ? btn.dataset.action : 'open';
-  if(action==='open'){  
+  if(action==='open'){
     if(type==='directory'){
       navigate(path);
     }else{ // file
-      window.location.href=`/api/log/${encodePath(path)}`;
+      if(isMarkdown){
+        viewFile(path);
+      }else{
+        window.location.href=`/api/log/${encodePath(path)}`;
+      }
     }
+  }else if(action==='view'){
+    viewFile(path);
   }else if(action==='delete'){
     const msg=`Delete ${type} \"${path}\"? This cannot be undone.`;
     if(!confirm(msg)) return;
     deleteItem(type,path);
-  }    
+  }
 });
 
 async function deleteItem(type,path){
@@ -156,6 +195,30 @@ async function loadFiles(path=''){
     render(data);
     filter();
     updateBreadcrumbs();
+  }catch(err){ showError(err.message); }
+}
+
+const viewModalEl = document.getElementById('viewModal');
+const viewModal = new bootstrap.Modal(viewModalEl);
+const viewContent = document.getElementById('viewContent');
+const viewModalTitle = document.getElementById('viewModalTitle');
+
+async function viewFile(path){
+  clearError(); 
+  try{
+    const resp = await fetch(`/api/log/${encodePath(path)}`);
+    if(!resp.ok) throw new Error('View failed: HTTP '+resp.status+ '\n' + await resp.text());
+    const data = await resp.text();
+    const filename = path.split('/').pop();
+    // Render as markdown for .md, as plain text for .txt/.log/.json
+    if(filename.endsWith('.md')){
+      const markdown = marked.parse(data || '');
+      viewContent.innerHTML = markdown || `<pre>${data}</pre>`;
+    }else{
+      viewContent.innerHTML = `<pre style='white-space:pre-wrap;'>${data}</pre>`;
+    }
+    viewModalTitle.textContent = `View: ${filename}`;
+    viewModal.show();
   }catch(err){ showError(err.message); }
 }
 

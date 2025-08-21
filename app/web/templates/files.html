@@ -42,11 +42,12 @@
         <input id="search-input" class="form-control" placeholder="Filter items…">
       </div>
     </div>
-    <!-- Create directory -->
+    <!-- Create directory and file -->
     <div class="col-md-3 col-sm-6">
       <div class="input-group shadow-sm">
-        <input id="newdir-input" class="form-control" placeholder="New directory name">
-        <button id="create-dir-btn" class="btn btn-outline-success"><i class="fa fa-folder-plus"></i> Create</button>
+        <input id="newitem-input" class="form-control" placeholder="New directory or file name">
+        <button id="create-dir-btn" class="btn btn-outline-success"><i class="fa fa-folder-plus"></i></button>
+        <button id="create-file-btn" class="btn btn-outline-warning"><i class="fa fa-file-circle-plus"></i></button>
       </div>
     </div>
     <!-- Upload file -->
@@ -69,7 +70,7 @@
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Workflow Result</h5>
+        <h5 class="modal-title" id="resultModalTitle">Workflow Result</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -88,18 +89,21 @@ const alertEl= document.getElementById('alert-box');
 const msgEl  = document.getElementById('msg-box');
 const searchEl=document.getElementById('search-input');
 const bcEl   = document.getElementById('breadcrumbs');
-const newDirInput=document.getElementById('newdir-input');
+const newItemInput=document.getElementById('newitem-input');
 const createBtn=document.getElementById('create-dir-btn');
 const fileInput=document.getElementById('file-input');
 const uploadBtn=document.getElementById('upload-btn');
 const resultModalEl=document.getElementById('resultModal');
 const resultModal = new bootstrap.Modal(resultModalEl);
 const resultContent=document.getElementById('resultContent');
+const resultModalTitle=document.getElementById('resultModalTitle');
+const createFileBtn=document.getElementById('create-file-btn');
 
 document.getElementById('refresh-btn').addEventListener('click',()=>loadFiles(currentPath));
 searchEl.addEventListener('input', filter);
 createBtn.addEventListener('click', createDirectory);
 uploadBtn.addEventListener('click', uploadFile);
+createFileBtn.addEventListener('click', createFile);
 
 let currentPath = '';
 
@@ -119,20 +123,36 @@ function createRow(item){
   li.className='list-group-item d-flex justify-content-between align-items-center';
   li.dataset.type=item.type;
   li.dataset.path=item.path;
+  const isEditorFile = item.name.endsWith('.md') || item.name.endsWith('.txt') || item.name.endsWith('.json');
+  const isMarkdown = item.name.endsWith('.md') || item.name.endsWith('.txt') || item.name.endsWith('.log') || item.name.endsWith('.json');
   let buttons=`<button class="btn btn-outline-primary btn-sm" data-action="open"><i class="fa fa-folder-open"></i></button>`;
   if(item.type==='file'){
-    buttons=`
+    buttons = `
       <button class="btn btn-outline-secondary btn-sm" data-action="download"><i class="fa fa-download"></i></button>
       <button class="btn btn-outline-success btn-sm" data-action="run"><i class="fa fa-play"></i></button>
+      ${isMarkdown ? `<button class='btn btn-outline-info btn-sm' data-action='view'><i class='fa fa-eye'></i></button>` : ''}
+      ${isEditorFile ? `<button class='btn btn-outline-warning btn-sm' data-action='edit'><i class='fa fa-pen'></i></button>` : ''}
     `;
   }
   buttons+=` <button class="btn btn-outline-danger btn-sm" data-action="delete"><i class="fa fa-trash"></i></button>`;
 
-  li.innerHTML=`<div class="d-flex align-items-center gap-2">
+  // Make filename clickable and trigger editor for .md/.txt/.json files
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'item-name';
+  nameSpan.textContent = item.name;
+  if(isEditorFile && item.type==='file'){
+    nameSpan.style.textDecoration = 'underline';
+    nameSpan.style.cursor = 'pointer';
+    nameSpan.addEventListener('click', function(e){
+      e.stopPropagation();
+      openInEditor(item.path);
+    });
+  }
+  li.innerHTML = `<div class="d-flex align-items-center gap-2">
       <i class="fa ${item.type==='directory'?'fa-folder':'fa-file-alt'} fa-lg"></i>
-      <span class="item-name">${item.name}</span>
     </div>
     <div class="btn-group" role="group">${buttons}</div>`;
+  li.querySelector('.d-flex').appendChild(nameSpan);
   return li;
 }
 
@@ -175,7 +195,9 @@ listEl.addEventListener('click',e=>{
   if(!li) return;
   const type=li.dataset.type;
   const path=li.dataset.path;
-  const action = btn ? btn.dataset.action : 'open';
+  const filename = li.querySelector('.item-name').textContent;
+  const isEditorFile = filename.endsWith('.md') || filename.endsWith('.txt') || filename.endsWith('.json');
+  const action = btn ? btn.dataset.action : (isEditorFile ? 'edit' : 'open');
 
   switch(action){
     case 'open':
@@ -190,8 +212,18 @@ listEl.addEventListener('click',e=>{
     case 'delete':
       deleteWithPrompt(type,path);
       break;
+    case 'view':
+      viewFile(path);
+      break;
+    case 'edit':
+      openInEditor(path);
+      break;
   }
 });
+
+function openInEditor(path){
+  window.open(`editor?filepath=${encodeURIComponent(path)}`, '_blank');
+}
 
 function deleteWithPrompt(type,path){
   const msg=`Delete ${type} \"${path}\"? This cannot be undone.`;
@@ -222,20 +254,57 @@ async function runWorkflow(path){
     // display result in modal (render markdown)
     const markdown=marked.parse(data || '');
     resultContent.innerHTML=markdown || `<pre>${data}</pre>`;
+    resultModalTitle.textContent = 'Workflow Result';
     clearMsg();
     resultModal.show();
   }catch(err){ showError(err.message); clearMsg(); }
 }
 
+async function viewFile(path){
+  clearError(); clearMsg();
+  try{
+    const resp = await fetch(`/api/files/${encodePath(path)}`);
+    if(!resp.ok) throw new Error('View failed: HTTP '+resp.status+ '\n' + await resp.text());
+    const data = await resp.text();
+    const filename = path.split('/').pop();
+    // Render as markdown for .md, as plain text for .txt/.log/.json
+    if(filename.endsWith('.md')){
+      const markdown = marked.parse(data || '');
+      resultContent.innerHTML = markdown || `<pre>${data}</pre>`;
+    }else{
+      resultContent.innerHTML = `<pre style='white-space:pre-wrap;'>${data}</pre>`;
+    }
+    resultModalTitle.textContent = `View: ${filename}`;
+    resultModal.show();
+  }catch(err){ showError(err.message); }
+}
+
 async function createDirectory(){
   clearError(); clearMsg();
-  const name=newDirInput.value.trim();
+  const name=newItemInput.value.trim();
   if(!name){ showError('Directory name required'); return; }
   const target=currentPath?currentPath+'/'+name:name;
   try{
     const resp=await fetch(`/api/files/${encodePath(target)}/`,{method:'POST'});
-    if(!resp.ok) throw new Error('Create failed: HTTP '+resp.status);
-    newDirInput.value='';
+    if(!resp.ok) throw new Error('Create directory failed: HTTP '+resp.status);
+    newItemInput.value='';
+    loadFiles(currentPath);
+  }catch(err){ showError(err.message); }
+}
+
+async function createFile(){
+  clearError(); clearMsg();
+  const name=newItemInput.value.trim();
+  if(!name){ showError('File name required'); return; }
+  const target=currentPath?currentPath+'/'+name:name;
+  try{
+    const resp=await fetch(`/api/files/${encodePath(target)}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/octet-stream'},
+      body:''
+    });
+    if(!resp.ok) throw new Error('Create file failed: HTTP '+resp.status);
+    newItemInput.value='';
     loadFiles(currentPath);
   }catch(err){ showError(err.message); }
 }

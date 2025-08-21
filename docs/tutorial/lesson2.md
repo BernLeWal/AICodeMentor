@@ -64,10 +64,11 @@ Finally, also show me the installed Python version.
 You can now execute the workflow using the AI-CodeMentor Web Frontend:
 
 - Ensure, that it is started, see [docker/codementor/README.md](../../docker/codementor/README.md)
-- **Login** into the AI-Codementor: http://localhost:5000/auth?token=<SERVER_TOKEN>
-- Use the **Workfile Explorer**: http://localhost:5000/files
-- Navigate to 'tutorial' subdirectory, 
-- click on [Play]-button right beside `lesson2.wf.md`
+- Use the simple Web-UI to get started: http://localhost:5000/
+  - **Login** into the AI-Codementor: http://localhost:5000/auth?token=<SERVER_TOKEN>
+  - Use the **Workfile Explorer**: http://localhost:5000/files
+  - Navigate to 'tutorial' subdirectory, 
+  - click on [Play]-button right beside `lesson1.wf.md`
 
 Expected output:
 ```

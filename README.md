@@ -41,8 +41,8 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.2.4
-- **Simple web UI** to run and manage workflows and history, docs see [docker/codementor/README.md](docker/codementor/README.md)
+🚀Latest News in version: 0.2.5
+- The **Simple web UI** to run and manage workflows and history, and also includes a simple editor docs see [docker/codementor/README.md](docker/codementor/README.md)
 - Workflow history and logs can be retrieved via REST API
 - Introduced **Shellbox** - a docker container dedicated to run shell commands, connected via SSH
 - Added RESTful API (see [api/openapi.yaml](app/api/openapi.yaml) ) and server mode (--server CLI param)
@@ -107,12 +107,7 @@ Version history see [app/version.py](./app/version.py)
   Remarks: This will use the default settings with OpenAI Platform as AI-agent and run AICodeMentor as Server (http://localhost:5000)
   - SwaggerUI: http://localhost:5000/docs
 
-  You may use the browser as REST-Client:
-  - Login before using the API (once per browser session): http://localhost:5000/auth?token=<SERVER_TOKEN>
-  - The SERVER_TOKEN is defined in your .env file On success a Secure, HttpOnly, SameSite=Strict cookie named auth_token is returned so that subsequent requests through the browser will be authenticated.
-  - Workfile Explorer: http://localhost:5000/files  
-    Select one of the .wf.md files and click on play to test the examples.
-  - History Explorer: http://localhost:5000/history
+  You may use the browser as REST-Client: http://localhost:5000/
 
 
 ### Command-Line Options:
@@ -198,7 +193,16 @@ see [CONTRIBUTION.md](CONTRIBUTION.md)
     python app/main.py -h
     ```
 
-4. Run the Test-Suite
+4. Run with REST-Server and Web-Frontend:
+
+    ```sh
+    python app/main.py --server
+    ```
+
+    Server-URL: http://localhost:5000/  
+    see [docker/codementor/README.md](docker/codementor/README.md) for instructions
+
+5. Run the Test-Suite
   
     Pytest is used to run the unit-tests, start it from the project root directory:
     ```sh
