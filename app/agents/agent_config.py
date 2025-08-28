@@ -117,7 +117,7 @@ class AIAgentConfig:
         """
         Returns the maximum number of output tokens of the AI-Agent instance
         """
-        return int(os.getenv("AI_MAX_OUTPUT_TOKENS", '1024'))
+        return int(os.getenv("AI_MAX_OUTPUT_TOKENS", '2000'))
 
     @staticmethod
     def get_stop_sequences() -> list:

@@ -42,15 +42,11 @@ if __name__ == "__main__":
 
     # Scenario 1: workflow execution
     #sys.argv.append("--verbose")
-    #sys.argv.append("workflows/tutorial/lesson2.wf.md")
+    #sys.argv.append("workflows/tutorial/lesson1.wf.md")
 
     #sys.argv.append("--verbose")
     #sys.argv.append("workflows/sample-project-eval.wf.md")
     #sys.argv.append("REPO_URL=https://github.com/BernLeWal/fhtw-bif5-swkom-paperless.git")
-
-    #sys.argv.append("--verbose")
-    #sys.argv.append("workflows/prompt-eval/prompt-eval.wf.md")
-    #sys.argv.append("USER_PROMPT=file:prompts/Mohamed_Emad.md")
 
     # Scenario 2: batch execution
     #sys.argv.append("--batch")

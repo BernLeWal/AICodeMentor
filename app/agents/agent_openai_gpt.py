@@ -72,6 +72,9 @@ class AIAgentOpenAIGpt(AIAgent):
         self.last_result = ""
         for choice in chat_completion.choices:
             self.last_result += choice.message.content + "\n"
+            if choice.finish_reason != "stop":
+                logger.warning("OpenAI Chat model did not finish because of 'stop', but '%s'",
+                               choice.finish_reason)
         self.messages.append( Prompt(Prompt.ASSISTANT, self.last_result) )
         # record telemetry
         self.total_iterations = len(self.messages)
@@ -87,7 +90,7 @@ class AIAgentOpenAIGpt(AIAgent):
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("gpt-5-mini")
+    main_config = AIAgentConfig("gpt-4o-mini")
     main_agent = AIAgentOpenAIGpt(main_config)
 
     main_agent.system("You are a helpful assistant")

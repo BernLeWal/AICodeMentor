@@ -178,7 +178,7 @@ class ActivityInterpreter(ActivityVisitor):
             self.context.agent.system(prompt_content)
             self.context.result = ""
         elif Prompt.ASSISTANT == role.lower():
-            self.agent.advice(None, prompt_content)
+            self.context.agent.advice(None, prompt_content)
             self.context.result = prompt_content
         else:   #if Prompt.USER == role.lower():
             self.context.result = self.context.agent.ask(prompt_content)

@@ -160,11 +160,7 @@ listEl.addEventListener('click',e=>{
     if(type==='directory'){
       navigate(path);
     }else{ // file
-      if(isMarkdown){
-        viewFile(path);
-      }else{
-        window.location.href=`/api/log/${encodePath(path)}`;
-      }
+      window.location.href=`/api/log/${encodePath(path)}`;
     }
   }else if(action==='view'){
     viewFile(path);

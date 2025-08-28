@@ -37,14 +37,14 @@ class AIAgentFactory:
             config = AIAgentConfig(config)
         model_name = config.model_name
 
+        # Platform OpenAI Reasoning Models:
+        if model_name.startswith("gpt-5"):
+            return AIAgentOpenAIInstruct(config)
+        elif model_name in ["o1","o3"] or model_name.startswith("o1-") or model_name.startswith("o3-"):
+            return AIAgentOpenAIInstruct(config)
         # Platform OpenAI GPT Chat Models:
-        if model_name.startswith("gpt-"):
+        elif model_name.startswith("gpt-"):
             return AIAgentOpenAIGpt(config)
-        # Platform OpenAI Reasoning Models (o1/o3):
-        elif model_name in ["o1","o3"]:
-            return AIAgentOpenAIInstruct(config)
-        elif model_name.startswith("o1-") or model_name.startswith("o3-"):
-            return AIAgentOpenAIInstruct(config)
         # Google Gemini API Models:
         elif model_name.startswith("gemini-"):
             return AIAgentGoogleGemini(config)

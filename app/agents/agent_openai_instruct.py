@@ -1,6 +1,6 @@
 #!/bin/python
 """
-The AI-Agent implementation using the Platform OpenAI Instruct Models (o1/o3)
+The AI-Agent implementation using the Platform OpenAI Instruct Models (gpt-5, o1/o3)
 """
 import logging
 import os
@@ -43,10 +43,10 @@ class AIAgentOpenAIInstruct(AIAgent):
         """Starts with a new context (a reset), and provides the chat-systems general behavior"""
         logger.debug("Init AIAgentOpenAI with system prompt: %s", prompt)
         self.messages = []
-        super().system(prompt)
-        logger.warning("Instruct models do not support System propmts! Ignoring: %s", prompt)
-        self.messages = []
-        return ""
+        logger.info("Instruct models do not support System prompts, use as user-prompt instead.")
+        self.messages.append( Prompt(Prompt.USER, prompt) )
+        return super().ask(prompt)
+
 
     def ask(self, prompt: str) -> str:
         """Sends a prompt to ChatGPT, will track the result in messages"""
@@ -75,6 +75,9 @@ class AIAgentOpenAIInstruct(AIAgent):
         self.last_result = ""
         for choice in chat_completion.choices:
             self.last_result += choice.message.content + "\n"
+            if choice.finish_reason != "stop":
+                logger.warning("OpenAI Instruct model did not finish because of 'stop', but '%s'",
+                               choice.finish_reason)
         self.messages.append( Prompt(Prompt.ASSISTANT, self.last_result) )
         # record telemetry
         self.total_iterations = len(self.messages)
@@ -90,7 +93,7 @@ class AIAgentOpenAIInstruct(AIAgent):
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig("o1-mini")
+    main_config = AIAgentConfig("gpt-5-mini")
     main_agent = AIAgentOpenAIInstruct(main_config)
 
     main_agent.system("You are a helpful assistant")

@@ -184,7 +184,7 @@ see [CONTRIBUTION.md](CONTRIBUTION.md)
 2. Run the application with a workflow file:
 
     ```sh
-    python app/main.py workflows/check-toolchain.wf.md
+    python app/main.py workflows/tutorial/lesson1.wf.md
     ```
 
 3. Help & Usage:
