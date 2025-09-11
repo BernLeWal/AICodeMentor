@@ -1,0 +1,30 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    openshift.io/host.generated: "true"
+  labels:
+    io.kompose.service: codementor
+  name: codementor
+spec:
+  host: <your-hostname>
+  port:
+    targetPort: 5000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect    
+  to:
+    kind: Service
+    name: codementor
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress:
+  - conditions:
+    - lastTransitionTime: "2025-06-24T12:31:06Z"
+      status: "True"
+      type: Admitted
+    host: <your-hostname>
+    routerCanonicalHostname: <your-router-hostname>
+    routerName: default
+    wildcardPolicy: None

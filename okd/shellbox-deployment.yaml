@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: shellbox
+  name: shellbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: shellbox
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: shellbox
+    spec:
+      containers:
+        - image: codepunx/shellbox-java:latest
+          name: shellbox
+          ports:
+            - containerPort: 22
+              protocol: TCP
+          resources:
+            limits:
+              cpu: '1'
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+      restartPolicy: Always

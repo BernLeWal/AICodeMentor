@@ -11,7 +11,9 @@ secrets/
 log/
 tmp/
 
-### Intermeidate files ###
+### Intermediate files ###
 k8s/
 docker-compose-k8s.yml
-okd/
+
+### Files not part of that repo
+workflows/te/

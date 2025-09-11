@@ -81,7 +81,7 @@ special settings required for the OKD cluster which have to be merged (manually)
 
 For additional information about the kustomization.yaml see: https://www.densify.com/kubernetes-tools/kustomize/
 
-Remarks: For OKD of FHTW 
+Remarks: consider the requirements of your OKD cluster, e.g.
 1. the Resource Quotas of all Deployments must be set to >0 (cores, memory,...), e.g.
     - CPU request 100 millicores
     - CPU limit 1 cores
