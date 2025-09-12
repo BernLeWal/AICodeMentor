@@ -123,20 +123,21 @@ function createRow(item){
   li.className='list-group-item d-flex justify-content-between align-items-center';
   li.dataset.type=item.type;
   li.dataset.path=item.path;
-  const isEditorFile = item.name.endsWith('.md') || item.name.endsWith('.txt') || item.name.endsWith('.json');
-  const isMarkdown = item.name.endsWith('.md') || item.name.endsWith('.txt') || item.name.endsWith('.log') || item.name.endsWith('.json');
+  const isWorkflowFile = item.name.endsWith('.wf.md');
+  const isEditorFile = item.name.endsWith('.md') || item.name.endsWith('.txt') || item.name.endsWith('.json') || item.name.endsWith('.csv');
+  const isViewerFile = isEditorFile || item.name.endsWith('.log');
   let buttons=`<button class="btn btn-outline-primary btn-sm" data-action="open"><i class="fa fa-folder-open"></i></button>`;
   if(item.type==='file'){
     buttons = `
       <button class="btn btn-outline-secondary btn-sm" data-action="download"><i class="fa fa-download"></i></button>
-      <button class="btn btn-outline-success btn-sm" data-action="run"><i class="fa fa-play"></i></button>
-      ${isMarkdown ? `<button class='btn btn-outline-info btn-sm' data-action='view'><i class='fa fa-eye'></i></button>` : ''}
+      ${isWorkflowFile ? `<button class="btn btn-outline-success btn-sm" data-action="run"><i class="fa fa-play"></i></button>` : ''}
+      ${isViewerFile ? `<button class='btn btn-outline-info btn-sm' data-action='view'><i class='fa fa-eye'></i></button>` : ''}
       ${isEditorFile ? `<button class='btn btn-outline-warning btn-sm' data-action='edit'><i class='fa fa-pen'></i></button>` : ''}
     `;
   }
   buttons+=` <button class="btn btn-outline-danger btn-sm" data-action="delete"><i class="fa fa-trash"></i></button>`;
 
-  // Make filename clickable and trigger editor for .md/.txt/.json files
+  // Make filename clickable and trigger editor for .md/.txt/.json/.csv files
   const nameSpan = document.createElement('span');
   nameSpan.className = 'item-name';
   nameSpan.textContent = item.name;
@@ -196,7 +197,7 @@ listEl.addEventListener('click',e=>{
   const type=li.dataset.type;
   const path=li.dataset.path;
   const filename = li.querySelector('.item-name').textContent;
-  const isEditorFile = filename.endsWith('.md') || filename.endsWith('.txt') || filename.endsWith('.json');
+  const isEditorFile = filename.endsWith('.md') || filename.endsWith('.txt') || filename.endsWith('.json') || filename.endsWith('.csv');
   const action = btn ? btn.dataset.action : (isEditorFile ? 'edit' : 'open');
 
   switch(action){
