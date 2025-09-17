@@ -36,14 +36,14 @@ logger = logging.getLogger(__name__)
 class ActivityInterpreter(ActivityVisitor):
     """Interprets the activities"""
 
-    def __init__(self, context : Context, history : History = None):
+    def __init__(self, context : Context, history : History | None = None):
         self.context = context
         self.history = history
 
         self.activity_succeeded = True
         self.is_in_onfailed = False
         self.workflow_ended = False
-        self.next_activity : Activity = None
+        self.next_activity : Activity | None = None
 
 
 
@@ -57,17 +57,14 @@ class ActivityInterpreter(ActivityVisitor):
 
     def visit_set(self, activity: Activity) -> None:
         """Set a variable value"""
+        if activity.expression is None:
+            self._visit_error(activity, "SET expression is not set! ")
+            return
         # parse the expression
         parts = str.split(activity.expression, "=")
         if len(parts) < 2:
-            logger.warning("SET expression=%s is not valid! " +\
-                "Syntax: <variable>=<value>", activity.expression)
-            self.context.status = Workflow.Status.FAILED
-            self.context.result = f"FAILED  \nSET expression={activity.expression}"+\
-                " is not valid!\nSyntax: <variable>=<value>"
-            self._save_history(activity, f"{Activity.Kind.SET.value}: {activity.expression}",
-                self.context.status, self.context.result)
-            self.activity_succeeded = False
+            self._visit_error(activity, f"SET expression={activity.expression} is not valid! " +\
+                "Syntax: <variable>=<value>")
             return
 
         name = parts[0]
@@ -88,12 +85,7 @@ class ActivityInterpreter(ActivityVisitor):
             content = self.context.get_value(activity.expression)
             content = self._render_content(content)
         if content is None:
-            logger.warning("ASSIGN: Value is not set! ")
-            self.context.status = Workflow.Status.FAILED
-            self.context.result = "FAILED  \nASSIGN Value is not set!"
-            self._save_history(activity, f"{Activity.Kind.ASSIGN.value}: {activity.expression}",
-                self.context.status, self.context.result)
-            self.activity_succeeded = False
+            self._visit_error(activity, "ASSIGN: Value is not set! ")
             return
 
         logger.info("ASSIGN: %s", escape_linefeed(trunc_right(content)))
@@ -106,16 +98,13 @@ class ActivityInterpreter(ActivityVisitor):
 
     def visit_check(self, activity: Activity) -> None:
         """Check if the status or result is as expected"""
+        if activity.expression is None:
+            self._visit_error(activity, "CHECK expression is not set! ")
+            return
         # parse the expression
         parts = str.split(activity.expression, " ")
         if len(parts) < 3:
-            logger.warning("CHECK expression '%s' is not valid! ", activity.expression)
-            self.context.status = Workflow.Status.FAILED
-            self.context.result = f"CHECK expression {activity.expression}" +\
-                " is not valid!\nSyntax: <variable> <operation> <expected>"
-            self._save_history(activity, f"{Activity.Kind.CHECK.value}: {activity.expression}",
-                self.context.status, self.context.result)
-            self.activity_succeeded = False
+            self._visit_error(activity, f"CHECK expression '{activity.expression}' is not valid!\nSyntax: <variable> <operation> <expected>")
             return
 
         left = self.context.get_value(parts[0])
@@ -123,13 +112,7 @@ class ActivityInterpreter(ActivityVisitor):
         right = " ".join(parts[2:])
         right = self.context.get_value(right, right)
         if left is None or operation is None or right is None:
-            logger.warning("CHECK expression '%s' is not valid! ", activity.expression)
-            self.context.status = Workflow.Status.FAILED
-            self.context.result = f"CHECK expression {activity.expression}" +\
-                " is not valid!\nSyntax: <variable> <operation> <expected>"
-            self._save_history(activity, f"{Activity.Kind.CHECK.value}: {activity.expression}",
-                self.context.status, self.context.result)
-            self.activity_succeeded = False
+            self._visit_error(activity, f"CHECK expression '{activity.expression}' is not valid!\nSyntax: <variable> <operation> <expected>")
             return
 
         logger.info("CHECK: '%s' %s '%s'", right, operation, escape_linefeed(trunc_right(left)))
@@ -152,14 +135,7 @@ class ActivityInterpreter(ActivityVisitor):
                 role = Prompt.ASSISTANT
 
         if prompt_content is None:
-            logger.warning("PROMPT content is not set or not found! " + \
-                "prompt_id=%s", prompt_id)
-            self.context.status = Workflow.Status.FAILED
-            self.context.result = "PROMPT content is not set or not found! " + \
-                f"prompt_id={prompt_id}"
-            self._save_history(activity, f"{Activity.Kind.PROMPT.value}: {prompt_id}",
-                self.context.status, self.context.result)
-            self.activity_succeeded = False
+            self._visit_error(activity, f"PROMPT content is not set or not found! prompt_id={prompt_id}")
             return
 
         prompt_content = self._render_content(prompt_content)
@@ -184,7 +160,8 @@ class ActivityInterpreter(ActivityVisitor):
             self.context.result = self.context.agent.ask(prompt_content)
         logger.info("PROMPT: result: %s",
                     escape_linefeed(trunc_right(self.context.result)))
-        self._update_history(history_record, f"{prompt_content}\n\n---\n\n{self.context.result}")
+        if history_record is not None:
+            self._update_history(history_record, f"{prompt_content}\n\n---\n\n{self.context.result}")
         self.activity_succeeded = True
 
 
@@ -204,7 +181,8 @@ class ActivityInterpreter(ActivityVisitor):
             self.context.result = "FAILED  \nInterrupted by user!"
             self.activity_succeeded = False
         history_result += f"Output:\n{self.context.result}\n\n"
-        self._update_history(history_record, history_result)
+        if history_record is not None:
+            self._update_history(history_record, history_result)
 
 
     def visit_execute(self, activity: Activity) -> None:
@@ -236,7 +214,8 @@ class ActivityInterpreter(ActivityVisitor):
             else:
                 self.context.result += "\n"
                 history_result += "```\n\nNo Output\n\n"
-        self._update_history(history_record, history_result)
+        if history_record is not None:
+            self._update_history(history_record, history_result)
         self.activity_succeeded = True
 
 
@@ -246,7 +225,7 @@ class ActivityInterpreter(ActivityVisitor):
         self.activity_succeeded = True
 
 
-    def visit_success(self, activity: Activity) -> None:
+    def visit_success(self, activity: Activity | None) -> None:
         """Finish workflow with status SUCCESS"""
         # is there an on_success event-handler? if yes, the go along there
         on_success = self.context.workflow.on_success
@@ -329,6 +308,14 @@ class ActivityInterpreter(ActivityVisitor):
         self.activity_succeeded = True
 
 
+    def _visit_error(self, activity : Activity, msg : str) -> None:
+        logger.warning(msg)
+        self.context.status = Workflow.Status.FAILED
+        self.context.result = f"FAILED  \n{msg}"
+        self._save_history(activity, f"{activity.kind.value}: {activity.expression}",
+                self.context.status, self.context.result)
+        self.activity_succeeded = False
+
 
     def _render_content(self, content: str)->str:
         """Render variables (the placeholders) values into the content (the template)"""
@@ -341,8 +328,8 @@ class ActivityInterpreter(ActivityVisitor):
         return content
 
 
-    def _save_history(self, activity : Activity, caption : str,
-                      status : Workflow.Status, result : str)->HistoryRecord:
+    def _save_history(self, activity : Activity | None, caption : str,
+                      status : Workflow.Status, result : str)->HistoryRecord | None:
         if self.history is None:
             logger.info("History-Record: caption=%s, status=%s, result=%s", caption, status, result)
             return None

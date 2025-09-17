@@ -19,7 +19,7 @@ class TestWorkflow(unittest.TestCase):
 
     def test_workflow_load_from_mdfile(self):
         """Test Workflow load_from_mdfile method"""
-        workflow = WorkflowReader().load_from_mdfile("check-toolchain.wf.md")
+        workflow = WorkflowReader.load_from_mdfile("check-toolchain.wf.md")
 
         print(f"Loaded workflow: {workflow.name}")
         self.assertEqual(workflow.name, "Check Toolchain")

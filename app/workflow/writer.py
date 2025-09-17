@@ -59,8 +59,8 @@ class WorkflowWriter:
         file.close()
 
 
-    def save_history(self, current_activity : Activity, context : Context, history : History,
-        filepath : str = None, directory = None, overwrite = True):
+    def save_history(self, current_activity : Activity | None, context : Context | None, history : History,
+        filepath : str | None = None, directory = None, overwrite = True):
         """Saves Workflow execution with history to a file"""
         if directory is None:
             directory = os.path.abspath(WorkflowWriter.LOGFILES_DIR)
@@ -75,7 +75,8 @@ class WorkflowWriter:
         file = self._open_file(filepath, directory, overwrite)
         self._write_general(file, include_description = False, write_workflow_path = True)
         self._write_flowchart(file, current_activity)
-        self._write_variables(file, context)
+        if context is not None:
+            self._write_variables(file, context)
         self._write_history(file, history)
         file.flush()
         file.close()
@@ -102,7 +103,7 @@ class WorkflowWriter:
         file.write("\n")
 
 
-    def _write_flowchart(self, file, current_activity = None):
+    def _write_flowchart(self, file, current_activity : Activity | None = None):
         """"Second section: flowchart of the workflow"""
 
         file.write(f"{WorkflowMdSection.WORKFLOW.value}\n")
@@ -165,7 +166,7 @@ class WorkflowWriter:
 
 if __name__ == '__main__':
     MAIN_FILENAME = "coth.wf.md"
-    main_workflow = WorkflowReader().load_from_mdfile(MAIN_FILENAME)
+    main_workflow = WorkflowReader.load_from_mdfile(MAIN_FILENAME)
 
     main_writer = WorkflowWriter(main_workflow)
     history_dir = os.path.abspath(WorkflowWriter.LOGFILES_DIR)

@@ -40,57 +40,70 @@ class WorkflowReader:
 
     WORKFLOWS_DIR = os.getenv('WORKFLOWS_DIR', './workflows')
 
-    def __init__(self):
-        self.workflow = None
+    def __init__(self, workflow : Workflow):
+        self.workflow : Workflow = workflow
 
 
-    def load_from_mdfile(self, filename: str, directory = None) -> Workflow:
+    @staticmethod
+    def load_from_mdfile(filename: str, directory = None) -> Workflow:
         """
         Load Workflow definition from a markdown file
         :param filename: The name of the file
         """
-        self.workflow = Workflow(filename)
+        workflow = Workflow(filename)
+        reader = WorkflowReader(workflow)
 
         if directory is None:
             directory = os.path.abspath(WorkflowReader.WORKFLOWS_DIR)
         else:
             directory = os.path.abspath(directory)
-        self.workflow.directory = directory
+        workflow.directory = directory
         abs_file_path = os.path.join(directory, filename)
         with open(abs_file_path, 'r', encoding='utf-8') as f:
             content = f.readlines()
-        self._parse_content(content)
-        return self.workflow
+        reader._parse_content(content)
+        return workflow
 
 
-    def load_from_string(self, content : str) -> Workflow:
+    @staticmethod
+    def load_from_string(content : str) -> Workflow:
         """Load Workflow definition from a string"""
-        self.workflow = Workflow("")
-        self._parse_content(content.split('\n'))
-        return self.workflow
+        workflow = Workflow("")
+        reader = WorkflowReader(workflow)
+        reader._parse_content(content.split('\n'))
+        return reader.workflow
 
 
     def _parse_content(self, content: list):
         section = WorkflowMdSection.NONE
 
+        # initialize the iterator and fetch the first line
         content_iter = iter(content)
-        line = ''
+        try:
+            line = next(content_iter)
+        except StopIteration:
+            line = None        
+
         while line is not None:
             line_strip = line.strip()
             try:
-                if line_strip.startswith('# '):
-                    section = WorkflowReader._check_section(line_strip)
-                    if section == WorkflowMdSection.NONE:
-                        self.workflow.name = line.replace('# ', '').strip()
-                elif section == WorkflowMdSection.NONE:
-                    if len(line_strip)>0 and line_strip != '\n':
-                        self.workflow.description += line
-                elif section == WorkflowMdSection.WORKFLOW:
-                    line = self._parse_section_workflow(line, content_iter)
-                    continue
-                elif section == WorkflowMdSection.PROMPTS:
-                    line = self._parse_section_prompts(line, content_iter)
-                    continue
+                if line_strip.startswith('!INCLUDE '):
+                    content_iter = self._include_file(line_strip)
+                    # the first line of the included file will be fetched below in 'fetch next line'
+                else:
+                    if line_strip.startswith('# '):
+                        section = WorkflowReader._check_section(line_strip)
+                        if section == WorkflowMdSection.NONE:
+                            self.workflow.name = line.replace('# ', '').strip()
+                    elif section == WorkflowMdSection.NONE:
+                        if len(line_strip)>0 and line_strip != '\n':
+                            self.workflow.description += line
+                    elif section == WorkflowMdSection.WORKFLOW:
+                        line = self._parse_section_workflow(line, content_iter)
+                        continue
+                    elif section == WorkflowMdSection.PROMPTS:
+                        line = self._parse_section_prompts(line, content_iter)
+                        continue
 
                 # fetch next line
                 try:
@@ -119,6 +132,21 @@ class WorkflowReader:
                          self.workflow.filepath, str(e))
             raise e
 
+
+    def _include_file(self, line : str):
+        include_file = line.replace('!INCLUDE ', '').strip().strip('"')
+        include_path = os.path.dirname( os.path.join(self.workflow.directory, self.workflow.filepath) )
+        include_path = os.path.join(include_path, include_file)
+        if os.path.isfile(include_path):
+            with open(include_path, 'r', encoding='utf-8') as f:
+                include_content = f.readlines()
+                # replace the current line with the included content lines
+                content_iter = iter(include_content[1:])
+        else:
+            raise FileNotFoundError(f"Included workflow file '{include_path}' not found!")
+        return content_iter
+
+
     @staticmethod
     def _check_section(line_strip : str) -> WorkflowMdSection:
         if line_strip.startswith('# Workflow'):
@@ -128,88 +156,98 @@ class WorkflowReader:
         return WorkflowMdSection.NONE
 
 
-    def _parse_section_workflow(self, line: str, content_iter) -> str:
+    def _parse_section_workflow(self, line: str, content_iter) -> str|None:
         in_mermaid = False
         in_flowchart = False
 
         while True:
             line_strip = line.strip()
             try:
-                if line_strip.startswith('# '): # next section --> end of workflow section
-                    return line_strip
+                if line_strip.startswith('!INCLUDE '):
+                    content_iter = self._include_file(line_strip)
+                    # the first line of the included file will be fetched below in 'fetch next line'
+                else:
+                    if line_strip.startswith('# '): # next section --> end of workflow section
+                        return line_strip
 
-                if line_strip.startswith('```mermaid'):
-                    in_mermaid = True
-                elif in_mermaid and line_strip.startswith('flowchart'):
-                    in_flowchart = True
-                elif line_strip.startswith('```'):
-                    in_mermaid = False
-                    in_flowchart = False
-                elif len(line_strip) > 0 and in_mermaid and in_flowchart:
-                    self._parse_flowchart_line(line_strip)
+                    if line_strip.startswith('```mermaid'):
+                        in_mermaid = True
+                    elif in_mermaid and line_strip.startswith('flowchart'):
+                        in_flowchart = True
+                    elif line_strip.startswith('```'):
+                        in_mermaid = False
+                        in_flowchart = False
+                    elif len(line_strip) > 0 and in_mermaid and in_flowchart:
+                        self._parse_flowchart_line(line_strip)
             except Exception as e:
                 logger.error("Error while parsing workflow file '%s', line '%s': %s",
                              self.workflow.filepath, line_strip, str(e))
                 raise e
 
-            # fetch next
+            # fetch next line
             try:
                 line = next(content_iter)
             except StopIteration:
                 return None
 
 
-    def _parse_section_prompts(self, line: str, content_iter) -> str:
+    def _parse_section_prompts(self, line: str, content_iter) -> str | None:
         current_content = ''
         current_role = None
         current_key = ''
+        result = ''
 
         while True:
             line_strip = line.strip()
             try:
-                if line_strip.startswith('# '): # next section --> end of workflow section
-                    return line_strip
-
-                if line_strip.startswith('## User'):
-                    if len(current_content) > 0:
-                        self.workflow.prompts[current_key] = Prompt(current_role, current_content)
-                        current_content = ''
-                    current_role = Prompt.USER
-                    current_key = line_strip.replace('## ', '').strip()
-                elif line_strip.startswith('## Assistant'):
-                    if len(current_content) > 0:
-                        self.workflow.prompts[current_key] = Prompt(current_role, current_content)
-                        current_content = ''
-                    current_role = Prompt.ASSISTANT
-                    current_key = line_strip.replace('## ', '').strip()
-                elif line_strip.startswith('## System'):
-                    if len(current_content) > 0:
-                        self.workflow.prompts[current_key] = Prompt(current_role, current_content)
-                        current_content = ''
-                    current_role = Prompt.SYSTEM
-                    current_key = line_strip.replace('## ', '').strip()
+                if line_strip.startswith('!INCLUDE '):
+                    content_iter = self._include_file(line_strip)
+                    # the first line of the included file will be fetched below in 'fetch next line'
                 else:
-                    if current_role is not None:
-                        current_content += line
+                    if line_strip.startswith('# '): # next section --> end of workflow section
+                        return line_strip
+
+                    if line_strip.startswith('## User'):
+                        if current_role is not None and len(current_content) > 0:
+                            self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                            current_content = ''
+                        current_role = Prompt.USER
+                        current_key = line_strip.replace('## ', '').strip()
+                    elif line_strip.startswith('## Assistant'):
+                        if current_role is not None and len(current_content) > 0:
+                            self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                            current_content = ''
+                        current_role = Prompt.ASSISTANT
+                        current_key = line_strip.replace('## ', '').strip()
+                    elif line_strip.startswith('## System'):
+                        if current_role is not None and len(current_content) > 0:
+                            self.workflow.prompts[current_key] = Prompt(current_role, current_content)
+                            current_content = ''
+                        current_role = Prompt.SYSTEM
+                        current_key = line_strip.replace('## ', '').strip()
+                    else:
+                        if current_role is not None:
+                            current_content += line
             except Exception as e:
                 logger.error("Error while parsing workflow file '%s', line '%s': %s",
                              self.workflow.filepath, line_strip, str(e))
                 raise e
 
-            # fetch next
+            # fetch next line
             try:
                 line = next(content_iter)
             except StopIteration:
+                result = None
                 break
 
-        if len(current_content) > 0:
+        if current_role is not None and len(current_content) > 0:
             if current_key is not None:
                 try:
                     self.workflow.prompts[current_key] = Prompt(current_role, current_content)
                 except Exception as e:
                     logger.error("Error while adding prompt '%s': %s",
                                  current_key, str(e))
-        return None
+        return result
 
 
     def _parse_flowchart_line(self, line : str) -> None:
@@ -228,8 +266,10 @@ class WorkflowReader:
 
                 self._parse_flow(line, left, right)
             else:
-                # Parse the activity
-                self._parse_activity(line)
+                pos = line.find('-.-')  # ignore blocks connected with dashed lines (comments)
+                if pos < 0:
+                    # Parse the activity
+                    self._parse_activity(line)
         except Exception as e:
             logger.error("Error while parsing flowchart line '%s': %s", line, str(e))
             raise e
@@ -336,7 +376,7 @@ class WorkflowReader:
 
 if __name__ == '__main__':
     MAIN_FILENAME = "sample-project-eval.wf.md"
-    main_workflow = WorkflowReader().load_from_mdfile(MAIN_FILENAME)
+    main_workflow = WorkflowReader.load_from_mdfile(MAIN_FILENAME)
     print(f"Loaded workflow: {main_workflow.name}")
     print(f"Description: {main_workflow.description}\n")
 

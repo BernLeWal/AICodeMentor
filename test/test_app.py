@@ -20,7 +20,7 @@ class TestAll(unittest.TestCase):
 
     def test_workflow(self):
         """Test the workflow implementation"""
-        main_workflow = WorkflowReader().load_from_mdfile("check-toolchain.wf.md")
+        main_workflow = WorkflowReader.load_from_mdfile("check-toolchain.wf.md")
         main_interpreter = WorkflowInterpreter(main_workflow)
 
         ## run the workflow

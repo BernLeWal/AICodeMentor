@@ -117,13 +117,13 @@ class WorkflowInterpreter:
 
     def _call(self, activity : Activity) -> bool:
         """Call another workflow as sub-workflow"""
-        sub_workflow_name = activity.expression
+        sub_workflow_name = str(activity.expression)
         logger.info("CALL: %s from dir %s", sub_workflow_name, self.workflow.directory)
         directory = os.path.dirname(self.workflow.filepath)
         if len(directory) == 0:
             directory = self.workflow.directory
         try:
-            sub_workflow = WorkflowReader().load_from_mdfile(sub_workflow_name, directory)
+            sub_workflow = WorkflowReader.load_from_mdfile(sub_workflow_name, directory)
         except FileNotFoundError:
             logger.warning("Workflow file %s not found", sub_workflow_name)
             self.context.status = Workflow.Status.FAILED
@@ -181,7 +181,7 @@ class WorkflowInterpreter:
 
 
 if __name__ == "__main__":
-    main_workflow = WorkflowReader().load_from_mdfile("sample-project-eval.wf.md")
+    main_workflow = WorkflowReader.load_from_mdfile("sample-project-eval.wf.md")
     main_interpreter = WorkflowInterpreter(main_workflow)
 
     ## run the workflow

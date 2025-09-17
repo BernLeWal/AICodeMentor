@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_swagger_ui import get_swaggerui_blueprint
 from werkzeug.middleware.proxy_fix import ProxyFix
-from app.api.routing import ApiRouter
 from version import __version__
+from app.api.routing import ApiRouter
 
 
 class AICodeMentorServer:

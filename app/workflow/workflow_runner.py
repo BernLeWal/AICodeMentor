@@ -41,7 +41,7 @@ class WorkflowRunner:
         Run the AI CodeMentor Workflow
         """
         self.start_time = datetime.datetime.now()
-        main_workflow = WorkflowReader().load_from_mdfile(self.workflow_file, ".")
+        main_workflow = WorkflowReader.load_from_mdfile(self.workflow_file, ".")
         print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath}) "+\
             f"using AI-model {AIAgentConfig.get_model_name()} ")
         if self.key_values:

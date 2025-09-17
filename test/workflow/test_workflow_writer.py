@@ -17,7 +17,7 @@ class TestWorkflowWriter(unittest.TestCase):
 
     def test_save_definition(self):
         """Test WorkflowWriter save_definition method"""
-        main_workflow = WorkflowReader().load_from_mdfile(self.MAIN_FILENAME)
+        main_workflow = WorkflowReader.load_from_mdfile(self.MAIN_FILENAME)
 
         main_writer = WorkflowWriter(main_workflow)
         main_writer.save_definition(
@@ -31,7 +31,7 @@ class TestWorkflowWriter(unittest.TestCase):
 
     def test_save_history(self):
         """Test WorkflowWriter save_definition method"""
-        main_workflow = WorkflowReader().load_from_mdfile(self.MAIN_FILENAME)
+        main_workflow = WorkflowReader.load_from_mdfile(self.MAIN_FILENAME)
 
         main_writer = WorkflowWriter(main_workflow)
         main_writer.save_history(

@@ -50,16 +50,16 @@ class AIAgent:
         self.total_chars = 0
 
         self.messages : list = []
-        self.last_result : str = None
+        self.last_result : str|None = None
 
 
     def __del__(self):
         """Destructor calls cleanup to ensure resource release"""
-        logger.info("Destructor called for AIAgent")
+        print("Destructor called for AIAgent")
         try:
             self.cleanup()
         except Exception as e:
-            logger.warning("Cleanup in __del__() failed: %s", e)
+            pass
 
 
     def cleanup(self):

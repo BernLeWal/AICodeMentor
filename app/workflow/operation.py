@@ -26,7 +26,7 @@ class Operation(Enum):
 class OperationInterpreter:
     """Interprets and Creates Operations"""
     @staticmethod
-    def parse_operation(operation: str) -> Operation:
+    def parse_operation(operation: str) -> Operation | None:
         """Parse operation"""
         if operation.upper() in Operation.__members__:
             return Operation[operation.upper()]
@@ -61,36 +61,36 @@ class OperationInterpreter:
         if operation == Operation.LESS:
             try:
                 # numeric comparison
-                left = float(left)
-                right = float(right)
-                return left < right
+                n_left = float(left)
+                n_right = float(right)
+                return n_left < n_right
             except ValueError:
                 # string comparison
                 return left < right
         if operation == Operation.GREATER:
             try:
                 # numeric comparison
-                left = float(left)
-                right = float(right)
-                return left > right
+                n_left = float(left)
+                n_right = float(right)
+                return n_left > n_right
             except ValueError:
                 # string comparison
                 return left > right
         if operation == Operation.LESS_EQUAL:
             try:
                 # numeric comparison
-                left = float(left)
-                right = float(right)
-                return left <= right
+                n_left = float(left)
+                n_right = float(right)
+                return n_left <= n_right
             except ValueError:
                 # string comparison
                 return left <= right
         if operation == Operation.GREATER_EQUAL:
             try:
                 # numeric comparison
-                left = float(left)
-                right = float(right)
-                return left >= right
+                n_left = float(left)
+                n_right = float(right)
+                return n_left >= n_right
             except ValueError:
                 # string comparison
                 return left >= right

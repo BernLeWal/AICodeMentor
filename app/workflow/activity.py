@@ -52,13 +52,13 @@ class Activity:
             return self.name
 
 
-    def __init__(self, kind: Kind, name: str, expression: str = None):
+    def __init__(self, kind: Kind, name: str, expression: str | None = None):
         self.kind : Activity.Kind = kind
         self.name : str = name
-        self.expression : str = expression
+        self.expression : str | None = expression
 
-        self.next : Activity = None
-        self.other : Activity = None
+        self.next : Activity | None = None
+        self.other : Activity | None = None
         self.hits : int = 0
 
 
@@ -103,7 +103,7 @@ class Activity:
 
 
     @staticmethod
-    def parse_kind(kind: str) -> Kind:
+    def parse_kind(kind: str) -> Kind | None:
         """Parse the kind of activity"""
         if kind.upper() not in Activity.Kind.__members__:
             return None
