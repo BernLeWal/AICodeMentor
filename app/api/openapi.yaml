@@ -79,6 +79,25 @@ components:
         - output
         - status
 
+    WorkflowInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the workflow.
+        description:
+          type: string
+          description: Description of the workflow.
+        params:
+          type: object
+          additionalProperties:
+            type: string
+          description: Key-value pairs of workflow parameters.
+      required:
+        - name
+        - description
+        - params
+
     ErrorResponse:
       type: object
       properties:
@@ -354,6 +373,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Workflow file not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/workflow_info/{filepath}:
+    get:
+      summary: Retrieve generic information about a workflow.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/FilePathParam'
+      responses:
+        '200':
+          description: Workflow information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowInfo'
         '404':
           description: Workflow file not found.
           content:

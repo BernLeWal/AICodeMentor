@@ -22,7 +22,7 @@ bin/run_codementor.sh workflows/prompt-eval/prompt-eval.wf.md USER_PROMPT="Ich h
 ```mermaid
 flowchart TD
     START@{ shape: f-circ, label:"start"} --> PROMPT_SYSTEM
-    PARAMS@{ shape: comment, label: "USER_PROMPT='Ich habe eine Aufgabe in Java. Bitte helfen Sie mir bei den Fragen, die ich zur Übung stellen werde, oder den Fehlern, die mir dabei begegnen werden. Aufgabe ist Message-Queuing'"}
+    PARAMS@{ shape: comment, label: "USER_PROMPT='Ich habe eine Aufgabe in Java. Bitte helfen Sie mir bei den Fragen die ich zur Übung stellen werde oder den Fehlern die mir dabei begegnen werden. Aufgabe ist Message-Queuing'"}
 
     PROMPT_SYSTEM[Prompt: System] --> PROMPT_ASSIGN_TAGS
     PROMPT_ASSIGN_TAGS[Prompt: User Assign Tags] --> PROMPT_SCORE

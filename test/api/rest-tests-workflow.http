@@ -4,6 +4,16 @@
 
 ###
 
+### Get workflow info
+GET http://localhost:5000/api/workflow_info/tutorial/lesson1.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+### Get workflow info (prompt-eval)
+GET http://localhost:5000/api/workflow_info/prompt-eval/prompt-eval.wf.md
+Authorization: Bearer {{SERVER_TOKEN}}
+
+###
+
 ### Execute a workflow 
 GET http://localhost:5000/api/workflow/tutorial/lesson1.wf.md
 Authorization: Bearer {{SERVER_TOKEN}}

@@ -34,6 +34,9 @@ class AICodeMentorServer:
         self.register_routes()
         self.register_swagger_ui()
 
+        # output the current working directory to help debugging path issues
+        logging.info("Current working directory: %s", os.getcwd())
+
     def configure_logging(self):
         """
         Configure logging for the application.
