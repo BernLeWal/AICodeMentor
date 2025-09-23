@@ -6,6 +6,8 @@ import logging
 import os
 from enum import Enum
 from dotenv import load_dotenv
+from app.agents.agent_config import AIAgentConfig
+from app.agents.agent_factory import AIAgentFactory
 from app.workflow.workflow import Workflow
 from app.agents.agent import AIAgent
 from app.commands.executor import CommandExecutor
@@ -34,21 +36,28 @@ class Context:
 
 
     def __init__(self, workflow : Workflow,
-                 agent : AIAgent = None, command_executor : CommandExecutor = None):
+                 special_agent_config : AIAgentConfig|None = None, command_executor : CommandExecutor = None):
         self.workflow = workflow
-        self.agent : AIAgent = agent   # will be set from outside
-        self.command_executor : CommandExecutor = command_executor  # will be set from outside
 
         self.status : Workflow.Status = Workflow.Status.CREATED
-        self.result : str = None
+        self.result : str|None = None
 
         self.variables : dict = {}
         for key,value in workflow.params.items():
             self.variables[key] = value
 
+        if special_agent_config is not None:
+            self.agent : AIAgent = AIAgentFactory.create_agent(special_agent_config)
+        else:
+            model_name = self.get_value('AI_MODEL_NAME', 'gpt-5-nano')
+            self.agent : AIAgent = AIAgentFactory.create_agent(AIAgentConfig(model_name))
+        print(f"Created context using AI model: {self.agent.config.model_name}");
+
+        self.command_executor : CommandExecutor = command_executor  # will be set from outside
 
 
-    def get_value(self, name: str, default_value: str = None)->str:
+
+    def get_value(self, name: str, default_value: str|None = None)->str:
         """Get the value of the variable with the given name"""
         if name is None or len(name) == 0:
             return default_value

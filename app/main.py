@@ -128,7 +128,7 @@ if __name__ == "__main__":
         # else normal workflow execution
         key_values_dict = {kv.split('=')[0]: kv.split('=')[1] for kv in args.key_values} if args.key_values else None
         runner = WorkflowRunner(args.workflow_file, key_values_dict)
-        (main_status, main_result) = runner.run(AIAgentConfig())
+        (main_status, main_result) = runner.run()
         if main_status == Workflow.Status.SUCCESS:
             print(f"Workflow completed with SUCCESS\n\n---\n{main_result}")
             sys.exit(0)

@@ -36,14 +36,13 @@ class WorkflowRunner:
         self.context:Context = None
 
 
-    def run(self, config:AIAgentConfig) -> tuple[Workflow.Status, str]:
+    def run(self, special_config:AIAgentConfig|None=None) -> tuple[Workflow.Status, str]:
         """
         Run the AI CodeMentor Workflow
         """
         self.start_time = datetime.datetime.now()
         main_workflow = WorkflowReader.load_from_mdfile(self.workflow_file, ".")
-        print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath}) "+\
-            f"using AI-model {AIAgentConfig.get_model_name()} ")
+        print(f"Running workflow: {main_workflow.name} (from file {main_workflow.filepath}) ")
         if self.key_values:
             print("with parameters:")
             for key,value in self.key_values.items():
@@ -54,7 +53,7 @@ class WorkflowRunner:
 
         ## run the workflow
         self.context = Context(main_workflow,
-                               AIAgentFactory.create_agent(config),
+                               special_config,
                                None)
         results = main_interpreter.run(self.context)
         self.duration_sec = (datetime.datetime.now() - self.start_time).total_seconds()

@@ -142,15 +142,12 @@ class ActivityInterpreter(ActivityVisitor):
         logger.info("PROMPT: role=%s, content=%s", role,
             escape_linefeed(trunc_right(prompt_content)))
 
-        if self.context.agent is None:
-            self.context.agent = AIAgentFactory.create_agent()
-
         history_record = self._save_history(activity, f"{Activity.Kind.PROMPT.value}: {prompt_id}",
             self.context.status,
             f"{prompt_content}\n\n---\n\n...")
         if Prompt.SYSTEM == role.lower():
             # The system prompt starts a new agent
-            self.context.agent = AIAgentFactory.create_agent()
+            self.context.agent = AIAgentFactory.create_agent(self.context.agent.config)
             self.context.agent.system(prompt_content)
             self.context.result = ""
         elif Prompt.ASSISTANT == role.lower():

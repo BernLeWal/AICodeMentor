@@ -9,7 +9,7 @@ from app.agents.agent_openai_gpt import AIAgentOpenAIGpt
 class TestAIAgentOpenAI(unittest.TestCase):
     """UnitTests for AIAgentOpenAI"""
     def setUp(self):
-        config = AIAgentConfig()
+        config = AIAgentConfig("gpt-5-nano")
         self.agent = AIAgentOpenAIGpt(config)
 
 

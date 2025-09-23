@@ -7,6 +7,7 @@ import logging
 from dotenv import load_dotenv
 from app.workflow.batch_config import BatchConfig
 from app.agents.agent_config import AIAgentConfig
+from app.agents.agent_factory import AIAgentFactory
 from app.workflow.workflow_runner import WorkflowRunner
 
 
@@ -40,7 +41,7 @@ class BatchRunner:
         """Runs a workflow in all config variations"""
 
         for _ in range(self.cfg.repeats):
-            for model_name in self.cfg.ai_model_names or [AIAgentConfig.get_model_name()]:
+            for model_name in self.cfg.ai_model_names or [AIAgentFactory.get_model_name()]:
                 logger.info("- Running benchmark for model: %s", model_name)
                 os.environ['AI_MODEL_NAME'] = model_name
 
@@ -74,7 +75,7 @@ class BatchRunner:
 
         if self.cfg.setup_workflow_file is not None:
             logger.info("Setting up the environment...")
-            WorkflowRunner(self.cfg.setup_workflow_file, main_key_values).run(AIAgentConfig())
+            WorkflowRunner(self.cfg.setup_workflow_file, main_key_values).run()
 
         if self.cfg.workflow_files is None:
             logger.error("No workflow files given!")
@@ -89,4 +90,4 @@ class BatchRunner:
         if self.cfg.cleanup_workflow_file is not None:
             logger.info("Cleaning up the environment...")
             load_dotenv()   # reload the environment variables
-            WorkflowRunner(self.cfg.cleanup_workflow_file, main_key_values).run(AIAgentConfig())
+            WorkflowRunner(self.cfg.cleanup_workflow_file, main_key_values).run()

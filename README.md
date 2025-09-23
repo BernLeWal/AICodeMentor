@@ -41,7 +41,7 @@ For more details see [AI CodeMentor – Automating the Evaluation of Programming
 
 ## Implementation Status
 
-🚀Latest News in version: 0.2.6
+🚀Latest News in version: 0.2.7
 - Improved support for readoning-models like GPT5, OKD setup
 - The **Simple web UI** to run and manage workflows and history, and also includes a simple editor docs see [docker/codementor/README.md](docker/codementor/README.md)
 - Workflow history and logs can be retrieved via REST API

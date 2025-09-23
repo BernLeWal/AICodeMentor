@@ -244,21 +244,80 @@ async function deleteItem(type,path){
 
 async function runWorkflow(path){
   clearError(); clearMsg();
-  const ok=confirm(`Run workflow \"${path}\"?\nThis may take a long time and you should not interrupt the processing by refreshing the browser.`);
-  if(!ok) return;
+  // Fetch workflow info first
+  try{
+    const infoResp = await fetch(`/api/workflow_info/${encodePath(path)}`);
+    if(!infoResp.ok) throw new Error('Failed to fetch workflow info: HTTP '+infoResp.status+ '\n' + await infoResp.text());
+    const info = await infoResp.json();
+    const params = info.params || {};
+    showWorkflowParamsDialog(path, params);
+  }catch(err){ showError(err.message); clearMsg(); }
+}
+
+function showWorkflowParamsDialog(path, params){
+  // Build table rows for params
+  let rows = '';
+  for(const [key, value] of Object.entries(params)){
+    rows += `<tr>
+      <td><label class='form-label mb-0'>${key}</label></td>
+      <td><input type='text' class='form-control' name='${key}' value='${value}'></td>
+    </tr>`;
+  }
+  // Confirm text
+  const confirmText = `Run workflow "${path}"?<br>This may take a long time and you should not interrupt the processing by refreshing the browser.`;
+  // Build modal content
+  resultContent.innerHTML = `
+    <form id='workflowParamsForm'>
+      <table class='table table-bordered mb-3'>
+        <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class='mb-3 text-muted'>${confirmText}</div>
+      <button type='submit' class='btn btn-success w-100'>Run Workflow</button>
+    </form>
+  `;
+  resultModalTitle.textContent = 'Run Workflow (with Parameters)';
+  clearMsg();
+  resultModal.show();
+
+  // Attach submit handler
+  const form = document.getElementById('workflowParamsForm');
+  form.onsubmit = async function(e){
+    e.preventDefault();
+    // Collect param values
+    const formData = new FormData(form);
+    const paramObj = {};
+    for(const [key, value] of formData.entries()){
+      paramObj[key] = value;
+    }
+    await runWorkflowWithParams(path, paramObj);
+  };
+}
+
+async function runWorkflowWithParams(path, paramObj){
+  clearError(); clearMsg();
+  resultModal.hide(); // Close the popup dialog 
   showMsg('Running workflow – please wait …','info');
   try{
-    const resp=await fetch(`/api/workflow/${encodePath(path)}`);
-    if(!resp.ok) throw new Error('Run failed: HTTP '+resp.status+ '\n' + await resp.text());
-    const data=await resp.text();
-
+    const resp = await fetch(`/api/workflow/${encodePath(path)}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(paramObj)
+    });
+    if(!resp.ok) {
+      throw new Error('Run failed: HTTP '+resp.status+ '\n' + await resp.text());
+    }
+    const data = await resp.text();
     // display result in modal (render markdown)
     const markdown=marked.parse(data || '');
     resultContent.innerHTML=markdown || `<pre>${data}</pre>`;
     resultModalTitle.textContent = 'Workflow Result';
     clearMsg();
     resultModal.show();
-  }catch(err){ showError(err.message); clearMsg(); }
+  }catch(err){
+    showError(err.message);
+    clearMsg();
+  }
 }
 
 async function viewFile(path){

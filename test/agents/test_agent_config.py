@@ -11,7 +11,7 @@ from app.agents.agent_config import AIAgentConfig
 class TestAIAgentConfig(unittest.TestCase):
     """UnitTests for AIAgentConfig"""
     def setUp(self):
-        self.config = AIAgentConfig()
+        self.config = AIAgentConfig("gpt-5-nano")
 
     def test_load_from_environment(self):
         """Checks if the configuration is loaded from the environment"""
@@ -26,8 +26,8 @@ class TestAIAgentConfig(unittest.TestCase):
     def test_load_from_jsonfile(self):
         """Checks if the configuration is loaded from a JSON file"""
         test_config = {
-            "OPENAI_API_KEY": "file_api_key",
-            "OPENAI_ORGANIZATION_ID": "file_org_id",
+            "openai_api_key": "file_api_key",
+            "openai_organization_id": "file_org_id",
             "AI_MODEL_NAME": "file_model_name",
             "AI_MAX_PROMPT_LENGTH": 200
         }
@@ -44,10 +44,10 @@ class TestAIAgentConfig(unittest.TestCase):
     def test_load_from_json(self):
         """Checks if the configuration is loaded from a JSON string"""
         json_data = json.dumps({
-            "OPENAI_API_KEY": "json_api_key",
-            "OPENAI_ORGANIZATION_ID": "json_org_id",
+            "openai_api_key": "json_api_key",
+            "openai_organization_id": "json_org_id",
             "AI_MODEL_NAME": "json_model_name",
-            "AI_MAX_PROMPT_LENGTH": 200
+            "AI_MAX_PROMPT_LENGTH": "200"
         })
 
         self.config.load_from_json(json_data)

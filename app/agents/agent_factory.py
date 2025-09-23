@@ -29,12 +29,13 @@ class AIAgentFactory:
     """
 
     @staticmethod
-    def create_agent(config:AIAgentConfig = None) -> AIAgent:
+    def create_agent(config:AIAgentConfig|None = None) -> AIAgent:
         """
         Creates an AI-Agent instance of type AIAgentOpenAI
         """
         if config is None:
-            config = AIAgentConfig(config)
+            model_name = AIAgentFactory.get_model_name()
+            config = AIAgentConfig(model_name)
         model_name = config.model_name
 
         # Platform OpenAI Reasoning Models:
@@ -58,6 +59,15 @@ class AIAgentFactory:
                 return AIAgentTransformers(config)
 
         raise ValueError(f"Unsupported model name: {model_name}")
+
+
+    @staticmethod
+    def get_model_name() -> str:
+        """
+        Returns the model name of the AI-Agent instance
+        """
+        return os.getenv('AI_MODEL_NAME', 'gpt-5-nano')
+
 
 
 if __name__ == "__main__":

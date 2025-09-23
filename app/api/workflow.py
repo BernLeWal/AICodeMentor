@@ -53,7 +53,7 @@ def register_workflow_routes(app):
             key_values_dict = request.args.to_dict()
             logger.info("Parameters: %s", key_values_dict)
             runner = WorkflowRunner(full_path, key_values_dict)
-            (main_status, main_result) = runner.run(AIAgentConfig())
+            (main_status, main_result) = runner.run()
             if main_status == Workflow.Status.SUCCESS:
                 return main_result, 200
             else:
@@ -76,7 +76,7 @@ def register_workflow_routes(app):
                 return jsonify({"error": "Invalid JSON"}), 400
 
             runner = WorkflowRunner(full_path, key_values_dict)
-            (main_status, main_result) = runner.run(AIAgentConfig())
+            (main_status, main_result) = runner.run()
             if main_status == Workflow.Status.SUCCESS:
                 return main_result, 200
             else:

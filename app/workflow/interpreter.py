@@ -137,7 +137,7 @@ class WorkflowInterpreter:
 
         ## run the workflow
         sub_interpreter = WorkflowInterpreter(sub_workflow, parent_interpreter=self )
-        sub_context = Context(sub_workflow, self.context.agent, self.context.command_executor)
+        sub_context = Context(sub_workflow, self.context.agent.config, self.context.command_executor)
         for key,value in self.context.variables.items():
             sub_context.variables[key] = value
         sub_context.result = self.context.result
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     main_interpreter = WorkflowInterpreter(main_workflow)
 
     ## run the workflow
-    main_context = Context(main_workflow, AIAgentFactory.create_agent(), ShellCommandExecutor())
+    main_context = Context(main_workflow, None, ShellCommandExecutor())
     (main_status, main_result) = main_interpreter.run(main_context)
     if main_status == Workflow.Status.SUCCESS:
         print(f"Workflow completed with SUCCESS, Result:\n{main_result}")

@@ -124,7 +124,7 @@ class AIAgent:
 
 
 if __name__ == "__main__":
-    main_agent = AIAgent(AIAgentConfig())
+    main_agent = AIAgent(AIAgentConfig("gpt-5-nano")) # use "codellama/CodeLlama-7b-Instruct-hf" to test the transformers agent
 
     print("System Prompt:")
     main_agent.system("You are a helpful assistant")

@@ -10,7 +10,7 @@ class TestAIAgent(unittest.TestCase):
     """UnitTests for AIAgent"""
 
     def setUp(self):
-        config = AIAgentConfig()
+        config = AIAgentConfig("gpt-5-nano")
         config.openai_api_key="test_api_key"
         config.openai_organization_id="test_org_id"
         self.agent = AIAgent(config)

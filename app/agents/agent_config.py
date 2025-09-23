@@ -20,12 +20,9 @@ logger = logging.getLogger(__name__)
 # app/agents/AIAgentConfig.py
 class AIAgentConfig:
     """Retrieves the configuration for the AI Agents"""
-    def __init__(self, model_name:str = None):
+    def __init__(self, model_name:str):
         # Generic configuration
-        if model_name is None:
-            self.model_name = AIAgentConfig.get_model_name()
-        else:
-            self.model_name = model_name
+        self.model_name = model_name
         # Vendor specific configuration
         self.openai_api_key = None
         self.openai_organization_id = None
@@ -55,7 +52,8 @@ class AIAgentConfig:
         logger.debug("Loading configuration from file: %s", filename)
         with open(filename, 'r', encoding='utf-8') as file:
             config = json.load(file)
-            self.__dict__ = json.loads(config)
+            # Update the instance attributes with the loaded config
+            self.__dict__.update(config)
         logger.debug(self)
 
 
@@ -64,7 +62,7 @@ class AIAgentConfig:
         # Load the configuration from the JSON string
         logger.debug("Loading configuration from JSON string")
         config = json.loads(json_data)
-        self.__dict__ = json.loads(config)
+        self.__dict__.update(config)
         logger.debug(self)
 
 
@@ -77,13 +75,6 @@ class AIAgentConfig:
 
 
     # ------------------------------------------------------
-    @staticmethod
-    def get_model_name() -> str:
-        """
-        Returns the model name of the AI-Agent instance
-        """
-        return os.getenv('AI_MODEL_NAME', 'gpt-5-mini')
-
     @staticmethod
     def get_temperature() -> float:
         """
@@ -129,5 +120,5 @@ class AIAgentConfig:
 
 
 if __name__ == "__main__":
-    main_config = AIAgentConfig()
+    main_config = AIAgentConfig('gpt-5-mini')
     print(main_config)
